@@ -23,7 +23,7 @@ librime's embedded libraries include OpenCC (Apache-2.0), Boost (BSL-1.0), maris
 
 ## Changes to upstream work
 
-Telepathy's Squirrel fork adds asynchronous Kev ranking, input-coverage checks, stale-response rejection, display-to-Rime candidate mapping, preceding-text extraction, isolated profile storage, bundled-worker startup, model setup commands and Telepathy branding. Updater/deployment/sync UI that is unused in the packaged prototype is omitted. Original source authorship headers are retained.
+Telepathy's Squirrel fork adds asynchronous Kev ranking, input-coverage checks, stale-response rejection, display-to-Rime candidate mapping, preceding-text extraction, isolated profile storage, bundled-worker startup, model setup commands, a native credits/licenses window and Telepathy branding. Updater/deployment/sync UI that is unused in the packaged prototype is omitted. Original source authorship headers are retained.
 
 Wanxiang's active full-pinyin profile is compiled with a 12-candidate page, static context scoring enabled, personal dictionary learning disabled, and personal-context/manual-order/statistics modules removed. Only the reference closure of its remaining schema is packaged. Raw dictionaries already represented by compiled binaries, alternate pinyin profiles, unused Lua modules and prediction plugins are omitted. The small typo-comment dictionary is retained because its Lua filter reads it directly.
 

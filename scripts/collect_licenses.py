@@ -1,6 +1,7 @@
 """Preserve upstream notices and the licenses of bundled Python distributions."""
 import ast,base64,importlib.metadata as md,json,shutil,subprocess,sys,urllib.request
 from pathlib import Path
+from html.parser import HTMLParser
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'licenses'
 UPSTREAM=[
 ('librime-BSD-3-Clause.txt','rime/librime','1.17.0','LICENSE'),
@@ -13,6 +14,25 @@ def github(repo,ref,path):
     response=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/contents/{path}?ref={ref}'],timeout=30))
     if response.get('content'):return base64.b64decode(response['content'])
     with urllib.request.urlopen(response['download_url']) as r:return r.read()
+
+def lua_license_text(html):
+    """Keep the verbatim notice from Lua's license box as offline plain text."""
+    class NoticeParser(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.depth=0;self.parts=[]
+        def handle_starttag(self,tag,attrs):
+            if tag=='div':self.depth+=1
+            elif tag=='p' and self.depth:self.parts.append('\n\n')
+        def handle_endtag(self,tag):
+            if tag=='div':self.depth=max(0,self.depth-1)
+        def handle_data(self,data):
+            if self.depth:self.parts.append(data)
+    parser=NoticeParser();parser.feed(html)
+    notice='\n\n'.join(' '.join(p.split()) for p in ''.join(parser.parts).split('\n\n') if p.strip())
+    if not all(part in notice for part in ('Copyright','Permission is hereby granted','THE SOFTWARE IS PROVIDED "AS IS"')):
+        raise ValueError('Lua license page does not contain a complete MIT notice')
+    return 'Lua — MIT license\nSource: https://www.lua.org/license.html\n\n'+notice+'\n'
 def main():
     OUT.mkdir(exist_ok=True)
     for name,repo,ref,path in UPSTREAM:
@@ -29,6 +49,8 @@ def main():
     for name,url in extra:
         if not (OUT/name).exists():
             with urllib.request.urlopen(url,timeout=30) as r:(OUT/name).write_bytes(r.read())
+    lua=OUT/'Lua-MIT.txt'
+    if '<html' in lua.read_text().lower():lua.write_text(lua_license_text(lua.read_text()))
     # Darts clone is embedded in Octagram/OpenCC; preserve the release header's notice.
     if not (OUT/'darts-clone-LICENSE.txt').exists():
         with urllib.request.urlopen('https://raw.githubusercontent.com/s-yata/darts-clone/master/COPYING.md',timeout=30) as r:(OUT/'darts-clone-LICENSE.txt').write_bytes(r.read())

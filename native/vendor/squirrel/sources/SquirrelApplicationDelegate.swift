@@ -20,6 +20,7 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
   var enableNotifications = false
   var showStatusIcon: Bool = true
   var statusItem: NSStatusItem?
+  private var informationWindow: TelepathyInformationWindow?
   func applicationWillFinishLaunching(_ notification: Notification) {
     panel = SquirrelPanel(position: .zero)
     refreshStatusItem()
@@ -66,7 +67,9 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
   func checkForUpdates() {}
 
   func openWiki() {
-    if let url = Bundle.main.url(forResource: "CREDITS", withExtension: "md") { NSWorkspace.shared.open(url) }
+    if informationWindow == nil { informationWindow = TelepathyInformationWindow() }
+    informationWindow?.showWindow(nil)
+    NSApp.activate()
   }
 
   static func showMessage(msgText: String?) {

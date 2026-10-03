@@ -36,6 +36,7 @@ def verify(app):
         for minimum in re.findall(r'\bminos ([\d.]+)',load_commands):
             assert tuple(map(int,minimum.split('.'))) <= (26,2),(str(p),minimum)
     assert (contents/'Resources/licenses/python-dependencies.json').is_file()
+    assert not any('__pycache__' in p.parts or p.suffix == '.pyc' for p in (contents/'Resources/licenses').rglob('*'))
     assert (contents/'Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker').is_file()
     print(json.dumps(dict(runtime_files=len(inventory),mach_o_binaries=len(binaries),weights_bundled=False,architecture='arm64',minimum_macos='26.2')))
 if __name__=='__main__':

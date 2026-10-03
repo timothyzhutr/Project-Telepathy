@@ -1,7 +1,7 @@
 """Assemble an Apple Silicon app from the active dependency closure."""
 import json,plistlib,shutil,subprocess
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];BUILD=ROOT/'.build';APP=ROOT/'dist/Telepathy.app';VERSION='0.1.0'
+ROOT=Path(__file__).resolve().parents[1];BUILD=ROOT/'.build';APP=ROOT/'dist/Telepathy.app';VERSION='0.1.1'
 def run(*args):subprocess.run(list(map(str,args)),check=True,cwd=ROOT)
 def main():
     dist=BUILD/'rime/dist';source=ROOT/'native';stock=BUILD/'squirrel-package/Payload/Squirrel.app/Contents'
@@ -34,7 +34,7 @@ def main():
         shutil.copytree(stock/f'Resources/{locale}.lproj',resources/f'{locale}.lproj')
         localized={'CFBundleName':'Telepathy','CFBundleDisplayName':'Telepathy','local.telepathy.inputmethod.Telepathy.Hans':'Telepathy'}
         (resources/f'{locale}.lproj/InfoPlist.strings').write_bytes(plistlib.dumps(localized))
-    shutil.copytree(ROOT/'licenses',resources/'licenses');shutil.copyfile(ROOT/'LICENSE',resources/'LICENSE');shutil.copyfile(ROOT/'CREDITS.md',resources/'CREDITS.md')
+    shutil.copytree(ROOT/'licenses',resources/'licenses',ignore=shutil.ignore_patterns('__pycache__','*.pyc'));shutil.copyfile(ROOT/'LICENSE',resources/'LICENSE');shutil.copyfile(ROOT/'CREDITS.md',resources/'CREDITS.md')
     shutil.copytree(BUILD/'worker-dist/TelepathyWorker.app',contents/'Helpers/TelepathyWorker.app',symlinks=True)
     plist=plistlib.loads((stock/'Info.plist').read_bytes())
     def rename(v):

@@ -27,6 +27,8 @@ Type pinyin normally. Space chooses the highlighted candidate; number keys and t
 
 The input-source menu includes **Kev assistance**, which switches ranking on/off. Rime's statistical grammar continues to work when Kev assistance is off. No personal dictionary learning is enabled in this prototype. No typed text is written to the worker log or sent to a cloud API. In applications that do not expose preceding text, the IME uses limited text committed during the current session; contextual quality can be lower.
 
+**Credits and licenses…** opens Telepathy's own window. The Credits tab lists the projects used; the Licenses tab lets you browse their bundled license texts. It works offline and does not launch an editor. The same texts are included under `Contents/Resources/licenses/`.
+
 Kev's backbone runs on the Apple GPU through MLX; its small pointer head uses the CPU through PyTorch. The helper loads the model once and stays resident. Expect several GB of memory while assistance is active; actual memory and latency vary with context and hardware. Decisions are debounced and asynchronous, so native candidates appear without waiting for inference. The development M2 Pro achieved roughly 100 ms for a short two-candidate decision and 117 ms for a 12-candidate native snapshot after warm-up; this is a smoke-test result, not a typing benchmark.
 
 ## Diagnose and remove
@@ -75,8 +77,7 @@ Run the checks:
 
 ```bash
 python -m unittest discover -s tests
-xcrun swiftc native/Sources/RankingState.swift native/Tests/RankingStateTests.swift -o .build/ranking-tests
-.build/ranking-tests
+python scripts/test_native.py
 python scripts/verify_package.py dist/Telepathy.app
 ```
 

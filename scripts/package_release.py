@@ -1,7 +1,7 @@
 """Create a source-free executable release archive, preserving executable modes and symlinks."""
 import hashlib,stat,subprocess,zipfile
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];DIST=ROOT/'dist';VERSION='0.1.0'
+ROOT=Path(__file__).resolve().parents[1];DIST=ROOT/'dist';VERSION='0.1.1'
 def main():
     subprocess.run([__import__('sys').executable,str(ROOT/'scripts/verify_package.py'),str(DIST/'Telepathy.app')],check=True)
     out=ROOT/'.build/release';out.mkdir(parents=True,exist_ok=True)
