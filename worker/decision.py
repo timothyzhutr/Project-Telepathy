@@ -1,0 +1,36 @@
+"""Rank copied native snapshots; Rime owns composition and selection."""
+import threading
+class DecisionService:
+    def __init__(self,ranker=None):
+        self.ranker=ranker
+        self.lock=threading.Lock()
+    def decision(self,body):
+        if not isinstance(body,dict): raise ValueError('Expected an object')
+        revision=body.get('revision');prefix=body.get('prefix');raw=body.get('pinyin')
+        pending=body.get('pending',raw);words=body.get('candidates');ends=body.get('candidate_ends')
+        alphabet="abcdefghijklmnopqrstuvwxyz'"
+        if (type(revision) is not int or revision<0 or
+            not isinstance(prefix,str) or len(prefix)>512 or '\x00' in prefix or
+            any(not isinstance(p,str) or not 0<len(p)<=64 or any(c not in alphabet for c in p) for p in (raw,pending)) or
+            not isinstance(words,list) or not 1<=len(words)<=12 or
+            any(not isinstance(w,str) or not 0<len(w)<=128 or '\x00' in w for w in words) or
+            not isinstance(ends,list) or len(ends)!=len(words) or
+            any(type(e) is not int or not -1<=e<=len(raw.encode()) for e in ends)):
+            raise ValueError('Invalid native snapshot')
+        original=list(range(len(words)))
+        unavailable=dict(status='unavailable',revision=revision,order=original)
+        if any(e<=0 for e in ends): return unavailable
+        eligible=[i for i,e in enumerate(ends) if e>=ends[0]]
+        shorter=[i for i in original if i not in eligible]
+        if len(eligible)==1:
+            return dict(status='ok',revision=revision,order=eligible+shorter,selected_index=None,keep=True,ranked=False,request_ms=0)
+        with self.lock:
+            if self.ranker is None: return unavailable
+            try:
+                result=self.ranker.rank(prefix,pending,[words[i] for i in eligible])
+                if sorted(result['order']) != list(range(len(eligible))): return unavailable
+                selected=result.get('selected_index')
+                return dict(result,status='ok',revision=revision,ranked=True,
+                    order=[eligible[i] for i in result['order']]+shorter,
+                    selected_index=eligible[selected] if selected is not None else None)
+            except Exception: return unavailable

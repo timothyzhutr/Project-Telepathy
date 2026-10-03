@@ -1,0 +1,373 @@
+[
+  {
+    "name": "Jinja2",
+    "version": "3.1.6",
+    "license": null,
+    "notices": [
+      "python/Jinja2/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "MarkupSafe",
+    "version": "3.0.4",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/MarkupSafe/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "PyYAML",
+    "version": "6.0.3",
+    "license": "MIT",
+    "notices": [
+      "python/PyYAML/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "Pygments",
+    "version": "2.21.0",
+    "license": "BSD-2-Clause",
+    "notices": [
+      "python/Pygments/licenses/AUTHORS",
+      "python/Pygments/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "annotated-types",
+    "version": "0.8.0",
+    "license": "MIT",
+    "notices": [
+      "python/annotated-types/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "anyio",
+    "version": "4.15.1",
+    "license": "MIT",
+    "notices": [
+      "python/anyio/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "certifi",
+    "version": "2026.7.22",
+    "license": "MPL-2.0",
+    "notices": [
+      "python/certifi/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "click",
+    "version": "8.5.0",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/click/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "filelock",
+    "version": "4.0.9",
+    "license": "MIT",
+    "notices": [
+      "python/filelock/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "fsspec",
+    "version": "2026.9.0",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/fsspec/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "h11",
+    "version": "0.16.0",
+    "license": "MIT",
+    "notices": [
+      "python/h11/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "hf-xet",
+    "version": "1.6.0",
+    "license": "Apache-2.0",
+    "notices": [
+      "python/hf-xet/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "httpcore",
+    "version": "1.0.9",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/httpcore/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "httpx",
+    "version": "0.28.1",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/httpx/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "huggingface_hub",
+    "version": "1.33.0",
+    "license": "Apache-2.0",
+    "notices": [
+      "python/huggingface_hub/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "idna",
+    "version": "3.20",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/idna/licenses/LICENSE.md"
+    ]
+  },
+  {
+    "name": "markdown-it-py",
+    "version": "4.2.0",
+    "license": null,
+    "notices": [
+      "python/markdown-it-py/licenses/LICENSE",
+      "python/markdown-it-py/licenses/LICENSE.markdown-it"
+    ]
+  },
+  {
+    "name": "mdurl",
+    "version": "0.1.2",
+    "license": null,
+    "notices": [
+      "python/mdurl/LICENSE"
+    ]
+  },
+  {
+    "name": "mlx",
+    "version": "0.32.3",
+    "license": "MIT",
+    "notices": [
+      "python/mlx/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "mlx-lm",
+    "version": "0.31.3",
+    "license": "MIT",
+    "notices": [
+      "python/mlx-lm/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "mlx-metal",
+    "version": "0.32.3",
+    "license": "MIT",
+    "notices": [
+      "python/mlx-metal/LICENSE.txt",
+      "python/mlx-metal/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "mpmath",
+    "version": "1.3.0",
+    "license": "BSD",
+    "notices": [
+      "python/mpmath/LICENSE"
+    ]
+  },
+  {
+    "name": "networkx",
+    "version": "3.7",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/networkx/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "numpy",
+    "version": "2.5.3",
+    "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+    "notices": [
+      "python/numpy/licenses/LICENSE.txt",
+      "python/numpy/licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt",
+      "python/numpy/licenses/numpy/_core/src/common/pythoncapi-compat/COPYING",
+      "python/numpy/licenses/numpy/_core/src/highway/LICENSE",
+      "python/numpy/licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+      "python/numpy/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+      "python/numpy/licenses/numpy/_core/src/umath/svml/LICENSE",
+      "python/numpy/licenses/numpy/fft/pocketfft/LICENSE.md",
+      "python/numpy/licenses/numpy/linalg/lapack_lite/LICENSE.txt",
+      "python/numpy/licenses/numpy/ma/LICENSE",
+      "python/numpy/licenses/numpy/random/LICENSE.md",
+      "python/numpy/licenses/numpy/random/src/distributions/LICENSE.md",
+      "python/numpy/licenses/numpy/random/src/mt19937/LICENSE.md",
+      "python/numpy/licenses/numpy/random/src/pcg64/LICENSE.md",
+      "python/numpy/licenses/numpy/random/src/philox/LICENSE.md",
+      "python/numpy/licenses/numpy/random/src/sfc64/LICENSE.md",
+      "python/numpy/licenses/numpy/random/src/splitmix64/LICENSE.md",
+      "python/numpy/LICENSE.txt",
+      "python/numpy/LICENSE",
+      "python/numpy/LICENSE.md"
+    ]
+  },
+  {
+    "name": "packaging",
+    "version": "26.3",
+    "license": "Apache-2.0 OR BSD-2-Clause",
+    "notices": [
+      "python/packaging/licenses/LICENSE",
+      "python/packaging/licenses/LICENSE.APACHE",
+      "python/packaging/licenses/LICENSE.BSD"
+    ]
+  },
+  {
+    "name": "protobuf",
+    "version": "7.36.2",
+    "license": "3-Clause BSD License",
+    "notices": [
+      "python/protobuf/LICENSE"
+    ]
+  },
+  {
+    "name": "psutil",
+    "version": "7.2.2",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/psutil/LICENSE"
+    ]
+  },
+  {
+    "name": "pydantic",
+    "version": "2.13.5",
+    "license": "MIT",
+    "notices": [
+      "python/pydantic/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "pydantic_core",
+    "version": "2.46.5",
+    "license": "MIT",
+    "notices": [
+      "python/pydantic_core/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "regex",
+    "version": "2026.9.29",
+    "license": "Apache-2.0 AND CNRI-Python",
+    "notices": [
+      "python/regex/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "rich",
+    "version": "15.0.0",
+    "license": "MIT",
+    "notices": [
+      "python/rich/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "safetensors",
+    "version": "0.8.0",
+    "license": null,
+    "notices": [
+      "python/safetensors/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "sentencepiece",
+    "version": "0.2.2",
+    "license": "Apache-2.0",
+    "notices": [
+      "python/sentencepiece/LICENSE"
+    ]
+  },
+  {
+    "name": "setuptools",
+    "version": "84.0.0",
+    "license": "MIT",
+    "notices": [
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/LICENSE",
+      "python/setuptools/LICENSE",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/LICENSE",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/licenses/LICENSE.APACHE",
+      "python/setuptools/licenses/LICENSE.BSD",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/licenses/LICENSE.txt",
+      "python/setuptools/licenses/LICENSE",
+      "python/setuptools/NOTICE",
+      "python/setuptools/NOTICE"
+    ]
+  },
+  {
+    "name": "sympy",
+    "version": "1.14.0",
+    "license": "BSD",
+    "notices": [
+      "python/sympy/licenses/AUTHORS",
+      "python/sympy/licenses/LICENSE",
+      "python/sympy/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "tokenizers",
+    "version": "0.23.2",
+    "license": null,
+    "notices": [
+      "python/tokenizers/LICENSE"
+    ]
+  },
+  {
+    "name": "torch",
+    "version": "2.8.0",
+    "license": "BSD-3-Clause",
+    "notices": [
+      "python/torch/licenses/LICENSE",
+      "python/torch/licenses/NOTICE"
+    ]
+  },
+  {
+    "name": "tqdm",
+    "version": "4.70.1",
+    "license": "MPL-2.0 AND MIT",
+    "notices": [
+      "python/tqdm/licenses/LICENCE"
+    ]
+  },
+  {
+    "name": "transformers",
+    "version": "5.17.0",
+    "license": "Apache 2.0 License",
+    "notices": [
+      "python/transformers/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "typing-inspection",
+    "version": "0.4.4",
+    "license": "MIT",
+    "notices": [
+      "python/typing-inspection/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "typing_extensions",
+    "version": "4.16.0",
+    "license": "PSF-2.0",
+    "notices": [
+      "python/typing_extensions/licenses/LICENSE"
+    ]
+  }
+]

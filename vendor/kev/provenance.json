@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/jaredpalmer/kev",
+  "revision": "84847f0a883d900f7de5b7a57eaa341ca7f9a6b4",
+  "license": "Apache-2.0",
+  "changes": "Unmodified inference modules only; local MLX loader is implemented in worker/kev_ranker.py."
+}

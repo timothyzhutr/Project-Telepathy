@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/rime/squirrel",
+  "revision": "0cd71a6130a5866b0ae6ba0494929ebdc8211194",
+  "license": "GPL-3.0",
+  "changes": "Telepathy input source, isolated profile, asynchronous Kev ranking"
+}
