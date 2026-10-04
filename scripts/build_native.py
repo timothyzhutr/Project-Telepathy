@@ -56,7 +56,7 @@ def main():
     run('codesign','--force','--sign','-',APP);run('codesign','--verify','--deep','--strict',APP)
     run(contents/'MacOS/Telepathy','--verify-runtime')
     for name in ('Install Telepathy.command','Download Kev Model.command'):shutil.copy2(ROOT/'packaging'/name,ROOT/'dist'/name)
-    for name in ('README.md','CREDITS.md','LICENSE'):shutil.copy2(ROOT/name,ROOT/'dist'/name)
+    for name in ('README.md','README.zh-CN.md','CREDITS.md','LICENSE'):shutil.copy2(ROOT/name,ROOT/'dist'/name)
     # The release's README uses the same relative images as GitHub.
     for name in ('assets/branding/Telepathy-128.png','docs/images/telepathy-native-demo.png'):
         target=ROOT/'dist'/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/name,target)

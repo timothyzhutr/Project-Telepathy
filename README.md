@@ -1,5 +1,7 @@
 # Project Telepathy
 
+**English** · [简体中文](README.zh-CN.md)
+
 <img src="assets/branding/Telepathy-128.png" alt="Telepathy icon" width="80" height="80">
 
 **Chinese typing with a little more context.**
