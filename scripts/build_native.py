@@ -1,7 +1,7 @@
 """Assemble an Apple Silicon app from the active dependency closure."""
 import json,plistlib,shutil,subprocess
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];BUILD=ROOT/'.build';APP=ROOT/'dist/Telepathy.app';VERSION='0.1.9'
+ROOT=Path(__file__).resolve().parents[1];BUILD=ROOT/'.build';APP=ROOT/'dist/Telepathy.app';VERSION='0.1.10'
 def run(*args):subprocess.run(list(map(str,args)),check=True,cwd=ROOT)
 def main():
     dist=BUILD/'rime/dist';source=ROOT/'native';stock=BUILD/'squirrel-package/Payload/Squirrel.app/Contents'

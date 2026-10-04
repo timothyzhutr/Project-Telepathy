@@ -191,6 +191,21 @@ private final class TestHealthProtocol: URLProtocol {
       app.sendAction(action, to: control.target, from: control)
     }
     let rows = control("settings.rows", NSPopUpButton.self)
+    let rankCount = control("settings.rankCount", NSPopUpButton.self)
+    let shownCount = control("settings.shownCount", NSPopUpButton.self)
+    guard rankCount.selectedTag() == 12, shownCount.selectedTag() == 6 else {
+      fatalError("Fresh settings must rank twelve candidates and show six")
+    }
+    rankCount.selectItem(withTag: 3); change(rankCount)
+    shownCount.selectItem(withTag: 9); change(shownCount)
+    guard defaults.integer(forKey: "TelepathyCandidatesToRank") == 3,
+          defaults.integer(forKey: "TelepathyCandidatesToShow") == 9 else {
+      fatalError("Ranking and display counts must persist independently")
+    }
+    delegate.openSettings()
+    guard rankCount.selectedTag() == 3, shownCount.selectedTag() == 9 else {
+      fatalError("Reopening Settings must retain both candidate counts")
+    }
     let strategy = control("settings.rankingStrategy", NSPopUpButton.self)
     guard strategy.indexOfSelectedItem == 0, TelepathyPreferences.shared.rankingStrategy == "continuation" else {
       fatalError("Context prediction must be the default ranking strategy")
@@ -250,6 +265,9 @@ private final class TestHealthProtocol: URLProtocol {
           font.intValue == 16, automatic.state == .off, punctuation.state == .on,
           strategy.indexOfSelectedItem == 0, defaults.object(forKey: "TelepathyRankingStrategy") == nil,
           TelepathyPreferences.shared.rankingStrategy == "continuation",
+          rankCount.selectedTag() == 12, shownCount.selectedTag() == 6,
+          defaults.object(forKey: "TelepathyCandidatesToRank") == nil,
+          defaults.object(forKey: "TelepathyCandidatesToShow") == nil,
           defaults.object(forKey: "TelepathyAutoLanguage") == nil,
           defaults.string(forKey: "UnrelatedPreference") == "preserve" else {
       fatalError("Restoring defaults must refresh controls and preserve unrelated preferences")

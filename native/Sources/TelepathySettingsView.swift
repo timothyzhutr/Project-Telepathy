@@ -8,6 +8,8 @@ final class TelepathySettingsView: NSView {
   private let preferences: TelepathyPreferences
   private let bundle: Bundle
   private let rows = NSPopUpButton()
+  private let rankCount = NSPopUpButton()
+  private let shownCount = NSPopUpButton()
   private let font = NSSlider(value: 16, minValue: 12, maxValue: 28, target: nil, action: nil)
   private let fontLabel = NSTextField(labelWithString: "16 pt")
   private let appearancePopup = NSPopUpButton()
@@ -77,13 +79,21 @@ final class TelepathySettingsView: NSView {
       add(button)
     }
     heading("Candidate window")
+    for count in TelepathyPreferences.countOptions {
+      for popup in [shownCount, rankCount] {
+        popup.addItem(withTitle: "\(count)"); popup.lastItem?.tag = count
+      }
+    }
+    shownCount.identifier = .init("settings.shownCount"); shownCount.target = self; shownCount.action = #selector(changeShownCount(_:))
+    row("Candidates to show", shownCount)
+    note("Maximum candidates on each displayed page. Page Down or = reveals more; Page Up or − goes back.")
     for value in TelepathyPreferences.rowOptions {
       rows.addItem(withTitle: value == 0 ? "Automatic" : "\(value)")
       rows.lastItem?.tag = value
     }
     rows.identifier = .init("settings.rows"); rows.target = self; rows.action = #selector(changeRows(_:))
     row("Candidates per row", rows)
-    note("All 12 candidates remain available. Long phrases may wrap when they need more room.")
+    note("Controls the layout of the visible candidates. Long phrases may wrap when they need more room.")
     font.identifier = .init("settings.font"); font.target = self; font.action = #selector(changeFont(_:))
     font.isContinuous = true; font.numberOfTickMarks = 9
     font.widthAnchor.constraint(equalToConstant: 220).isActive = true
@@ -111,6 +121,9 @@ final class TelepathySettingsView: NSView {
     heading("Typing")
     checkbox("Enable Kev assistance", .kev)
     note("Kev ranks candidates locally using preceding text. Turning assistance off stops the helper to free memory. Turning it on reloads the model while ordinary pinyin typing remains available.")
+    rankCount.identifier = .init("settings.rankCount"); rankCount.target = self; rankCount.action = #selector(changeRankCount(_:))
+    row("Candidates to rank", rankCount)
+    note("Ranks up to this many candidates from Rime's first page, then shows the best ones. Remaining candidates keep their original order. A smaller pool can reduce scoring work but may miss a better word. With 1, there is no choice to rerank.")
     rankingPopup.addItems(withTitles: ["Context prediction (default)", "Kev decision ranking"])
     rankingPopup.identifier = .init("settings.rankingStrategy"); rankingPopup.target = self; rankingPopup.action = #selector(changeRanking(_:))
     row("Ranking method", rankingPopup)
@@ -144,17 +157,22 @@ final class TelepathySettingsView: NSView {
 
   func reload() {
     rows.selectItem(withTag: preferences.candidatesPerRow)
+    rankCount.selectItem(withTag: preferences.candidatesToRank)
+    shownCount.selectItem(withTag: preferences.candidatesToShow)
+    rankCount.isEnabled = preferences.enabled(.kev)
     font.doubleValue = Double(preferences.fontSize); fontLabel.stringValue = "\(preferences.fontSize) pt"
     appearancePopup.selectItem(at: ["system", "light", "dark"].firstIndex(of: preferences.appearance) ?? 0)
     rankingPopup.selectItem(at: preferences.rankingStrategy == "kev" ? 1 : 0)
     rankingPopup.isEnabled = preferences.enabled(.kev)
     assistanceEnabled = preferences.enabled(.kev)
     toggles.forEach { $0.value.state = preferences.enabled($0.key) ? .on : .off }
-    let samples = ["你好", "拟好", "你号", "倪好", "泥好", "你好啊"]
+    let samples = ["你好", "拟好", "你号", "倪好", "泥好", "你好啊", "您好", "你好呀", "你好吗", "你好吧", "你好哦", "你好呢"].prefix(preferences.candidatesToShow)
     preview.font = .systemFont(ofSize: CGFloat(preferences.fontSize))
     preview.stringValue = samples.enumerated().map { preferences.separator(before: $0.offset, linear: true) + "\($0.offset + 1). \($0.element)" }.joined()
   }
   @objc private func changeRows(_ sender: NSPopUpButton) { preferences.set(sender.selectedTag(), for: .rows) }
+  @objc private func changeRankCount(_ sender: NSPopUpButton) { preferences.set(sender.selectedTag(), for: .rankCount) }
+  @objc private func changeShownCount(_ sender: NSPopUpButton) { preferences.set(sender.selectedTag(), for: .shownCount) }
   @objc private func changeFont(_ sender: NSSlider) { preferences.set(Int(sender.doubleValue.rounded()), for: .font) }
   @objc private func changeAppearance(_ sender: NSPopUpButton) { preferences.set(["system", "light", "dark"][sender.indexOfSelectedItem], for: .appearance) }
   @objc private func changeRanking(_ sender: NSPopUpButton) { preferences.set(sender.indexOfSelectedItem == 1 ? "kev" : "continuation", for: .rankingStrategy) }

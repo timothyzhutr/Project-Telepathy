@@ -10,6 +10,9 @@ private final class IntentProtocol: URLProtocol {
   static var delay = 0.01
   static var failLanguage = false
   static var lastRankingStrategy: String?
+  static var lastRankCandidates = [String]()
+  static var lastLanguageCandidates = [String]()
+  static var reverseRanking = false
   private var work: DispatchWorkItem?
   override class func canInit(with request: URLRequest) -> Bool {
     request.url?.path == "/api/language" || request.url?.path == "/api/decision"
@@ -28,10 +31,13 @@ private final class IntentProtocol: URLProtocol {
     }
     let body = (try! JSONSerialization.jsonObject(with: data)) as! [String: Any]
     let isRank = request.url!.path == "/api/decision"
-    if isRank { Self.rankCalls += 1; Self.lastRankingStrategy = body["strategy"] as? String }
-    else { Self.languageCalls += 1 }
+    if isRank {
+      Self.rankCalls += 1; Self.lastRankingStrategy = body["strategy"] as? String
+      Self.lastRankCandidates = body["candidates"] as! [String]
+    }
+    else { Self.languageCalls += 1; Self.lastLanguageCandidates = body["candidates"] as! [String] }
     let result: [String: Any] = isRank
-      ? ["status": "ok", "revision": body["revision"]!, "order": Array(0..<(body["candidates"] as! [String]).count), "ranked": false]
+      ? ["status": "ok", "revision": body["revision"]!, "order": Self.reverseRanking ? Array((0..<(body["candidates"] as! [String]).count).reversed()) : Array(0..<(body["candidates"] as! [String]).count), "ranked": false]
       : ["status": "ok", "revision": body["revision"]!, "language": (body["prefix"] as! String).hasPrefix("中文") ? "chinese" : "english"]
     let status = !isRank && Self.failLanguage ? 500 : 200
     let work = DispatchWorkItem { [weak self] in
@@ -250,6 +256,117 @@ enum ControllerEventTests {
     check(client.text == "中文句子,", "Rime's manual ASCII punctuation shortcut must take precedence")
     key("#", code: 20, flags: [.control, .shift])
     controller.deactivateServer(client)
+    controller.activateServer(client)
+    let defaults = UserDefaults.standard
+    defaults.set(12, forKey: "TelepathyCandidatesToRank")
+    defaults.set(6, forKey: "TelepathyCandidatesToShow")
+    TelepathyPreferences.shared.set(false, for: .autoLanguage)
+    controller.preferencesDidChange()
+    IntentProtocol.reverseRanking = true
+    func renderedCandidates() -> String {
+      func findText(_ view: NSView) -> NSTextView? {
+        if let text = view as? NSTextView { return text }
+        return view.subviews.compactMap(findText).first
+      }
+      return findText(delegate.panel!.contentView!)!.textContentStorage?.attributedString?.string ?? ""
+    }
+    func typeLe() {
+      client.text = "中文："; key("l"); key("e"); wait(0.25)
+    }
+    typeLe()
+    let all = IntentProtocol.lastRankCandidates
+    check(all.count == 12, "The ranking pool must remain twelve while only six are shown")
+    let reversed = Array(all.reversed())
+    check(reversed.prefix(6).allSatisfy { renderedCandidates().contains($0) } &&
+          reversed.suffix(6).allSatisfy { !renderedCandidates().contains($0) },
+          "The panel must show only the six best candidates after ranking")
+    let beforeHiddenKey = client.text
+    let beforeHiddenMarked = client.marked
+    key("7", code: 26)
+    check(client.text == beforeHiddenKey && !client.marked.isEmpty,
+          "A number key must never select a hidden candidate")
+    key("7", code: 89, flags: .numericPad)
+    check(client.text == beforeHiddenKey && client.marked == beforeHiddenMarked,
+          "A numeric keypad key must never select a hidden candidate")
+    check(!controller.selectCandidate(6), "Clicks outside the displayed page must be rejected")
+    for _ in 0..<10 { key("\u{f701}", code: 125) }
+    key(" ", code: 49)
+    check(client.text == "中文：" + reversed[5], "Arrow navigation must stop at the last visible candidate")
+    typeLe(); key("c", code: 8, flags: .command)
+    key("7", code: 26)
+    check(client.text == "中文：" && !client.marked.isEmpty, "A Command shortcut must not allow hidden candidate selection afterward")
+    key("1", code: 18)
+    check(client.text == "中文：" + reversed[0], "A Command shortcut must preserve the displayed selection mapping")
+    typeLe()
+    check(key("=", code: 24), "The paging shortcut must reveal the rest of the ranking pool")
+    check(reversed.suffix(6).allSatisfy { renderedCandidates().contains($0) } &&
+          reversed.prefix(6).allSatisfy { !renderedCandidates().contains($0) },
+          "Paging must reveal candidates seven to twelve without skipping them")
+    key("1", code: 18)
+    check(client.text == "中文：" + reversed[6], "Number selection on the second displayed page must use its own mapping")
+    typeLe(); key("=", code: 24); key("-", code: 78, flags: .numericPad)
+    check(reversed.prefix(6).allSatisfy { renderedCandidates().contains($0) }, "Keypad minus must page back within the ranked pool")
+    key("=", code: 24); key("1", code: 83, flags: .numericPad)
+    check(client.text == "中文：" + reversed[6], "Keypad selection must use the currently displayed candidate mapping")
+    defaults.set(3, forKey: "TelepathyCandidatesToRank")
+    controller.preferencesDidChange()
+    typeLe()
+    check(IntentProtocol.lastRankCandidates == Array(all.prefix(3)), "The worker must receive only the configured ranking pool")
+    let limited = Array(all.prefix(3).reversed()) + Array(all[3..<6])
+    check(limited.allSatisfy { renderedCandidates().contains($0) } &&
+          all.suffix(6).allSatisfy { !renderedCandidates().contains($0) },
+          "Showing more than are ranked must keep remaining candidates in native order")
+    controller.commitComposition(client)
+    TelepathyPreferences.shared.set(true, for: .autoLanguage)
+    controller.preferencesDidChange()
+    typeLe()
+    check(IntentProtocol.lastLanguageCandidates == all && IntentProtocol.lastRankCandidates.count == 3,
+          "A small ranking budget must not reduce the Chinese/English routing evidence")
+    controller.commitComposition(client)
+    client.text = "I think "; key("h"); key("e"); wait()
+    key("1", code: 83, flags: .numericPad)
+    check(client.text == "I think he1", "An English word followed by a keypad digit must commit raw English and pass the digit to the host")
+    key(" ", code: 49)
+    TelepathyPreferences.shared.set(false, for: .autoLanguage)
+    defaults.set(12, forKey: "TelepathyCandidatesToRank")
+    defaults.set(1, forKey: "TelepathyCandidatesToShow")
+    controller.preferencesDidChange()
+    typeLe()
+    check(renderedCandidates().contains(reversed[0]) && !renderedCandidates().contains(reversed[1]), "A display count of one must show only the highest-ranked word")
+    key("2", code: 19)
+    check(client.text == "中文：", "Hidden number keys must be ignored even with one visible candidate")
+    check(controller.page(up: false), "A single visible choice must still allow paging")
+    key(" ", code: 49)
+    check(client.text == "中文：" + reversed[1], "Space must commit the candidate on the current displayed page")
+    defaults.set(5, forKey: "TelepathyCandidatesToShow")
+    controller.preferencesDidChange()
+    typeLe()
+    key("\u{f72d}", code: 121); key("\u{f72d}", code: 121)
+    check(reversed.suffix(2).allSatisfy { renderedCandidates().contains($0) } &&
+          reversed.prefix(10).allSatisfy { !renderedCandidates().contains($0) },
+          "Page Down must reach the short final display page")
+    check(controller.page(up: false), "After exhausting the pool, paging must reach the next Rime page")
+    check(controller.page(up: true), "Paging back from another Rime page must succeed")
+    check(all.suffix(2).allSatisfy { renderedCandidates().contains($0) } &&
+          all.prefix(10).allSatisfy { !renderedCandidates().contains($0) },
+          "Returning from another Rime page must restore its previous last display page")
+    key("1", code: 18)
+    check(client.text == "中文：" + all[10], "Selection after crossing a Rime page boundary must use the displayed word")
+    defaults.set(6, forKey: "TelepathyCandidatesToShow")
+    TelepathyPreferences.shared.set(false, for: .kev)
+    controller.preferencesDidChange()
+    let callsBeforeOff = IntentProtocol.rankCalls
+    typeLe()
+    check(all.prefix(6).allSatisfy { renderedCandidates().contains($0) } &&
+          all.suffix(6).allSatisfy { !renderedCandidates().contains($0) } && IntentProtocol.rankCalls == callsBeforeOff,
+          "The display limit must also apply when model assistance is off")
+    check(controller.page(up: false) && controller.page(up: true), "Display paging must work without model assistance")
+    key("1", code: 18)
+    check(client.text == "中文：" + all[0], "Paging back must restore the visible native selection mapping")
+    controller.deactivateServer(client)
+    IntentProtocol.reverseRanking = false
+    defaults.removeObject(forKey: "TelepathyCandidatesToRank")
+    defaults.removeObject(forKey: "TelepathyCandidatesToShow")
     print("PASS: actual controller language commits, contextual punctuation, technical text, settings and skipped inference")
   }
 }

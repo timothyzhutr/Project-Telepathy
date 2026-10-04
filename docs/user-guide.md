@@ -21,13 +21,17 @@ Telepathy is ad-hoc signed, **not Apple-notarized**. macOS may block a downloade
 
 ## Typing and settings
 
-Type pinyin normally. Space chooses the highlighted candidate; number keys and the native candidate panel select words. Kev ranks up to 12 candidates on the current page. Candidates consuming less input than Rime's first candidate stay behind that group. Manual navigation freezes the current list until the input changes.
+Type pinyin normally. Space chooses the highlighted candidate; number keys and the native candidate panel select visible words. By default, the model ranks up to 12 candidates from Rime's first page and shows six at a time. Candidates consuming less input than Rime's first candidate stay behind that group within the ranking pool. Manual navigation freezes the current list until the input changes.
+
+Use **Page Down or =** to reveal more choices and **Page Up or -** to go back. Paging reveals the remainder of the current Rime page before moving to another native page; later native pages retain Rime's order. Number labels start again on each displayed page, and Up/Down stay within its visible choices. A number key without a visible candidate is ignored.
 
 The input-source menu includes **Kev assistance**, which switches ranking on/off. Rime's statistical grammar continues to work when Kev assistance is off. No personal dictionary learning is enabled. No typed text is written to the worker log or sent to a cloud API. In applications that do not expose preceding text, the IME uses limited text committed during the current session; contextual quality can be lower.
 
 **Settings…** opens Telepathy's native settings panel above the app you're typing in. Close it with the window button or ⌘W. Preferences save automatically and apply to the candidate panel:
 
-- Candidates per row: automatic, 1, 2, 3, 4, 6 or 12. All 12 candidates remain available; long phrases can wrap.
+- Candidates to show: **6 by default**, adjustable from 1–12. This is the total visible on each displayed page, including when model assistance is off. Paging keeps the other candidates accessible.
+- Candidates to rank: **12 by default**, adjustable from 1–12. The worker receives up to this many candidates from Rime's first page; candidates outside that pool stay in their original order after it. Showing more than are ranked is allowed. A smaller pool can reduce scoring work but excludes potential matches; 1 leaves no choice to rerank. Chinese/English routing still considers the full native candidate pool.
+- Candidates per row: automatic, 1, 2, 3, 4, 6 or 12. This controls layout independently of the display total; long phrases can wrap.
 - Text size (12–28 pt) and appearance (follow system, light or dark).
 - Inline pinyin, candidate annotations, Kev timing and the Chinese / English menu-bar status icon.
 - Kev assistance and Chinese punctuation.

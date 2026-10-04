@@ -19,7 +19,7 @@ def make_server(port,service,health=None,reload_model=None):
         def do_GET(self):
             if not self.allowed(): return
             if self.path!='/api/health': self.send(404,{'error':'Unknown endpoint'});return
-            self.send(200,dict(app='Telepathy',version='0.1.9',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
+            self.send(200,dict(app='Telepathy',version='0.1.10',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
         def do_POST(self):
             if not self.allowed(): return
             if self.path not in ('/api/decision','/api/language','/api/reload','/api/shutdown'): self.send(404,{'error':'Unknown endpoint'});return

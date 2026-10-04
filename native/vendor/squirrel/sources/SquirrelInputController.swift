@@ -32,6 +32,7 @@ final class SquirrelInputController: IMKInputController {
   private var rankingDelay: DispatchWorkItem?
   private var rankingNote = ""
   private var compositionPrefix = ""
+  private var refreshContextOnEdit = false
   private var fallbackHistory = ""
   private var displayedHighlight = 0
   private var rankingEnabled: Bool { TelepathyPreferences.shared.enabled(.kev) }
@@ -122,7 +123,10 @@ final class SquirrelInputController: IMKInputController {
       // Let client apps handle Command shortcuts.
       if modifiers.contains(.command) {
         if intent.english { commitPendingLiteral() }
-        invalidateRanking()
+        rankingDelay?.cancel(); rankingDelay = nil
+        ranking.freeze()
+        intent.invalidate(revision: ranking.revision)
+        refreshContextOnEdit = true
         fallbackHistory = ""
         break
       }
@@ -135,9 +139,27 @@ final class SquirrelInputController: IMKInputController {
         keyChars = event.characters
       }
       if let char = keyChars?.first {
-        let rimeKeycode = SquirrelKeycode.osxKeycodeToRime(keycode: keyCode, keychar: char,
+        var rimeKeycode = SquirrelKeycode.osxKeycodeToRime(keycode: keyCode, keychar: char,
                                                            shift: modifiers.contains(.shift),
                                                            caps: modifiers.contains(.capsLock))
+        // Match the active profile's keypad bindings before Auto routing and
+        // visible-candidate selection, so neither can bypass the display map.
+        if !ranking.order.isEmpty || intent.english {
+          if (UInt32(XK_KP_0)...UInt32(XK_KP_9)).contains(rimeKeycode) {
+            rimeKeycode = 48 + rimeKeycode - UInt32(XK_KP_0)
+          } else {
+            switch rimeKeycode {
+            case UInt32(XK_KP_Subtract): rimeKeycode = 45
+            case UInt32(XK_KP_Equal): rimeKeycode = 61
+            case UInt32(XK_KP_Add): rimeKeycode = 43
+            case UInt32(XK_KP_Decimal): rimeKeycode = 46
+            case UInt32(XK_KP_Divide): rimeKeycode = 47
+            case UInt32(XK_KP_Multiply): rimeKeycode = 42
+            case UInt32(XK_KP_Enter): rimeKeycode = UInt32(XK_Return)
+            default: break
+            }
+          }
+        }
         if rimeKeycode != 0 {
           if let result = handleAutoKey(rimeKeycode, modifiers: modifiers) { return result }
           let rimeModifiers = SquirrelKeycode.osxModifiersToRime(modifiers: modifiers)
@@ -154,8 +176,8 @@ final class SquirrelInputController: IMKInputController {
   }
 
   func selectCandidate(_ index: Int) -> Bool {
+    guard let native = ranking.nativeIndex(index) else { return false }
     freezeRanking()
-    let native = ranking.nativeIndex(index) ?? index
     let success = rimeAPI.select_candidate_on_current_page(session, native)
     if success {
       rimeUpdate()
@@ -165,13 +187,19 @@ final class SquirrelInputController: IMKInputController {
 
   // swiftlint:disable:next identifier_name
   func page(up: Bool) -> Bool {
-    intent.forceChinese()
-    var handled = false
-    handled = rimeAPI.change_page(session, up)
-    if handled {
-      rimeUpdate()
+    freezeRanking()
+    if ranking.page(up: up) {
+      _ = rimeAPI.highlight_candidate_on_current_page(session, ranking.nativeIndex(0)!)
+      rimeUpdate(clearReservedComments: false)
+      return true
     }
-    return handled
+    guard rimeAPI.change_page(session, up) else { return false }
+    rimeUpdate()
+    if up { ranking.lastDisplayPage() }
+    freezeRanking()
+    if let native = ranking.nativeIndex(0) { _ = rimeAPI.highlight_candidate_on_current_page(session, native) }
+    rimeUpdate(clearReservedComments: false)
+    return true
   }
 
   func moveCaret(forward: Bool) -> Bool {
@@ -562,11 +590,16 @@ private extension SquirrelInputController {
           freezeRanking()
           return rimeAPI.select_candidate_on_current_page(session, native)
         }
+        return true
+      }
+      if rimeKeycode == UInt32(XK_Page_Up) || rimeKeycode == UInt32(XK_Page_Down) || rimeKeycode == 45 || rimeKeycode == 61 {
+        _ = page(up: rimeKeycode == UInt32(XK_Page_Up) || rimeKeycode == 45)
+        return true
       }
       if rimeKeycode == UInt32(XK_Up) || rimeKeycode == UInt32(XK_Down) {
         freezeRanking()
         let step = rimeKeycode == UInt32(XK_Up) ? -1 : 1
-        displayedHighlight = max(0, min(ranking.order.count - 1, displayedHighlight + step))
+        displayedHighlight = max(0, min(ranking.visibleOrder.count - 1, displayedHighlight + step))
         if let native = ranking.nativeIndex(displayedHighlight) {
           return rimeAPI.highlight_candidate_on_current_page(session, native)
         }
@@ -741,32 +774,38 @@ private extension SquirrelInputController {
       let caret = Int(rimeAPI.get_caret_pos(session))
       let nativeHighlight = Int(ctx.menu.highlighted_candidate_index)
       let signature = "\(raw)|\(confirmed)|\(caret)|\(page)|" + candidates.joined(separator: "\u{1f}")
-      if raw.isEmpty || candidates.isEmpty || !rankingEnabled {
+      if candidates.isEmpty {
         invalidateRanking()
         compositionPrefix = ""
-      } else if page != 0 {
-        invalidateRanking(resetIntent: false)
-        intent.update(raw: raw, revision: ranking.revision)
-        intent.forceChinese()
       } else if signature != ranking.key {
         let wasEmpty = ranking.key.isEmpty
         invalidateRanking(resetIntent: false)
-        if wasEmpty { compositionPrefix = precedingText() }
-        let revision = ranking.reset(key: signature, count: candidates.count)
+        if wasEmpty || refreshContextOnEdit {
+          compositionPrefix = precedingText(); refreshContextOnEdit = false
+        }
+        let preferences = TelepathyPreferences.shared
+        let rankCount = rankingEnabled && page == 0 && !raw.isEmpty ? min(preferences.candidatesToRank, candidates.count) : 0
+        let revision = ranking.reset(key: signature, count: candidates.count, rankedCount: rankCount, shownCount: preferences.candidatesToShow)
         intent.update(raw: raw, revision: revision)
         let snapshotWords = candidates
         var ends = [Int32](repeating: -1, count: candidates.count)
         ends.withUnsafeMutableBufferPointer { tp_candidate_ends(session, Int32(candidates.count), $0.baseAddress) }
         let prefix = String((compositionPrefix + confirmed).suffix(512))
-        let payload: [String: Any] = ["revision": revision, "prefix": prefix, "pinyin": raw, "pending": pending,
+        let languagePayload: [String: Any] = ["revision": revision, "prefix": prefix, "pinyin": raw, "pending": pending,
                                     "candidates": snapshotWords, "candidate_ends": ends.map(Int.init),
                                     "strategy": TelepathyPreferences.shared.rankingStrategy]
+        var payload = languagePayload
+        payload["candidates"] = Array(snapshotWords.prefix(rankCount))
+        payload["candidate_ends"] = Array(ends.prefix(rankCount)).map(Int.init)
         let data = try? JSONSerialization.data(withJSONObject: payload)
         let deadline = DispatchTime.now() + 0.085
-        if automaticLanguageEnabled && confirmed.isEmpty && caret == raw.utf8.count, let data {
+        if rankCount == 0 {
+          intent.forceChinese()
+        } else if automaticLanguageEnabled && confirmed.isEmpty && caret == raw.utf8.count, let data,
+                  let languageData = try? JSONSerialization.data(withJSONObject: languagePayload) {
           // Start during the existing ranking debounce. Replies can only change
           // the current uncommitted snapshot and cannot override manual choices.
-          DecisionTransport.language.submit(data) { [weak self] result in
+          DecisionTransport.language.submit(languageData) { [weak self] result in
             guard let self, self.automaticLanguageEnabled, !self.ranking.frozen,
                   self.ranking.revision == revision else { return }
             let language = result?["status"] as? String == "ok" ? result?["language"] as? String ?? "uncertain" : "uncertain"
@@ -789,19 +828,23 @@ private extension SquirrelInputController {
         _ = rimeAPI.free_context(&ctx)
         return
       }
-      var shownHighlight = nativeHighlight
+      var shownHighlight = 0
       if ranking.order.count == candidates.count {
         let nativeWords = candidates, nativeComments = comments
-        candidates = ranking.order.map { nativeWords[$0] }
-        comments = ranking.order.map { nativeComments[$0] }
+        candidates = ranking.visibleOrder.map { nativeWords[$0] }
+        comments = ranking.visibleOrder.map { nativeComments[$0] }
         shownHighlight = ranking.displayIndex(nativeHighlight) ?? 0
-        if TelepathyPreferences.shared.enabled(.timing), !rankingNote.isEmpty && !comments.isEmpty { comments[0] = rankingNote }
+        if ranking.displayIndex(nativeHighlight) == nil, let native = ranking.nativeIndex(0) {
+          _ = rimeAPI.highlight_candidate_on_current_page(session, native)
+        }
+        if TelepathyPreferences.shared.enabled(.timing), !rankingNote.isEmpty && !comments.isEmpty && ranking.displayPage == 0 { comments[0] = rankingNote }
       }
       displayedHighlight = shownHighlight
       let selRange = NSRange(location: start.utf16Offset(in: preedit), length: preedit.utf16.distance(from: start, to: end))
       showPanel(preedit: inlinePreedit ? "" : preedit, selRange: selRange, caretPos: caretPos.utf16Offset(in: preedit),
                 candidates: candidates, comments: comments, labels: labels, highlighted: shownHighlight,
-                page: page, lastPage: lastPage)
+                page: page * ((Int(ctx.menu.page_size) + ranking.displayLimit - 1) / ranking.displayLimit) + ranking.displayPage,
+                lastPage: lastPage && !ranking.hasNextDisplayPage)
       _ = rimeAPI.free_context(&ctx)
     } else {
       hidePalettes()

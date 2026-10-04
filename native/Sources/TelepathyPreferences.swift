@@ -13,13 +13,21 @@ final class TelepathyPreferences {
     case statusIcon = "TelepathyStatusIcon", kev = "KevEnabled", autoLanguage = "TelepathyAutoLanguage"
     case autoPunctuation = "TelepathyAutoPunctuation"
     case rankingStrategy = "TelepathyRankingStrategy"
+    case rankCount = "TelepathyCandidatesToRank", shownCount = "TelepathyCandidatesToShow"
   }
   static let rowOptions = [0, 1, 2, 3, 4, 6, 12]
+  static let countOptions = Array(1...12)
   let defaults: UserDefaults
   init(defaults: UserDefaults = .standard) { self.defaults = defaults }
   var candidatesPerRow: Int {
     let value = defaults.integer(forKey: Key.rows.rawValue)
     return Self.rowOptions.contains(value) ? value : 0
+  }
+  var candidatesToRank: Int { candidateCount(.rankCount, fallback: 12) }
+  var candidatesToShow: Int { candidateCount(.shownCount, fallback: 6) }
+  private func candidateCount(_ key: Key, fallback: Int) -> Int {
+    let value = defaults.integer(forKey: key.rawValue)
+    return Self.countOptions.contains(value) ? value : fallback
   }
   var fontSize: Int {
     guard let value = defaults.object(forKey: Key.font.rawValue) as? NSNumber,
