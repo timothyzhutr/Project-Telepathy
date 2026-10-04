@@ -58,7 +58,7 @@ By default, Telepathy **ranks up to 12 candidates and shows six per page**. **Ca
 
 Auto mode keeps confident English input literal and gives Chinese or uncertain input the usual candidate choices. Press **↓ or Tab** to bring back Chinese choices for the current word, or **Shift + a letter** to start literal English until the next space. Short words and limited context can still be ambiguous.
 
-See the [user guide](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md) for all settings, punctuation behavior and keyboard details.
+The model ranks candidates supplied by Rime/万象. Wanxiang can offer word and phrase completions, and the model may move a longer completion higher; it does not generate new phrases itself. Context prediction may still promote a poor match when all candidates are unsuitable. With no usable preceding context, it retains Rime's order. See the [user guide](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md) for all settings, punctuation behavior and keyboard details.
 
 ## Privacy and resources
 
@@ -66,7 +66,7 @@ Typing context is processed locally. Telepathy does not send it to a cloud API o
 
 Kev runs on the Apple GPU through MLX, with **MXFP8 weights by default** to reduce memory use. Backbone weights occupy about **0.78 GB**; total memory usage is higher because of caches, the inference runtime and other model components. Turning assistance off stops the helper and releases its memory. Turning it back on reloads the model while ordinary pinyin typing remains available. Candidates appear immediately while model decisions run asynchronously.
 
-Some apps expose less surrounding text than others, which can reduce contextual accuracy. [Resource and prediction details](https://github.com/timothyzhutr/Project-Telepathy/blob/main/experiments/prediction/README.md) include measurements and known limitations.
+The model uses up to 100 model tokens before the cursor where you begin composing, excluding text after it. If an app does not expose preceding text, Telepathy falls back to text recently typed through the input method, which can reduce accuracy. [Resource and prediction details](https://github.com/timothyzhutr/Project-Telepathy/blob/main/experiments/prediction/README.md) include measurements and known limitations.
 
 ## Development
 

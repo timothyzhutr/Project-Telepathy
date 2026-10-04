@@ -68,7 +68,7 @@ Auto 模式在判断较有把握时保留英文原文；中文或不确定的输
 
 Kev 通过 MLX 在 Apple GPU 上运行，默认使用 **MXFP8 权重量化**。骨干模型权重约占 **0.78 GB**；缓存、推理运行时及其他模型组件还会占用额外内存。关闭辅助功能会停止模型进程并释放其内存。候选先显示，模型排序异步进行，无需等模型返回才能选词。
 
-部分应用提供的光标前文较少，可能影响上下文判断。更多测量结果和已知限制见[资源与预测说明（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/experiments/prediction/README.md)。
+模型使用开始输入时光标前最多 100 个模型 token 的文字，不使用光标后的内容。应用无法提供前文时，会使用近期通过 Telepathy 输入的文字，判断可能不够准确。更多测量结果和已知限制见[资源与预测说明（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/experiments/prediction/README.md)。
 
 ## 参与开发
 
