@@ -11,6 +11,7 @@ final class TelepathyPreferences {
     case inlinePinyin = "TelepathyInlinePinyin", annotations = "TelepathyAnnotations"
     case timing = "TelepathyRankingTiming", punctuation = "TelepathyChinesePunctuation"
     case statusIcon = "TelepathyStatusIcon", kev = "KevEnabled", autoLanguage = "TelepathyAutoLanguage"
+    case autoPunctuation = "TelepathyAutoPunctuation"
   }
   static let rowOptions = [0, 1, 2, 3, 4, 6, 12]
   let defaults: UserDefaults

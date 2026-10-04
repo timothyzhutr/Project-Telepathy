@@ -222,6 +222,12 @@ private final class TestHealthProtocol: URLProtocol {
     guard defaults.object(forKey: "TelepathyAutoLanguage") as? Bool == true else {
       fatalError("Automatic Chinese / English typing must be available as a saved opt-in setting")
     }
+    let punctuation = control("settings.TelepathyAutoPunctuation", NSButton.self)
+    guard punctuation.state == .on else { fatalError("Automatic punctuation must default on within Auto mode") }
+    punctuation.state = .off; change(punctuation)
+    guard defaults.object(forKey: "TelepathyAutoPunctuation") as? Bool == false else {
+      fatalError("Automatic punctuation preference must persist")
+    }
     delegate.openSettings()
     guard tabs.selectedTabViewItem?.label == "Settings", app.windows.filter({ $0.title == window.title }).count == 1 else {
       fatalError("Settings must open in the retained credits window")
@@ -230,7 +236,7 @@ private final class TestHealthProtocol: URLProtocol {
     let reset = descendants(tabs.tabViewItems[0].view!, of: NSButton.self).first(where: { $0.title == "Restore default settings" })!
     change(reset)
     guard defaults.object(forKey: "KevEnabled") == nil, rows.selectedTag() == 0,
-          font.intValue == 16, automatic.state == .off,
+          font.intValue == 16, automatic.state == .off, punctuation.state == .on,
           defaults.object(forKey: "TelepathyAutoLanguage") == nil,
           defaults.string(forKey: "UnrelatedPreference") == "preserve" else {
       fatalError("Restoring defaults must refresh controls and preserve unrelated preferences")

@@ -395,6 +395,41 @@ private extension SquirrelInputController {
         fallbackHistory = String((fallbackHistory + String(scalar)).suffix(512))
       } else { fallbackHistory = "" }
     }
+    if TelepathyPreferences.shared.enabled(.autoPunctuation),
+       TelepathyPreferences.shared.enabled(.punctuation),
+       !rimeAPI.get_option(session, "ascii_punct"),
+       let scalar = UnicodeScalar(key), PunctuationPolicy.supports(Character(String(scalar))) {
+      let char = Character(String(scalar))
+      let raw = rimeAPI.get_input(session).map { String(cString: $0) } ?? ""
+      let prefix = precedingText()
+      let addressStart = PunctuationPolicy.beginsAddress(key: char, context: prefix + raw)
+      // Apostrophes inside Chinese composition are pinyin syllable separators.
+      if char != "'" || raw.isEmpty || intent.english {
+        var context = prefix
+        if intent.english || addressStart { context += raw }
+        else if !raw.isEmpty {
+          var ctx = RimeContext_stdbool.rimeStructInit()
+          if rimeAPI.get_context(session, &ctx) {
+            context += ctx.commit_text_preview.map { String(cString: $0) } ?? ""
+            _ = rimeAPI.free_context(&ctx)
+          }
+        }
+        if let decision = PunctuationPolicy.decide(key: char, context: context, defaultChinese: true) {
+          if intent.english || addressStart { commitPendingLiteral() }
+          else {
+            // Commit the current native highlight (including Kev's ordering)
+            // before inserting the mark; never replace committed host text.
+            _ = tp_commit_composition(session)
+            rimeConsumeCommittedText()
+            rimeAPI.clear_composition(session)
+          }
+          commit(string: decision.text)
+          rimeUpdate()
+          if decision.continueLiteral { intent.startLiteralRun() }
+          return true
+        }
+      }
+    }
     if intent.passLiteralKey(key) { recordPassedKey(); return false }
     if (65...90).contains(key) {
       commitPendingLiteral()

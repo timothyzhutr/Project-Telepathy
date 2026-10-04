@@ -17,4 +17,4 @@ pyz=PYZ(a.pure)
 exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='TelepathyWorker',debug=False,bootloader_ignore_signals=False,strip=False,upx=False,console=True,target_arch='arm64')
 coll=COLLECT(exe,a.binaries,a.datas,strip=False,upx=False,name='TelepathyWorker')
 app=BUNDLE(coll,name='TelepathyWorker.app',bundle_identifier='local.telepathy.worker',
-    info_plist={'LSUIElement':True,'LSMinimumSystemVersion':'26.2','CFBundleShortVersionString':'0.1.4'})
+    info_plist={'LSUIElement':True,'LSMinimumSystemVersion':'26.2','CFBundleShortVersionString':'0.1.5'})

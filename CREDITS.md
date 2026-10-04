@@ -23,12 +23,14 @@ librime's embedded libraries include OpenCC (Apache-2.0), Boost (BSL-1.0), maris
 
 ## Changes to upstream work
 
-Telepathy's Squirrel fork adds asynchronous Kev ranking, experimental context-based Chinese/English routing, input-coverage checks, stale-response rejection, display-to-Rime candidate mapping, preceding-text extraction, isolated profile storage, bundled-worker startup, model setup commands, persistent native settings, configurable candidate rows and text size, a native credits/licenses window and Telepathy branding. Updater/deployment/sync UI that is unused in the packaged prototype is omitted. Original source authorship headers are retained.
+Telepathy's Squirrel fork adds asynchronous Kev ranking, experimental context-based Chinese/English routing, native contextual punctuation forms, input-coverage checks, stale-response rejection, display-to-Rime candidate mapping, preceding-text extraction, isolated profile storage, bundled-worker startup, model setup commands, persistent native settings, configurable candidate rows and text size, a native credits/licenses window and Telepathy branding. Updater/deployment/sync UI that is unused in the packaged prototype is omitted. Original source authorship headers are retained.
 
 Wanxiang's active full-pinyin profile is compiled with a 12-candidate page, static context scoring enabled, personal dictionary learning disabled, and personal-context/manual-order/statistics modules removed. Only the reference closure of its remaining schema is packaged. Raw dictionaries already represented by compiled binaries, alternate pinyin profiles, unused Lua modules and prediction plugins are omitted. The small typo-comment dictionary is retained because its Lua filter reads it directly.
 
 Kev's vendored inference files are unmodified at the pinned revision. Telepathy's loader supplies verified local base-model paths instead of resolving a Hugging Face identifier during inference. It uses the official encoder, LoRA merge, head weights, calibration and answer conversion.
 
 Telepathy's language router is an additional implementation that compares natural continuation likelihoods through that same loaded backbone. Its normalized alternative scores are separate from Kev's calibrated pointer-head outputs and are not calibrated probabilities of human language intent.
+
+Telepathy's punctuation policy is original native code that selects Chinese or ASCII forms from bounded preceding text. It uses no model inference or additional upstream component.
 
 Project Telepathy's native application and original integration code are distributed under GPL-3.0. Independently licensed dependencies and data retain their respective licenses. Model weights are never included in the source repository or app release. Corresponding application source, build scripts, upstream revisions, notices and dependency locks are available in [Project Telepathy](https://github.com/timothyzhutr/Project-Telepathy). No affiliation or endorsement by upstream authors is implied.

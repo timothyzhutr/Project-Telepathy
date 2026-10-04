@@ -112,6 +112,8 @@ final class TelepathySettingsView: NSView {
     checkbox("Automatic Chinese / English (experimental)", .autoLanguage)
     note("Uses context to keep English words literal. Requires Kev assistance. Space adds a space after English; ↓ or Tab restores Chinese choices. Shift + a letter starts literal English until the next space.")
     checkbox("Use Chinese punctuation", .punctuation)
+    checkbox("Automatic punctuation in Auto mode", .autoPunctuation)
+    note("Chooses Chinese or English forms from the current sentence, without waiting for Kev. Keeps decimals, URLs, email and backtick code ASCII. Turn off Use Chinese punctuation to always use ASCII forms.")
     note("Space chooses the highlighted candidate; 1–9 select candidates; Esc cancels composition. Personal dictionary learning is disabled in this prototype.")
     heading("Local model")
     add(modelStatus)

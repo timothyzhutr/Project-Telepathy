@@ -137,6 +137,8 @@ enum ControllerEventTests {
     check(IntentProtocol.rankCalls == 0, "Early English must skip pointer reranking")
     key(" ", code: 49)
     check(client.text == "I think he ", "English Space must commit raw text plus one space; got \(client.text), language calls \(IntentProtocol.languageCalls)")
+    key(".", code: 47)
+    check(client.text == "I think he .", "English period after committing a word must stay ASCII")
     shift(true); key("H", flags: .shift); shift(false)
     check(!key("e"), "Shift-release must preserve the literal run after H")
     key("l"); key("l"); key("o"); key(" ", code: 49)
@@ -185,7 +187,63 @@ enum ControllerEventTests {
     let committed = client.text
     wait(0.35)
     check(client.text == committed && client.marked.isEmpty, "Late judgments must never rewrite committed text")
+    IntentProtocol.delay = 0.01
+    for (prefix, mark, expected) in [
+      ("中文句子", ",", "，"), ("I think so ", ".", "."),
+      ("这个项目叫 ProjectTelepathy", ",", "，"), ("Python 的速度不错", ".", "。"),
+      ("I like 中文", "?", "?"), ("版本号是 3", ".", "."),
+      ("访问 https://example", ".", "."), ("邮件发到 name@example", ".", "."),
+      ("中文代码 `x = 1", ";", ";"), ("说明（English text", ")", "）"),
+      ("Example (中文", ")", ")"), ("他说：“hello", "\"", "”"),
+      ("他说：‘hello", "'", "’"), ("访问（https://example.com", ")", "）")
+    ] {
+      client.text = prefix
+      let calls = IntentProtocol.languageCalls + IntentProtocol.rankCalls
+      check(key(mark), "Automatic punctuation should commit synchronously")
+      check(client.text == prefix + expected, "Wrong punctuation for \(prefix): \(client.text)")
+      wait(0.02)
+      check(IntentProtocol.languageCalls + IntentProtocol.rankCalls == calls, "Punctuation must not request model inference")
+    }
+    // Punctuation commits the displayed language/candidate and ends composition.
+    client.text = "中文："
+    key("n"); key("i"); key("h"); key("a"); key("o"); wait()
+    key(",")
+    check(client.text == "中文：你好，" && client.marked.isEmpty, "Chinese composition must commit before punctuation")
+    client.text = "I think "
+    key("h"); key("e"); wait(); key(",")
+    check(client.text == "I think he," && client.marked.isEmpty, "English composition must stay literal before punctuation")
+    client.text = "中文价格是 3"
+    key("."); key("1"); key("4"); key(",")
+    key("k"); key("e"); key("y"); key("i"); wait(); key(" ", code: 49)
+    check(client.text.hasSuffix("可以"), "A decimal must not make following Chinese pinyin literal: \(client.text)")
+    client.text = "中文访问 "
+    key("w"); key("w"); key("w"); key(".")
+    check(client.text == "中文访问 www.", "An explicit URL start must preserve raw letters before its first dot")
+    key("e"); key("x"); key("a"); key("m"); key("p"); key("l"); key("e"); key("."); key("c"); key("o"); key("m"); key(" ", code: 49)
+    check(client.text == "中文访问 www.example.com ", "An address must stay literal through its punctuation")
+    client.text = "中文："
+    key("x"); key("i"); key("'")
+    check(!client.marked.isEmpty && client.text == "中文：", "Pinyin apostrophe must remain a syllable separator")
+    controller.commitComposition(client)
+    TelepathyPreferences.shared.set(false, for: .autoPunctuation)
+    controller.preferencesDidChange()
+    client.text = "English text "
+    key(".")
+    check(client.text == "English text 。", "Disabling Auto punctuation must restore configured Chinese forms")
+    TelepathyPreferences.shared.set(true, for: .autoPunctuation)
+    TelepathyPreferences.shared.set(false, for: .punctuation)
+    controller.preferencesDidChange()
+    client.text = "中文句子"
+    key(",")
+    check(client.text == "中文句子,", "The ASCII punctuation override must take precedence")
+    TelepathyPreferences.shared.set(true, for: .punctuation)
+    controller.preferencesDidChange()
+    key("#", code: 20, flags: [.control, .shift])
+    client.text = "中文句子"
+    key(",")
+    check(client.text == "中文句子,", "Rime's manual ASCII punctuation shortcut must take precedence")
+    key("#", code: 20, flags: [.control, .shift])
     controller.deactivateServer(client)
-    print("PASS: actual controller English commits, Shift release, manual Chinese, stale replies and skipped ranking")
+    print("PASS: actual controller language commits, contextual punctuation, technical text, settings and skipped inference")
   }
 }

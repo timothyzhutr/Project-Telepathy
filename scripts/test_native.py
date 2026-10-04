@@ -21,6 +21,10 @@ def main():
     run('xcrun', 'swiftc', SOURCE / 'Sources/InputIntentState.swift',
         SOURCE / 'Tests/InputIntentStateTests.swift', '-o', intent)
     run(intent)
+    punctuation = BUILD / 'punctuation-tests'
+    run('xcrun', 'swiftc', SOURCE / 'Sources/PunctuationPolicy.swift',
+        SOURCE / 'Tests/PunctuationPolicyTests.swift', '-o', punctuation)
+    run(punctuation)
 
     contents = BUILD / 'credits-tests.app/Contents'
     (contents / 'MacOS').mkdir(parents=True, exist_ok=True)
