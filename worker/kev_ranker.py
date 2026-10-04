@@ -4,7 +4,7 @@ from functools import lru_cache
 from model_store import validate_models,manifest
 from prompt import build_request
 class KevRanker:
-    def __init__(self,model_root):
+    def __init__(self,model_root,*,quantization='mxfp8'):
         paths=validate_models(model_root,manifest())
         os.environ.update(HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',TOKENIZERS_PARALLELISM='false',PYTORCH_ENABLE_MPS_FALLBACK='0')
         import torch
@@ -21,6 +21,10 @@ class KevRanker:
         self.engine=MLXDecisionModel(lm,pad_id(self.tok),head_dim=ck.meta.head_dim)
         self.engine.head.load_state_dict(ck.meta.head);self.engine.eval()
         self.engine.head.temperature=ck.meta.temperature
+        # The official head reads the original embedding width. Pack weights
+        # after initializing it, but before caches/warm-up can retain BF16 state.
+        from model_precision import configure_backbone
+        self.model_info=configure_backbone(lm,quantization)
         self.torch,self.mx=torch,mx
         self.user_tokens=user_tokens
         self.request_type,self.record,self.answers,self.admit=SystemOneRequest,to_record,to_answers,admit

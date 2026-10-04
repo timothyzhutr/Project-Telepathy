@@ -7,27 +7,31 @@ import argparse, json, statistics, sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'worker'),str(ROOT/'vendor/kev')]
-# Checkpoint answers round probabilities to four decimals. BF16 split passes
-# can shift probabilities by about .01; close ties need not retain their winner.
-PROBABILITY_TOLERANCE=.011
+# Empirical numerical budgets for four-decimal checkpoint answers, not accuracy
+# guarantees. MXFP8 split passes reached .0157 in the expanded M2 Pro probe.
+PROBABILITY_TOLERANCES={'bf16':.011,'mxfp8':.020}
+MAX_REFERENCE_CHOICE_GAP=.010
 
-def near_tie(row):
+def near_tie(row,tolerance=PROBABILITY_TOLERANCES['bf16']):
     a,b=row['reference']['probabilities'],row['cached']['probabilities']
     def choice(result):return 'keep' if result['keep'] else 'c'+str(result['selected_index'])
     ak,bk=choice(row['reference']),choice(row['cached'])
     if any(key not in probs for key in (ak,bk) for probs in (a,b)):return False
     # Check actual returned selections, not just the distributions' argmax.
-    return (max(a.values())-a[bk]<=2*PROBABILITY_TOLERANCE and
-            max(b.values())-b[ak]<=2*PROBABILITY_TOLERANCE)
+    return (max(a.values())-a[bk]<=MAX_REFERENCE_CHOICE_GAP and
+            max(a.values())-a[bk]<=2*tolerance and
+            max(b.values())-b[ak]<=2*tolerance)
 
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--model-dir',type=Path,default=Path.home()/'Library/Application Support/Telepathy/models')
     parser.add_argument('--cases',type=Path,default=ROOT/'experiments/language-routing/cases.json')
     parser.add_argument('--output',type=Path)
+    parser.add_argument('--quantization',choices=['mxfp8','bf16'],default='mxfp8')
     args=parser.parse_args()
+    tolerance=PROBABILITY_TOLERANCES[args.quantization]
     from kev_ranker import KevRanker
-    ranker=KevRanker(args.model_dir)
+    ranker=KevRanker(args.model_dir,quantization=args.quantization)
     cases=[c for c in json.loads(args.cases.read_text()) if c['category']=='chinese-regression']
     original_answers=ranker.answers
     distribution={}
@@ -89,12 +93,15 @@ def main():
         edits.append(dict(raw=raw,reference=reference,cached=cached,same_choice=same_choice(reference,cached)))
     all_pairs=rows+matrix+edits
     max_delta=max(abs(r['reference']['probabilities'][k]-r['cached']['probabilities'][k]) for r in all_pairs for k in r['reference']['probabilities'])
-    summary=dict(paired_cases=len(rows),changed_choices=[(r['id'],r['variant']) for r in rows if not r['same_choice']],
+    summary=dict(quantization=args.quantization,paired_cases=len(rows),changed_choices=[(r['id'],r['variant']) for r in rows if not r['same_choice']],
                  reference_median_ms=statistics.median(r['reference']['request_ms'] for r in rows),
                  cached_median_ms=statistics.median(r['cached']['request_ms'] for r in rows),
                  max_probability_delta=max(abs(r['reference']['probabilities'][k]-r['cached']['probabilities'][k]) for r in rows for k in r['reference']['probabilities']),
                  all_groups_max_rounded_probability_delta=max_delta,
-                 probability_tolerance=PROBABILITY_TOLERANCE,
+                 probability_tolerance=tolerance,
+                 max_reference_choice_gap=MAX_REFERENCE_CHOICE_GAP,
+                 original_order_choice_changes=[r['id'] for r in rows if r['variant']==0 and not r['same_choice']],
+                 keep_changes=[(r['id'],r['variant'],r['reference']['keep'],r['cached']['keep']) for r in rows+matrix if r['reference']['keep']!=r['cached']['keep']],
                  matrix_pairs=len(matrix),
                  matrix_choice_changes=[(r['id'],r['variant']) for r in matrix if not r['same_choice']],
                  edit_choice_changes=[r['raw'] for r in edits if not r['same_choice']],
@@ -104,13 +111,14 @@ def main():
         args.output.parent.mkdir(parents=True,exist_ok=True)
         args.output.write_text(json.dumps(dict(summary=summary,rows=rows,matrix=matrix,edits=edits),ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(summary,indent=2),flush=True)
-    assert not summary['changed_choices'],summary['changed_choices']
+    assert not summary['original_order_choice_changes'],summary['original_order_choice_changes']
+    if args.quantization=='bf16':assert not summary['changed_choices'],summary['changed_choices']
     assert not summary['edit_choice_changes'],summary['edit_choice_changes']
-    assert max_delta<=PROBABILITY_TOLERANCE,max_delta
-    assert all(r['same_choice'] or near_tie(r) for r in matrix),summary['matrix_choice_changes']
+    assert max_delta<=tolerance,max_delta
+    assert all(r['same_choice'] or near_tie(r,tolerance) for r in rows+matrix),summary['changed_choices']+summary['matrix_choice_changes']
     assert all(r['cached']['cache_hit'] for r in rows)
     assert all(r['cached']['cache_hit'] for r in matrix)
     assert summary['edit_cache_hits']==len(edits)-1
-    print('PASS: normal/edit decisions preserved; extra matrix within BF16 tolerance (near-tie flips reported)')
+    print('PASS: original-order/edit decisions preserved; reordered/extra pairs within '+args.quantization+' numerical budget (near-tie/keep flips reported)')
 
 if __name__=='__main__':main()

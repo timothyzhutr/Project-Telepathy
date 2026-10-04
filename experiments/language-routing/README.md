@@ -16,7 +16,7 @@ python scripts/check_language.py --output .build/language-results.json
 
 `cases.json` contains 74 **handcrafted synthetic** snapshots captured from the packaged Wanxiang profile with learning disabled: 24 matched English/Chinese contexts sharing the same letters, 42 earlier Chinese regression cases with longer passages, and 8 mixed-language cases. Candidate text and consumed-input endpoints are frozen to make scoring reproducible. No personal writing is included. The script also verifies that reuse of a cached prefix agrees with fresh evaluation and that original pointer ranking still selects 权利 in the existing smoke case.
 
-On the development M2 Pro, this exploratory set produced:
+On the development M2 Pro with the original BF16 weights, this exploratory set produced:
 
 | Group | Matching label | Chinese wrongly routed to English | Median inference |
 |---|---:|---:|---:|
@@ -27,3 +27,5 @@ On the development M2 Pro, this exploratory set produced:
 Five mixed examples had only exact literal-English full candidates, allowing the service to skip neural inference; the Chinese mixed examples used the model. An additional short/long version of the 24 paired examples matched 48/48 at 63/75 ms median; those longer passages explicitly described their language and are an easier diagnostic, not independent accuracy evidence. A same-context `c → ca → can` cache trace took approximately 64 → 35 → 36 ms. Those diagnostic traces used fixed Chinese alternatives rather than freshly captured candidates at every letter.
 
 These are development checks, not a held-out typing benchmark. Threshold selection and implementation exploration used these examples. They do not estimate real accuracy, end-to-end key latency, battery consumption, or every application's context-access behavior. Real typing should test contractions, punctuation, short-word boundaries, very fast typing, and frequent language switches.
+
+The app defaults to MXFP8 backbone weights from v0.1.7. The script uses that default; pass `--quantization bf16` to reproduce the original precision. Quantization does not change the routing calculation or thresholds. A fresh production-loader check preserved all 74 BF16 language decisions, with group medians of 44/75/0 ms; this remains a synthetic development check.

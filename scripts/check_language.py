@@ -14,10 +14,11 @@ def main():
     parser.add_argument('--model-dir',type=Path,default=Path.home()/'Library/Application Support/Telepathy/models')
     parser.add_argument('--cases',type=Path,default=ROOT/'experiments/language-routing/cases.json')
     parser.add_argument('--output',type=Path)
+    parser.add_argument('--quantization',choices=['mxfp8','bf16'],default='mxfp8')
     args=parser.parse_args()
     from kev_ranker import KevRanker
     from decision import DecisionService
-    ranker=KevRanker(args.model_dir);service=DecisionService(ranker)
+    ranker=KevRanker(args.model_dir,quantization=args.quantization);service=DecisionService(ranker)
     rows=[]
     for revision,case in enumerate(json.loads(args.cases.read_text()),1):
         snapshot={k:case[k] for k in ('prefix','pinyin','pending','candidates','candidate_ends')}

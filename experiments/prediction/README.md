@@ -1,6 +1,22 @@
 # Prediction speed and quality
 
-These are synthetic diagnostics on an M2 Pro, not estimates of real typing accuracy. They use the 42 `chinese-regression` snapshots in [the routing fixture](../language-routing/cases.json), with handwritten answer labels in [labels.json](labels.json). There is no personal learning. Only candidates consuming at least as much pinyin as Rime's first candidate are eligible, matching the production coverage rule. Four snapshots have just one eligible candidate and normally skip inference. Forty snapshots contain an accepted answer; two do not.
+These are synthetic diagnostics on an M2 Pro, not estimates of real typing accuracy. They use the 42 `chinese-regression` snapshots in [the routing fixture](../language-routing/cases.json), with handwritten answer labels in [labels.json](labels.json). There is no personal learning. Only candidates consuming at least as much pinyin as Rime's first candidate are eligible, matching the production coverage rule. Four snapshots have just one eligible candidate and normally skip inference. Forty snapshots contain an accepted answer; two do not. The original cache/quality experiments below used BF16; v0.1.7 switches the app's default backbone weights to MXFP8.
+
+## MXFP8 default
+
+The original adapter is merged before in-memory weight quantization. The pointer head remains FP32; activations and recurrent state keep their existing precision. Linear and embedding layers use MLX's MXFP8 format with groups of 32. Temporary BF16 conversion buffers are cleared before inference caches are constructed. Source model files and checksums remain unchanged; the app does not store an additional converted checkpoint.
+
+| Weight format | Backbone parameter storage | Fresh context median | Cached context median | Kev accepted / 42 | Continuation accepted / 42 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| BF16 | 1.505 GB | 133 ms | 91 ms | 32 | 39 |
+| MXFP8 | 0.776 GB | 157 ms | 110 ms | 32 | 40 |
+| 8-bit affine (diagnostic only) | 0.800 GB | 147 ms | 103 ms | 32 | 40 |
+
+All Kev word choices and `keep` decisions matched BF16 across the 42 original snapshots. The extra accepted continuation was `权力` instead of `权利`; one changed answer on a development fixture is not evidence of general quality improvement. Weight storage excludes activations, caches, allocator buffers, head and runtime. Timings are one run with relevant shapes warmed first; MXFP8 saves memory but was slower for pointer ranking on this Mac. It is the production default because of the memory preference. Loading/conversion still briefly requires the original BF16 weights.
+
+The production MXFP8 loader also preserved all 74 Chinese/English routing decisions. Its expanded cache check preserved original-order choices and the nine-step edit probe. Two of 114 candidate-order comparisons changed the `keep` decision on reversed lists; two of 40 extra matrix pairs changed choice, including one `keep` flip. Their reference winner margins were .0011, .0060, .0004 and .0045. Maximum rounded probability drift was .0157. The MXFP8 diagnostic uses an empirical .020 numerical budget, requires original-order/edit choices to stay unchanged, and permits reordered/extra choice flips only when the original selection gap is at most .010 and both selections remain inside the numerical near-tie band. These bounds are diagnostic budgets, not universal accuracy guarantees. All flips, including `keep`, are reported explicitly.
+
+Use `--quantization bf16` on the diagnostic scripts below to reproduce the original precision. Omitting it uses the production MXFP8 default.
 
 ## Reusing preceding context
 
@@ -15,7 +31,7 @@ The full English prompt, 100-token context limit, supplied candidates and checkp
 
 The shorter prompt is excluded from the app because two accepted answers were lost. The winning choice/keep decision matched on all 42 full-prompt cases. Two lower-ranked alternatives changed order; probabilities are not bitwise identical.
 
-Expanded validation compared the original and cached scorers on 114 original/reversed/rotated candidate lists: zero winner changes, median 134 ms versus 93 ms. Forty additional pairs cover 1/2/7/12 alternatives, changed candidate text, empty/newline/emoji/control-token-looking user context, and the ten closest original margins. One unusual near-tie changed winner: reference probabilities .3592/.3578 became .3510/.3625. Maximum probability change across the extra matrix was .0100, versus .0089 on the normal comparisons. These values come from the official four-decimal answer conversion. The pinned [upstream MLX implementation](https://github.com/jaredpalmer/kev/blob/84847f0a883d900f7de5b7a57eaa341ca7f9a6b4/kev/mlx_model.py) documents BF16 split-pass differences of about .01. Validation uses a .011 tolerance and permits extra-matrix winner changes only within the corresponding near-tie band; it does not claim universal winner equivalence.
+Expanded BF16 validation compared the original and cached scorers on 114 original/reversed/rotated candidate lists: zero winner changes, median 134 ms versus 93 ms. Forty additional pairs cover 1/2/7/12 alternatives, changed candidate text, empty/newline/emoji/control-token-looking user context, and the ten closest original margins. One unusual near-tie changed winner: reference probabilities .3592/.3578 became .3510/.3625. Maximum probability change across the extra matrix was .0100, versus .0089 on the normal comparisons. These values come from the official four-decimal answer conversion. The pinned [upstream MLX implementation](https://github.com/jaredpalmer/kev/blob/84847f0a883d900f7de5b7a57eaa341ca7f9a6b4/kev/mlx_model.py) documents BF16 split-pass differences of about .01. BF16 validation retains its .011 numerical budget and unchanged ordinary choices; extra-matrix flips must have an original selection gap at most .010 and stay within the numerical near-tie band. It does not claim universal winner equivalence.
 
 A separate nine-step raw-letter/backspace probe, with frozen alternatives, had eight cache hits and no winner changes. That probe checks state reuse; it does not simulate live Rime candidate generation. Six unit tests cover token-boundary mismatches, changed context, copied-state isolation, failed prefill, empty prefixes and state-token limits.
 
@@ -44,6 +60,7 @@ Use the source-build Python environment and separately installed pinned model:
 python -m unittest discover -s tests
 python scripts/check_ranking_cache.py --output .build/cache-check.json
 python scripts/compare_rankers.py --output .build/ranker-comparison.json
+python scripts/compare_rankers.py --quantization bf16 --output .build/bf16-comparison.json
 ```
 
 The scripts accept `--model-dir`. `compare_rankers.py` additionally accepts `--cases` and `--labels` for fresh fixtures. It emits synthetic inputs/scores to the requested report; it does not capture typing, alter preferences or replace the installed app. Exact timings and close choices can vary across hardware and runs.

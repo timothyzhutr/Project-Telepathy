@@ -29,7 +29,9 @@ Wanxiang's active full-pinyin profile is compiled with a 12-candidate page, stat
 
 Kev's vendored inference files are unmodified at the pinned revision. Telepathy's loader supplies verified local base-model paths instead of resolving a Hugging Face identifier during inference. It uses the official encoder, LoRA merge, head weights, calibration and answer conversion.
 
-Telepathy's ranking integration additionally retains one token-matched preceding-text prefix and scores changing pinyin/candidates on copied MLX attention and recurrent caches. This changes the prefill split, with the usual BF16 numerical variation; it does not modify model weights or the decision prompt.
+After merging the adapter, Telepathy's loader applies MLX's MXFP8 weight quantization (groups of 32) to the backbone's supported linear and embedding layers before creating caches. Activations and recurrent state retain their existing precision; the pointer head remains FP32. The original downloaded checkpoints remain unchanged. This is Telepathy's inference precision policy, not an upstream Kev checkpoint change.
+
+Telepathy's ranking integration additionally retains one token-matched preceding-text prefix and scores changing pinyin/candidates on copied MLX attention and recurrent caches. This changes the prefill split, with precision-dependent numerical variation; the cache itself does not modify model weights or the decision prompt.
 
 Telepathy's language router is an additional implementation that compares natural continuation likelihoods through that same loaded backbone. Its normalized alternative scores are separate from Kev's calibrated pointer-head outputs and are not calibrated probabilities of human language intent.
 

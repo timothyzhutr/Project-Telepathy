@@ -21,7 +21,7 @@ def main():
                 while True:
                     assert process.poll() is None,'Worker exited early'
                     try:
-                        status=request('/api/health')['status']
+                        health=request('/api/health');status=health['status']
                         if status==expected:break
                         assert status!='error','Model initialization failed'
                     except urllib.error.URLError:pass
@@ -30,6 +30,8 @@ def main():
                 ranked=request('/api/decision',json.dumps(snapshot).encode())
                 assert ranked['revision']==18
                 if expected=='ready':
+                    assert health['quantization']=='mxfp8',health
+                    assert 0<health['backbone_weight_bytes']<health['unquantized_backbone_weight_bytes']*.6,health
                     assert ranked['status']=='ok' and ranked['order'][0]==1 and ranked['order'][7:]==list(range(7,12)),ranked
                     repeated=request('/api/decision',json.dumps(dict(snapshot,revision=20)).encode())
                     assert repeated['status']=='ok' and repeated['cache_hit'] and repeated['order'][0]==1,repeated

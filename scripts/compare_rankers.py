@@ -46,9 +46,10 @@ def main():
     parser.add_argument('--cases',type=Path,default=ROOT/'experiments/language-routing/cases.json')
     parser.add_argument('--labels',type=Path,default=ROOT/'experiments/prediction/labels.json')
     parser.add_argument('--output',type=Path)
+    parser.add_argument('--quantization',choices=['mxfp8','bf16'],default='mxfp8')
     args=parser.parse_args()
     from kev_ranker import KevRanker
-    ranker=KevRanker(args.model_dir)
+    ranker=KevRanker(args.model_dir,quantization=args.quantization)
     cases=[c for c in json.loads(args.cases.read_text()) if c['category']=='chinese-regression']
     labels=json.loads(args.labels.read_text())
     original_answers=ranker.answers
@@ -71,7 +72,7 @@ def main():
                          kev=chosen,kev_keep=decision['keep'],kev_ms=decision['request_ms'],
                          ignore_keep=no_keep,continuation=natural,continuation_ms=elapsed,
                          log_likelihoods=scores,probabilities=dict(probabilities)))
-    summary=dict(cases=len(rows),target_supplied=sum(r['target_supplied'] for r in rows))
+    summary=dict(quantization=args.quantization,cases=len(rows),target_supplied=sum(r['target_supplied'] for r in rows))
     for arm in ['baseline','kev','ignore_keep','continuation']:
         summary[arm+'_correct']=sum(r[arm] in r['acceptable'] for r in rows)
     for arm in ['kev','continuation']:

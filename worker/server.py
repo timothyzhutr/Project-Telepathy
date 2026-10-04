@@ -19,7 +19,7 @@ def make_server(port,service,health=None,reload_model=None):
         def do_GET(self):
             if not self.allowed(): return
             if self.path!='/api/health': self.send(404,{'error':'Unknown endpoint'});return
-            self.send(200,dict(app='Telepathy',version='0.1.6',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
+            self.send(200,dict(app='Telepathy',version='0.1.7',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
         def do_POST(self):
             if not self.allowed(): return
             if self.path not in ('/api/decision','/api/language','/api/reload'): self.send(404,{'error':'Unknown endpoint'});return
@@ -40,7 +40,9 @@ class ModelLoader:
     def __init__(self,service,model_dir):
         self.service,self.model_dir=service,model_dir
         self.status='model_missing';self.error=None;self.lock=threading.Lock()
-    def health(self): return dict(status=self.status,error=self.error)
+        self.model_info={}
+    def health(self):
+        return dict(status=self.status,error=self.error,**(self.model_info if self.status=='ready' else {}))
     def start(self):
         if not self.lock.acquire(blocking=False): return
         def load():
@@ -48,7 +50,9 @@ class ModelLoader:
             try:
                 from kev_ranker import KevRanker
                 ranker=KevRanker(self.model_dir)
-                with self.service.lock: self.service.ranker=ranker
+                with self.service.lock:
+                    self.service.ranker=ranker
+                    self.model_info=ranker.model_info
                 self.status='ready'
             except FileNotFoundError:
                 self.status='model_missing';self.error='Run Telepathy --download-model.'
