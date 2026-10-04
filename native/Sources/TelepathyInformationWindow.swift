@@ -1,6 +1,8 @@
 import AppKit
 
-private final class TelepathyUtilityWindow: NSWindow {
+private final class TelepathyUtilityWindow: NSPanel {
+  override var canBecomeKey: Bool { true }
+
   override func performKeyEquivalent(with event: NSEvent) -> Bool {
     guard event.type == .keyDown,
           event.modifierFlags.intersection([.command, .control, .option, .shift]) == .command else {
@@ -29,11 +31,17 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
 
   init(bundle: Bundle = .main) {
     let window = TelepathyUtilityWindow(contentRect: NSRect(x: 0, y: 0, width: 780, height: 620),
-                          styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable, .nonactivatingPanel],
                           backing: .buffered, defer: false)
     window.title = "Telepathy"
     window.minSize = NSSize(width: 620, height: 420)
     window.isReleasedWhenClosed = false
+    // The typing app may come forward again when its input menu closes.
+    // A key-capable utility panel stays above that app without activating the IME.
+    window.level = .floating
+    window.isFloatingPanel = true
+    window.hidesOnDeactivate = false
+    window.becomesKeyOnlyIfNeeded = false
     window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary, .canJoinAllApplications]
     super.init(window: window)
     window.setFrameAutosaveName("TelepathyInformationWindow")
@@ -137,7 +145,6 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
     selectTab(identifier)
     window?.deminiaturize(nil)
     showWindow(nil)
-    NSApp.activate()
     window?.makeKeyAndOrderFront(nil)
     // An IME serves another app, which may keep activation. Showing its
     // utility window must not depend on that app yielding focus.

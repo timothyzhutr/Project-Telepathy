@@ -27,7 +27,7 @@ Type pinyin normally. Space chooses the highlighted candidate; number keys and t
 
 The input-source menu includes **Kev assistance**, which switches ranking on/off. Rime's statistical grammar continues to work when Kev assistance is off. No personal dictionary learning is enabled in this prototype. No typed text is written to the worker log or sent to a cloud API. In applications that do not expose preceding text, the IME uses limited text committed during the current session; contextual quality can be lower.
 
-**Settings…** opens Telepathy's native settings window. Preferences save automatically and apply to the candidate panel:
+**Settings…** opens Telepathy's native settings panel above the app you're typing in. Close it with the window button or ⌘W. Preferences save automatically and apply to the candidate panel:
 
 - Candidates per row: automatic, 1, 2, 3, 4, 6 or 12. All 12 candidates remain available; long phrases can wrap.
 - Text size (12–28 pt) and appearance (follow system, light or dark).

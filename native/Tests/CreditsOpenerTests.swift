@@ -40,6 +40,10 @@ private final class TestHealthProtocol: URLProtocol {
       window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary, .canJoinAllApplications]
       window.center(); window.makeKeyAndOrderFront(nil); window.orderFrontRegardless()
       if let argument = CommandLine.arguments.last, let parent = Int32(argument), parent > 0 {
+        DistributedNotificationCenter.default().addObserver(forName: .init("TelepathyTestRaiseCover"), object: String(parent), queue: .main) { _ in
+          window.orderFrontRegardless()
+          DistributedNotificationCenter.default().postNotificationName(.init("TelepathyTestCoverRaised"), object: String(parent), userInfo: nil, deliverImmediately: true)
+        }
         Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
           if kill(parent, 0) != 0 { app.terminate(nil) }
         }
@@ -72,25 +76,24 @@ private final class TestHealthProtocol: URLProtocol {
     let app = NSApplication.shared
     app.setActivationPolicy(.accessory)
     app.finishLaunching()
-    let configuration = NSWorkspace.OpenConfiguration()
-    configuration.arguments = ["--foreground-fixture", String(getpid())]
-    configuration.activates = true
-    configuration.createsNewApplicationInstance = true
-    var foreground: NSRunningApplication?
     let fixtureURL = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("foreground-tests.app")
-    NSWorkspace.shared.openApplication(at: fixtureURL, configuration: configuration) { running, _ in foreground = running }
+    let foreground = Process()
+    foreground.executableURL = fixtureURL.appendingPathComponent("Contents/MacOS/CreditsOpenerTests")
+    foreground.arguments = ["--foreground-fixture", String(getpid())]
+    try! foreground.run()
+    defer { if foreground.isRunning { foreground.terminate() } }
     let launchDeadline = Date().addingTimeInterval(5)
-    func fixtureIsInFront() -> Bool {
-      guard let foreground else { return false }
+    func fixtureIsVisible() -> Bool {
       let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as! [[String: Any]]
-      let first = windows.first { ($0[kCGWindowLayer as String] as? Int) == 0 }
-      return (first?[kCGWindowOwnerPID as String] as? Int32) == foreground.processIdentifier
+      return windows.contains {
+        ($0[kCGWindowLayer as String] as? Int) == 0 &&
+        ($0[kCGWindowOwnerPID as String] as? Int32) == foreground.processIdentifier
+      }
     }
-    while !fixtureIsInFront() {
-      guard Date() < launchDeadline else { fatalError("Covering fixture did not reach the front") }
+    while !fixtureIsVisible() {
+      guard Date() < launchDeadline else { fatalError("Covering fixture did not become visible") }
       RunLoop.current.run(until: Date().addingTimeInterval(0.01))
     }
-    defer { foreground?.terminate() }
     // App activation is a request and can be denied. Make that OS boundary
     // deterministic; the actual window and WindowServer order stay real.
     app.deactivate()
@@ -134,7 +137,7 @@ private final class TestHealthProtocol: URLProtocol {
       let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as! [[String: Any]]
       let utilityIndex = windows.firstIndex { ($0[kCGWindowNumber as String] as? Int) == window.windowNumber }
       let foregroundIndex = windows.firstIndex {
-        ($0[kCGWindowOwnerPID as String] as? Int32) == foreground!.processIdentifier &&
+        ($0[kCGWindowOwnerPID as String] as? Int32) == foreground.processIdentifier &&
         ($0[kCGWindowLayer as String] as? Int) == 0
       }
       return utilityIndex != nil && foregroundIndex != nil && utilityIndex! < foregroundIndex!
@@ -147,6 +150,17 @@ private final class TestHealthProtocol: URLProtocol {
       fputs("Utility visible=\(window.isVisible) activeSpace=\(window.isOnActiveSpace) appActive=\(app.isActive)\n", stderr)
       fatalError("The IME utility window must open in front of the other app even when activation is denied")
     }
+    // Dismissing the system input menu can raise the host window again.
+    // Reproduce that final step after the utility window has been presented.
+    var coverRaised = false
+    let raised = DistributedNotificationCenter.default().addObserver(forName: .init("TelepathyTestCoverRaised"), object: String(getpid()), queue: .main) { _ in coverRaised = true }
+    defer { DistributedNotificationCenter.default().removeObserver(raised) }
+    DistributedNotificationCenter.default().postNotificationName(.init("TelepathyTestRaiseCover"), object: String(getpid()), userInfo: nil, deliverImmediately: true)
+    let raiseDeadline = Date().addingTimeInterval(3)
+    while !coverRaised, Date() < raiseDeadline { RunLoop.current.run(until: Date().addingTimeInterval(0.01)) }
+    guard coverRaised else { fatalError("Covering fixture did not acknowledge its raise") }
+    RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+    guard utilityIsInFront() else { fatalError("Settings must remain above the host after the input menu closes") }
     // Clicking the tab itself must refresh health, even when Settings was not
     // opened through the input-source menu. Stub only the HTTP boundary.
     tabs.selectTabViewItem(at: 0)
