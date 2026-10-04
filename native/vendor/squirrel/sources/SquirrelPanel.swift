@@ -258,7 +258,7 @@ final class SquirrelPanel: NSPanel {
         line.addAttribute(.noBreak, value: true, range: NSRange(location: 1, length: line.length-1))
       }
 
-      let lineSeparator = NSAttributedString(string: linear ? "  " : "\n", attributes: attrs)
+      let lineSeparator = NSAttributedString(string: TelepathyPreferences.shared.separator(before: i, linear: linear), attributes: attrs)
       if i > 0 {
         text.append(lineSeparator)
       }

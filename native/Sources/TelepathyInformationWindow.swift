@@ -16,8 +16,7 @@ private final class TelepathyUtilityWindow: NSWindow {
 }
 
 // A retained native window, independent of external editors and file associations.
-// Its tab container can also host preferences when those are added.
-final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSource, NSTableViewDelegate {
+final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSource, NSTableViewDelegate, NSTabViewDelegate {
   private struct License {
     let title: String
     let url: URL
@@ -25,12 +24,14 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
   private var licenses = [License]()
   private let licenseTable = NSTableView()
   private let licenseText = NSTextView()
+  private let tabs = NSTabView()
+  private var settingsView: TelepathySettingsView?
 
   init(bundle: Bundle = .main) {
     let window = TelepathyUtilityWindow(contentRect: NSRect(x: 0, y: 0, width: 780, height: 620),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
-    window.title = "Telepathy — Credits and licenses"
+    window.title = "Telepathy"
     window.minSize = NSSize(width: 620, height: 420)
     window.isReleasedWhenClosed = false
     super.init(window: window)
@@ -41,7 +42,7 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
     let title = NSTextField(labelWithString: "Project Telepathy")
     title.font = .systemFont(ofSize: 24, weight: .semibold)
     let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-    let subtitle = NSTextField(labelWithString: version.isEmpty ? "Credits and open-source licenses" : "Version \(version) · Credits and open-source licenses")
+    let subtitle = NSTextField(labelWithString: version.isEmpty ? "Settings, credits and open-source licenses" : "Version \(version)")
     subtitle.textColor = .secondaryLabelColor
     let header = NSStackView(views: [title, subtitle])
     header.orientation = .vertical
@@ -50,7 +51,6 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
     header.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(header)
 
-    let tabs = NSTabView()
     tabs.translatesAutoresizingMaskIntoConstraints = false
     content.addSubview(tabs)
     NSLayoutConstraint.activate([
@@ -63,6 +63,11 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
       tabs.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -20),
     ])
 
+    let settings = TelepathySettingsView(bundle: bundle)
+    settingsView = settings
+    let settingsTab = NSTabViewItem(identifier: "settings")
+    settingsTab.label = "Settings"; settingsTab.view = settings
+    tabs.addTabViewItem(settingsTab)
     let creditsText = NSTextView()
     let creditsScroll = reader(creditsText)
     if let url = bundle.url(forResource: "CREDITS", withExtension: "md"),
@@ -122,9 +127,25 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
       showLicense(0)
     }
     tabs.selectTabViewItem(creditsTab)
+    tabs.delegate = self
   }
 
   required init?(coder: NSCoder) { nil }
+
+  func selectTab(_ identifier: String) {
+    if let tab = tabs.tabViewItems.first(where: { $0.identifier as? String == identifier }) {
+      if tabs.selectedTabViewItem === tab { refreshSettings(ifSelected: tab) }
+      else { tabs.selectTabViewItem(tab) }
+    }
+  }
+
+  func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
+    if let tabViewItem { refreshSettings(ifSelected: tabViewItem) }
+  }
+
+  private func refreshSettings(ifSelected tab: NSTabViewItem) {
+    if tab.identifier as? String == "settings" { settingsView?.reload(); settingsView?.refreshModelStatus() }
+  }
 
   private func reader(_ text: NSTextView) -> NSScrollView {
     let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 720, height: 480))

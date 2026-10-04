@@ -27,7 +27,17 @@ Type pinyin normally. Space chooses the highlighted candidate; number keys and t
 
 The input-source menu includes **Kev assistance**, which switches ranking on/off. Rime's statistical grammar continues to work when Kev assistance is off. No personal dictionary learning is enabled in this prototype. No typed text is written to the worker log or sent to a cloud API. In applications that do not expose preceding text, the IME uses limited text committed during the current session; contextual quality can be lower.
 
-**Credits and licenses…** opens Telepathy's own window. The Credits tab lists the projects used; the Licenses tab lets you browse their bundled license texts. It works offline and does not launch an editor. The same texts are included under `Contents/Resources/licenses/`.
+**Settings…** opens Telepathy's native settings window. Preferences save automatically and apply to the candidate panel:
+
+- Candidates per row: automatic, 1, 2, 3, 4, 6 or 12. All 12 candidates remain available; long phrases can wrap.
+- Text size (12–28 pt) and appearance (follow system, light or dark).
+- Inline pinyin, candidate annotations, Kev timing and the Chinese / English menu-bar status icon.
+- Kev assistance and Chinese punctuation.
+- Local model status, model folder access, and an explicit download / repair action. Valid pinned files are reused; missing or damaged files are fetched and verified before the worker reloads them.
+
+Turning assistance off skips decisions; the loaded worker stays resident. Settings survive app updates. **Restore default settings** resets only Telepathy's controls, preserving model files and unrelated preferences.
+
+**Credits and licenses…** opens the same window on Credits. The Credits tab lists the projects used; the Licenses tab lets you browse their bundled license texts. These tabs work offline and do not launch an editor. The same texts are included under `Contents/Resources/licenses/`.
 
 Kev's backbone runs on the Apple GPU through MLX; its small pointer head uses the CPU through PyTorch. The helper loads the model once and stays resident. Expect several GB of memory while assistance is active; actual memory and latency vary with context and hardware. Decisions are debounced and asynchronous, so native candidates appear without waiting for inference. The development M2 Pro achieved roughly 100 ms for a short two-candidate decision and 117 ms for a 12-candidate native snapshot after warm-up; this is a smoke-test result, not a typing benchmark.
 

@@ -30,7 +30,13 @@ def download_models(root):
     for role in ('kev','base'):
         info=lock[role]
         for f in info['files']:
+            path=Path(root)/role/f['name']
+            if path.is_file() and path.stat().st_size == f['bytes']:
+                with path.open('rb') as stream: digest=hashlib.file_digest(stream,'sha256').hexdigest()
+                if digest == f['sha256']: continue
             print('Downloading '+info['repo']+'/'+f['name'],flush=True)
-            hf_hub_download(repo_id=info['repo'],filename=f['name'],revision=info['revision'],local_dir=Path(root)/role,token=False)
+            # Hub metadata may trust a damaged local file with an unchanged
+            # mtime. Fetch fresh bytes whenever our pinned checksum is invalid.
+            hf_hub_download(repo_id=info['repo'],filename=f['name'],revision=info['revision'],local_dir=Path(root)/role,token=False,force_download=True)
     validate_models(root,lock)
     print('Kev and Qwen model files verified. Inference runs offline.',flush=True)

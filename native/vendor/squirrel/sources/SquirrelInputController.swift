@@ -33,7 +33,7 @@ final class SquirrelInputController: IMKInputController {
   private var compositionPrefix = ""
   private var fallbackHistory = ""
   private var displayedHighlight = 0
-  private var rankingEnabled: Bool { UserDefaults.standard.object(forKey: "KevEnabled") as? Bool ?? true }
+  private var rankingEnabled: Bool { TelepathyPreferences.shared.enabled(.kev) }
 
   func freezeRanking() { ranking.freeze() }
 
@@ -189,6 +189,7 @@ final class SquirrelInputController: IMKInputController {
     compositionPrefix = ""
     fallbackHistory = ""
     self.client ?= sender as? IMKTextInput
+    applyTypingPreferences()
     var keyboardLayout = NSApp.squirrelAppDelegate.config?.getString("keyboard_layout") ?? ""
     if keyboardLayout == "last" || keyboardLayout == "" {
       keyboardLayout = ""
@@ -266,6 +267,8 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func menu() -> NSMenu! {
+    let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: "")
+    settings.target = self
     let logDir = NSMenuItem(title: NSLocalizedString("Logs...", comment: "Menu item"), action: #selector(openLogFolder), keyEquivalent: "")
     logDir.target = self
     let wiki = NSMenuItem(title: "Credits and licenses…", action: #selector(openWiki), keyEquivalent: "")
@@ -275,6 +278,7 @@ final class SquirrelInputController: IMKInputController {
     kev.target = self
     kev.state = rankingEnabled ? .on : .off
     let menu = NSMenu()
+    menu.addItem(settings)
     menu.addItem(kev)
     menu.addItem(.separator())
     menu.addItem(logDir)
@@ -285,7 +289,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   @objc func toggleKev() {
-    UserDefaults.standard.set(!rankingEnabled, forKey: "KevEnabled")
+    TelepathyPreferences.shared.set(!rankingEnabled, for: .kev)
     invalidateRanking()
     rimeUpdate()
   }
@@ -312,6 +316,24 @@ final class SquirrelInputController: IMKInputController {
 
   @objc func openWiki() {
     NSApp.squirrelAppDelegate.openWiki()
+  }
+
+  @objc func openSettings() { NSApp.squirrelAppDelegate.openSettings() }
+
+  func preferencesDidChange() {
+    invalidateRanking()
+    applyTypingPreferences()
+    rimeUpdate()
+  }
+
+  private func applyTypingPreferences() {
+    guard session != 0 else { return }
+    rimeAPI.set_option(session, "ascii_punct", !TelepathyPreferences.shared.enabled(.punctuation))
+    if let panel = NSApp.squirrelAppDelegate.panel {
+      inlinePreedit = (panel.inlinePreedit && !rimeAPI.get_option(session, "no_inline")) || rimeAPI.get_option(session, "inline")
+      inlineCandidate = panel.inlineCandidate && !rimeAPI.get_option(session, "no_inline")
+      rimeAPI.set_option(session, "soft_cursor", !inlinePreedit)
+    }
   }
 
   private(set) var specialCommentIndices: [ReservedPropertyKey: Set<Int>] = [:]
@@ -399,6 +421,7 @@ private extension SquirrelInputController {
       updateAppOptions()
       rimeAPI.set_option(session, "ascii_mode", false)
       for option in ["context_reorder", "s2t", "s2hk", "s2tw"] { rimeAPI.set_option(session, option, false) }
+      applyTypingPreferences()
     }
   }
 
@@ -506,11 +529,7 @@ private extension SquirrelInputController {
       if let schema_id = status.schema_id, schemaId == "" || schemaId != String(cString: schema_id) {
         schemaId = String(cString: schema_id)
         NSApp.squirrelAppDelegate.loadSettings(for: schemaId)
-        if let panel = NSApp.squirrelAppDelegate.panel {
-          inlinePreedit = (panel.inlinePreedit && !rimeAPI.get_option(session, "no_inline")) || rimeAPI.get_option(session, "inline")
-          inlineCandidate = panel.inlineCandidate && !rimeAPI.get_option(session, "no_inline")
-          rimeAPI.set_option(session, "soft_cursor", !inlinePreedit)
-        }
+        applyTypingPreferences()
       }
       _ = rimeAPI.free_status(&status)
     }
@@ -584,6 +603,7 @@ private extension SquirrelInputController {
         candidates.append(candidate.text.map { String(cString: $0) } ?? "")
         comments.append(candidate.comment.map { String(cString: $0) } ?? "")
       }
+      if !TelepathyPreferences.shared.enabled(.annotations) { comments = Array(repeating: "", count: numCandidates) }
       var labels = [String]()
       // swiftlint:disable identifier_name
       if let select_keys = ctx.menu.select_keys {
@@ -641,7 +661,7 @@ private extension SquirrelInputController {
         candidates = ranking.order.map { nativeWords[$0] }
         comments = ranking.order.map { nativeComments[$0] }
         shownHighlight = ranking.displayIndex(nativeHighlight) ?? 0
-        if !rankingNote.isEmpty && !comments.isEmpty { comments[0] = rankingNote }
+        if TelepathyPreferences.shared.enabled(.timing), !rankingNote.isEmpty && !comments.isEmpty { comments[0] = rankingNote }
       }
       displayedHighlight = shownHighlight
       let selRange = NSRange(location: start.utf16Offset(in: preedit), length: preedit.utf16.distance(from: start, to: end))

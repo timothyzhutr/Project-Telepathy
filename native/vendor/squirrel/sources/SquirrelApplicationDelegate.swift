@@ -21,13 +21,19 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
   var showStatusIcon: Bool = true
   var statusItem: NSStatusItem?
   private var informationWindow: TelepathyInformationWindow?
+  private var preferencesObserver: NSObjectProtocol?
   func applicationWillFinishLaunching(_ notification: Notification) {
     panel = SquirrelPanel(position: .zero)
     refreshStatusItem()
     addObservers()
+    preferencesObserver = NotificationCenter.default.addObserver(forName: .telepathyPreferencesChanged, object: TelepathyPreferences.shared, queue: .main) { [weak self] _ in
+      self?.loadSettings()
+      self?.panel?.inputController?.preferencesDidChange()
+    }
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    if let preferencesObserver { NotificationCenter.default.removeObserver(preferencesObserver) }
     // swiftlint:disable:next notification_center_detachment
     NotificationCenter.default.removeObserver(self)
     DistributedNotificationCenter.default().removeObserver(self)
@@ -68,6 +74,14 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
 
   func openWiki() {
     if informationWindow == nil { informationWindow = TelepathyInformationWindow() }
+    informationWindow?.selectTab("credits")
+    informationWindow?.showWindow(nil)
+    NSApp.activate()
+  }
+
+  func openSettings() {
+    if informationWindow == nil { informationWindow = TelepathyInformationWindow() }
+    informationWindow?.selectTab("settings")
     informationWindow?.showWindow(nil)
     NSApp.activate()
   }
@@ -111,7 +125,13 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     enableNotifications = config!.getString("show_notifications_when") != "never"
-    showStatusIcon = config!.getBool("status_icon/show") ?? true
+    let preferences = TelepathyPreferences.shared
+    NSApp.appearance = switch preferences.appearance {
+    case "light": NSAppearance(named: .aqua)
+    case "dark": NSAppearance(named: .darkAqua)
+    default: nil
+    }
+    showStatusIcon = preferences.enabled(.statusIcon)
     refreshStatusItem()
     if let panel = panel, let config = self.config {
       panel.load(config: config, forDarkMode: false)

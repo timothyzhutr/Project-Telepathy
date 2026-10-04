@@ -295,6 +295,13 @@ final class SquirrelTheme {
       available = false
     }
 
+    let preferences = TelepathyPreferences.shared
+    if preferences.candidatesPerRow > 0 { linear = preferences.candidatesPerRow > 1 }
+    inlinePreedit = preferences.enabled(.inlinePinyin)
+    fontSize = CGFloat(preferences.fontSize)
+    labelFontSize = fontSize
+    commentFontSize = fontSize
+    preeditFontSize = fontSize
     fonts = decodeFonts(from: fontName)
     self.fontSize = fontSize
     labelFonts = decodeFonts(from: labelFontName ?? fontName)

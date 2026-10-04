@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="740" viewBox="0 0 1200 740">
+  <title>Telepathy — three original logo directions</title>
+  <desc>Context link uses text brackets joined by a connection. Text gesture recalls the Chinese character 文. Quiet echo pairs two speech forms. Each is tested in monochrome at menu-bar sizes. These are exploratory, not installed app icons.</desc>
+  <defs>
+    <g id="link" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M24 14H14v36h10M40 14h10v36H40"/>
+      <path d="M24 38c8 0 8-12 16-12"/>
+      <circle cx="24" cy="38" r="2" fill="currentColor" stroke="none"/>
+      <circle cx="40" cy="26" r="2" fill="currentColor" stroke="none"/>
+    </g>
+    <g id="text" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M32 12v5M15 23h34M23 29c4 11 13 19 26 24M41 29c-4 11-13 19-26 24"/>
+      <circle cx="49" cy="12" r="3" fill="currentColor" stroke="none"/>
+    </g>
+    <g id="echo" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M30 14H18a8 8 0 0 0-8 8v12a8 8 0 0 0 8 8h4l8 8V30"/>
+      <path d="M34 50h12a8 8 0 0 0 8-8V30a8 8 0 0 0-8-8h-4l-8-8v20"/>
+    </g>
+  </defs>
+  <rect width="1200" height="740" fill="#f5f6f2"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, sans-serif" fill="#203d32">
+    <text x="48" y="65" font-size="15" letter-spacing="3">PROJECT TELEPATHY · LOGO EXPLORATIONS</text>
+    <text x="48" y="122" font-size="36" font-weight="600">A little context. The right word.</text>
+    <text x="48" y="156" font-size="17" fill="#66736b">Original vector concepts · one colour · readable at small sizes · provisional</text>
+    <g fill="#fff" stroke="#d9e1d8"><rect x="48" y="190" width="352" height="342" rx="22"/><rect x="424" y="190" width="352" height="342" rx="22"/><rect x="800" y="190" width="352" height="342" rx="22"/></g>
+    <g color="#2c7056">
+      <use xlink:href="#link" transform="translate(166 222) scale(1.8)"/>
+      <use xlink:href="#text" transform="translate(542 222) scale(1.8)"/>
+      <use xlink:href="#echo" transform="translate(918 222) scale(1.8)"/>
+    </g>
+    <g font-size="23" font-weight="600"><text x="76" y="383">01  Context link</text><text x="452" y="383">02  Text gesture</text><text x="828" y="383">03  Quiet echo</text></g>
+    <g font-size="17" fill="#66736b">
+      <text x="76" y="419">Text brackets + two connected points.</text><text x="76" y="447">Typing and context in a single mark.</text><text x="76" y="490" fill="#2c7056">First choice to develop</text>
+      <text x="452" y="419">A loose gesture around 文.</text><text x="452" y="447">Directly rooted in Chinese writing.</text><text x="452" y="490">More language-specific</text>
+      <text x="828" y="419">Two speech forms sharing a thought.</text><text x="828" y="447">The most literal telepathy metaphor.</text><text x="828" y="490">Softer, closer to a messaging app</text>
+    </g>
+    <rect x="48" y="554" width="1104" height="138" rx="22" fill="#20332b"/>
+    <text x="76" y="588" font-size="14" letter-spacing="1" fill="#bdcfc2">MENU-BAR STUDIES · 16 / 24 / 40 PX</text>
+    <g color="#f2f5ee">
+      <use xlink:href="#link" transform="translate(76 616) scale(.25)"/><use xlink:href="#link" transform="translate(118 612) scale(.375)"/><use xlink:href="#link" transform="translate(168 604) scale(.625)"/>
+      <use xlink:href="#text" transform="translate(452 616) scale(.25)"/><use xlink:href="#text" transform="translate(494 612) scale(.375)"/><use xlink:href="#text" transform="translate(544 604) scale(.625)"/>
+      <use xlink:href="#echo" transform="translate(828 616) scale(.25)"/><use xlink:href="#echo" transform="translate(870 612) scale(.375)"/><use xlink:href="#echo" transform="translate(920 604) scale(.625)"/>
+    </g>
+  </g>
+</svg>
