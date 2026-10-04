@@ -2,6 +2,51 @@ import os,subprocess,tempfile,unittest,shutil
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 class InstallerTests(unittest.TestCase):
+    def fixture(self, tmp, fail=False):
+        home=tmp/'user';release=tmp/'release';release.mkdir()
+        native='Telepathy.app/Contents/MacOS/Telepathy'
+        for base in (release,home/'Library/Input Methods'):
+            path=base/native;path.parent.mkdir(parents=True)
+            path.write_text('#!/bin/bash\n'+('[[ "${1:-}" != "--verify-runtime" ]]\n' if fail and base==release else 'exit 0\n'))
+            path.chmod(0o755)
+        (release/'Telepathy.app/Contents/Resources/Profile').mkdir(parents=True)
+        backups=home/'Library/Application Support/Telepathy/InstallBackups'
+        for i in range(4):
+            old=backups/f'2020010{i+1}-120000/Telepathy.app'
+            old.mkdir(parents=True);(old/'marker').write_text(str(i))
+        personal=backups/'personal';personal.mkdir();(personal/'marker').write_text('keep')
+        incomplete=backups/'20200105-120000/new.app';incomplete.mkdir(parents=True)
+        shutil.copyfile(ROOT/'packaging/Install Telepathy.command',release/'Install Telepathy.command')
+        return home,release,backups
+
+    def test_success_keeps_two_recent_backups_without_touching_unrelated_or_incomplete_folders(self):
+        with tempfile.TemporaryDirectory(prefix='telepathy retention ') as name:
+            home,release,backups=self.fixture(Path(name))
+            result=subprocess.run(['/bin/bash',str(release/'Install Telepathy.command')],env=dict(os.environ,TELEPATHY_INSTALL_ROOT=str(home)),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            retained=[p for p in backups.iterdir() if (p/'Telepathy.app').is_dir()]
+            self.assertEqual(len(retained),2,'Successful installs must bound backup storage')
+            self.assertTrue((backups/'20200104-120000/Telepathy.app/marker').exists())
+            self.assertTrue((backups/'personal/marker').exists())
+            self.assertTrue((backups/'20200105-120000/new.app').exists())
+
+    def test_failed_install_preserves_every_previous_backup(self):
+        with tempfile.TemporaryDirectory(prefix='telepathy retention failure ') as name:
+            home,release,backups=self.fixture(Path(name),fail=True)
+            result=subprocess.run(['/bin/bash',str(release/'Install Telepathy.command')],env=dict(os.environ,TELEPATHY_INSTALL_ROOT=str(home)),capture_output=True,text=True)
+            self.assertNotEqual(result.returncode,0)
+            for i in range(4):self.assertTrue((backups/f'2020010{i+1}-120000/Telepathy.app/marker').exists())
+            self.assertTrue((home/'Library/Input Methods/Telepathy.app/Contents/MacOS/Telepathy').exists())
+
+    def test_success_preserves_an_interrupted_install_after_staging_moved(self):
+        with tempfile.TemporaryDirectory(prefix='telepathy interrupted install ') as name:
+            home,release,backups=self.fixture(Path(name))
+            interrupted=backups/'20190101-120000';(interrupted/'Telepathy.app').mkdir(parents=True)
+            (interrupted/'.install-in-progress').write_text('')
+            result=subprocess.run(['/bin/bash',str(release/'Install Telepathy.command')],env=dict(os.environ,TELEPATHY_INSTALL_ROOT=str(home)),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertTrue((interrupted/'Telepathy.app').exists(),'A SIGKILL leaves no new.app but its recovery backup must survive')
+
     def test_upgrade_stops_only_the_previous_installed_helper(self):
         with tempfile.TemporaryDirectory(prefix='telepathy legacy upgrade ') as name:
             tmp=Path(name);home=tmp/'user';release=tmp/'release';release.mkdir()

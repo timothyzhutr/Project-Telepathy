@@ -1,6 +1,6 @@
 """Offline context prediction and alternative Kev pointer-head decisions."""
 import math,os,time
-from functools import lru_cache
+from collections import OrderedDict
 from model_store import validate_models,manifest
 from prompt import build_request
 class KevRanker:
@@ -56,16 +56,29 @@ class KevRanker:
         self.route('I think ','he',['和','喝','何'])
         self.route('这个职位拥有决定预算分配的','quanli',['权力','权利','全力','劝离','圈里','泉里','拳理','全利','全礼','犬吏','全里','全离'])
         self.rank('这个职位拥有决定预算分配的','quanli',['权力','权利','全力','劝离','圈里','泉里','拳理','全利','全礼','犬吏','全里','全离'])
-    @lru_cache(maxsize=32)
     def cap(self,prefix):
-        start=0
-        while start<len(prefix) and len(self.tok(prefix[start:],add_special_tokens=False).input_ids)>100: start+=1
-        return prefix[start:]
-    @lru_cache(maxsize=1)
+        # Instance-owned caches cannot keep a replaced model alive. Offsets
+        # jump directly to the token budget; re-encode to verify BPE boundaries.
+        cache=self.__dict__.setdefault('_capped_prefixes',OrderedDict())
+        if prefix in cache:
+            cache.move_to_end(prefix);return cache[prefix]
+        original=prefix
+        encoded=self.tok(prefix,add_special_tokens=False,return_offsets_mapping=True)
+        while len(encoded.input_ids)>100:
+            start=max(1,encoded.offset_mapping[-100][0])
+            prefix=prefix[start:]
+            encoded=self.tok(prefix,add_special_tokens=False,return_offsets_mapping=True)
+        cache[original]=prefix
+        if len(cache)>32:cache.popitem(last=False)
+        return prefix
     def stable_tokens(self,prefix):
         # Tokenization can merge at the boundary. RankingCache intersects this
         # prefix with the actual encoding before reusing any recurrent state.
-        return [self.tok.convert_tokens_to_ids('<|fim_prefix|>')]+self.user_tokens(self.tok,'prefix: '+prefix+'\npinyin:')
+        cached=self.__dict__.get('_stable_tokens')
+        if cached is None or cached[0]!=prefix:
+            tokens=[self.tok.convert_tokens_to_ids('<|fim_prefix|>')]+self.user_tokens(self.tok,'prefix: '+prefix+'\npinyin:')
+            self._stable_tokens=(prefix,tokens)
+        return self._stable_tokens[1]
     def rank(self,prefix,pinyin,words,use_cache=True,*,strategy='continuation'):
         started=time.perf_counter()
         if strategy not in ('kev','continuation'):

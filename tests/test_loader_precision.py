@@ -1,4 +1,4 @@
-import sys,time,unittest
+import sys,time,unittest,weakref
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -7,6 +7,20 @@ from decision import DecisionService
 from server import ModelLoader
 
 class LoaderPrecisionTests(unittest.TestCase):
+    def test_reload_releases_previous_ranker_before_allocating_replacement(self):
+        old = SimpleRanker()
+        old.cycle = old
+        reference = weakref.ref(old)
+        service = DecisionService(old); del old
+        loader = ModelLoader(service, Path('/unused'))
+        released = []
+        def replacement(*args):
+            released.append(reference() is None)
+            return SimpleRanker()
+        with patch('kev_ranker.KevRanker', side_effect=replacement):
+            loader.start(); self.wait_loaded(loader)
+        self.assertEqual(released, [True], 'Reload must not allocate two backbones together')
+        self.assertEqual(loader.status, 'ready')
     def wait_loaded(self,loader):
         deadline=time.monotonic()+2
         while loader.status=='loading':
@@ -26,5 +40,8 @@ class LoaderPrecisionTests(unittest.TestCase):
         self.assertNotIn('quantization',loader.health())
         loader.status='error'
         self.assertNotIn('backbone_weight_bytes',loader.health())
+
+class SimpleRanker:
+    model_info = {}
 
 if __name__=='__main__':unittest.main()

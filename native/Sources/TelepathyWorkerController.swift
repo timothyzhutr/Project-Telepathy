@@ -15,6 +15,9 @@ final class TelepathyWorkerController {
   private var stopped = false
   private var lastEnabled: Bool?
   private var lastAttempt = Date.distantPast
+  private var healthTask: URLSessionDataTask?
+  private var restart: DispatchWorkItem?
+  private var generation = 0
   private let session: URLSession = {
     let config = URLSessionConfiguration.ephemeral
     config.timeoutIntervalForRequest = 1
@@ -50,7 +53,25 @@ final class TelepathyWorkerController {
 
   func ensureRunning() {
     guard !stopped, preferences.enabled(.kev), !shutdownInFlight,
-          process?.isRunning != true, Date().timeIntervalSince(lastAttempt) > 15 else { return }
+          process?.isRunning != true, healthTask == nil,
+          Date().timeIntervalSince(lastAttempt) > 15 else { return }
+    let ticket = generation
+    healthTask = session.dataTask(with: baseURL.appendingPathComponent("api/health")) { [weak self] data, response, error in
+      let body = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+      let serving = error == nil && (response as? HTTPURLResponse)?.statusCode == 200 &&
+        body?["app"] as? String == "Telepathy" && body?["ime_api"] as? Int == 1
+      DispatchQueue.main.async {
+        guard let self, self.generation == ticket else { return }
+        self.healthTask = nil
+        guard !serving, !self.stopped, self.preferences.enabled(.kev),
+              !self.shutdownInFlight, self.process?.isRunning != true else { return }
+        self.launch()
+      }
+    }
+    healthTask?.resume()
+  }
+
+  private func launch() {
     lastAttempt = Date()
     let child = Process()
     child.executableURL = executable; child.arguments = arguments; child.environment = environment
@@ -59,13 +80,22 @@ final class TelepathyWorkerController {
       DispatchQueue.main.async {
         guard let self, self.process === child else { return }
         self.process = nil
-        self.ensureRunning()
+        // A clean lock-contention exit means another helper owns service.
+        // Only an unexpected failure schedules an automatic retry.
+        if child.terminationStatus != 0 && !self.stopped && self.preferences.enabled(.kev) {
+          let work = DispatchWorkItem { [weak self] in self?.ensureRunning() }
+          self.restart = work
+          DispatchQueue.main.asyncAfter(deadline: .now() + max(0.01, 15.01 - Date().timeIntervalSince(self.lastAttempt)), execute: work)
+        }
       }
     }
     do { try child.run(); process = child } catch { process = nil }
   }
 
   private func stopRunning() {
+    generation += 1
+    healthTask?.cancel(); healthTask = nil
+    restart?.cancel(); restart = nil
     if let process, process.isRunning { process.terminate() }
     guard !shutdownInFlight else { return }
     shutdownInFlight = true

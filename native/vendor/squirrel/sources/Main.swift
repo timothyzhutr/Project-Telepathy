@@ -51,12 +51,9 @@ import InputMethodKit
     app.setActivationPolicy(.accessory)
     FileManager.default.changeCurrentDirectoryPath(Bundle.main.sharedSupportPath!)
     // Start from the packaged compiled profile, without a source checkout or deployment.
-    if !FileManager.default.fileExists(atPath: userDir.appendingPathComponent("build/wanxiang.schema.yaml").path) {
-      do {
-        try FileManager.default.createDirectory(at: userDir, withIntermediateDirectories: true)
-        try FileManager.default.copyItem(at: appDir.appendingPathComponent("Contents/Resources/Profile/build"), to: userDir.appendingPathComponent("build"))
-      } catch { fputs("Unable to initialize the packaged Rime profile.\n", stderr); exit(1) }
-    }
+    do {
+      try ProfileSeeder.seed(source: appDir.appendingPathComponent("Contents/Resources/Profile/build"), target: userDir.appendingPathComponent("build"))
+    } catch { fputs("Unable to initialize the packaged Rime profile.\n", stderr); exit(1) }
     delegate.setupRime()
     delegate.startRime(fullCheck: false)
     delegate.loadSettings()

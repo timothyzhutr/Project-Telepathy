@@ -336,24 +336,8 @@ final class SquirrelInputController: IMKInputController {
     rimeUpdate()
   }
 
-  @objc func deploy() {
-    NSApp.squirrelAppDelegate.deploy()
-  }
-
-  @objc func syncUserData() {
-    NSApp.squirrelAppDelegate.syncUserData()
-  }
-
   @objc func openLogFolder() {
     NSApp.squirrelAppDelegate.openLogFolder()
-  }
-
-  @objc func openRimeFolder() {
-    NSApp.squirrelAppDelegate.openRimeFolder()
-  }
-
-  @objc func checkForUpdates() {
-    NSApp.squirrelAppDelegate.checkForUpdates()
   }
 
   @objc func openWiki() {
@@ -596,9 +580,10 @@ private extension SquirrelInputController {
         _ = page(up: rimeKeycode == UInt32(XK_Page_Up) || rimeKeycode == 45)
         return true
       }
-      if rimeKeycode == UInt32(XK_Up) || rimeKeycode == UInt32(XK_Down) {
+      let horizontal = rimeAPI.get_option(session, "_linear") && (rimeKeycode == UInt32(XK_Left) || rimeKeycode == UInt32(XK_Right))
+      if rimeKeycode == UInt32(XK_Up) || rimeKeycode == UInt32(XK_Down) || horizontal {
         freezeRanking()
-        let step = rimeKeycode == UInt32(XK_Up) ? -1 : 1
+        let step = rimeKeycode == UInt32(XK_Up) || rimeKeycode == UInt32(XK_Left) ? -1 : 1
         displayedHighlight = max(0, min(ranking.visibleOrder.count - 1, displayedHighlight + step))
         if let native = ranking.nativeIndex(displayedHighlight) {
           return rimeAPI.highlight_candidate_on_current_page(session, native)
@@ -657,11 +642,35 @@ private extension SquirrelInputController {
     }
   }
 
-  func scheduleRanking(_ data: Data, revision: Int, deadline: DispatchTime) {
+  func scheduleDecisions(prefix: String, raw: String, pending: String, words: [String],
+                         rankCount: Int, revision: Int, routeLanguage: Bool, strategy: String) {
     rankingDelay?.cancel()
-    let work = DispatchWorkItem { [weak self] in self?.submitRanking(data, revision: revision) }
+    let work = DispatchWorkItem { [weak self] in
+      guard let self, self.rankingEnabled, self.ranking.revision == revision, !self.ranking.frozen else { return }
+      // Native pointers stay on the event thread. Probe only a settled first
+      // page; disabled assistance, special input and later pages never get here.
+      let count = routeLanguage ? words.count : rankCount
+      var ends = [Int32](repeating: -1, count: count)
+      ends.withUnsafeMutableBufferPointer { tp_candidate_ends(self.session, Int32(count), $0.baseAddress) }
+      let snapshot: [String: Any] = ["revision": revision, "prefix": prefix, "pinyin": raw, "pending": pending,
+                                    "candidates": Array(words.prefix(count)), "candidate_ends": ends.map(Int.init), "strategy": strategy]
+      var rankingSnapshot = snapshot
+      rankingSnapshot["candidates"] = Array(words.prefix(rankCount))
+      rankingSnapshot["candidate_ends"] = Array(ends.prefix(rankCount)).map(Int.init)
+      guard let data = try? JSONSerialization.data(withJSONObject: rankingSnapshot) else { return }
+      if routeLanguage, let languageData = try? JSONSerialization.data(withJSONObject: snapshot) {
+        DecisionTransport.language.submit(languageData) { [weak self] result in
+          guard let self, self.automaticLanguageEnabled, !self.ranking.frozen,
+                self.ranking.revision == revision else { return }
+          let language = result?["status"] as? String == "ok" ? result?["language"] as? String ?? "uncertain" : "uncertain"
+          _ = self.intent.apply(language, revision: revision)
+          if !self.intent.english { self.submitRanking(data, revision: revision) }
+          self.rimeUpdate(clearReservedComments: false)
+        }
+      } else { self.submitRanking(data, revision: revision) }
+    }
     rankingDelay = work
-    DispatchQueue.main.asyncAfter(deadline: deadline, execute: work)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.085, execute: work)
   }
 
   // Preserve reserved comment marks when librime requests a UI-only refresh.
@@ -782,42 +791,21 @@ private extension SquirrelInputController {
           compositionPrefix = precedingText(); refreshContextOnEdit = false
         }
         let preferences = TelepathyPreferences.shared
-        let rankCount = rankingEnabled && page == 0 && !raw.isEmpty ? min(preferences.candidatesToRank, candidates.count) : 0
+        let rankCount = rankingEnabled && page == 0 && DecisionSnapshot.validPinyin(raw) && DecisionSnapshot.validPinyin(pending)
+          ? min(preferences.candidatesToRank, candidates.count) : 0
         let revision = ranking.reset(key: signature, count: candidates.count, rankedCount: rankCount, shownCount: preferences.candidatesToShow)
         intent.update(raw: raw, revision: revision)
-        let snapshotWords = candidates
-        var ends = [Int32](repeating: -1, count: candidates.count)
-        ends.withUnsafeMutableBufferPointer { tp_candidate_ends(session, Int32(candidates.count), $0.baseAddress) }
-        let prefix = String((compositionPrefix + confirmed).suffix(512))
-        let languagePayload: [String: Any] = ["revision": revision, "prefix": prefix, "pinyin": raw, "pending": pending,
-                                    "candidates": snapshotWords, "candidate_ends": ends.map(Int.init),
-                                    "strategy": TelepathyPreferences.shared.rankingStrategy]
-        var payload = languagePayload
-        payload["candidates"] = Array(snapshotWords.prefix(rankCount))
-        payload["candidate_ends"] = Array(ends.prefix(rankCount)).map(Int.init)
-        let data = try? JSONSerialization.data(withJSONObject: payload)
-        let deadline = DispatchTime.now() + 0.085
         if rankCount == 0 {
           intent.forceChinese()
-        } else if automaticLanguageEnabled && confirmed.isEmpty && caret == raw.utf8.count, let data,
-                  let languageData = try? JSONSerialization.data(withJSONObject: languagePayload) {
-          // Start during the existing ranking debounce. Replies can only change
-          // the current uncommitted snapshot and cannot override manual choices.
-          DecisionTransport.language.submit(languageData) { [weak self] result in
-            guard let self, self.automaticLanguageEnabled, !self.ranking.frozen,
-                  self.ranking.revision == revision else { return }
-            let language = result?["status"] as? String == "ok" ? result?["language"] as? String ?? "uncertain" : "uncertain"
-            // A manual language override rejects the judgment, while an edited
-            // Chinese snapshot can still use ordinary candidate ranking.
-            _ = self.intent.apply(language, revision: revision)
-            if self.intent.english { self.rankingDelay?.cancel(); self.rankingDelay = nil }
-            else { self.scheduleRanking(data, revision: revision, deadline: deadline) }
-            self.rimeUpdate(clearReservedComments: false)
-          }
         } else {
-          if automaticLanguageEnabled { intent.forceChinese() }
-          else { intent.invalidate(revision: revision) }
-          if let data { scheduleRanking(data, revision: revision, deadline: deadline) }
+          let routeLanguage = automaticLanguageEnabled && confirmed.isEmpty && caret == raw.utf8.count
+          if !routeLanguage {
+            if automaticLanguageEnabled { intent.forceChinese() }
+            else { intent.invalidate(revision: revision) }
+          }
+          scheduleDecisions(prefix: DecisionSnapshot.cappedPrefix(compositionPrefix + confirmed), raw: raw,
+                            pending: pending, words: candidates, rankCount: rankCount, revision: revision,
+                            routeLanguage: routeLanguage, strategy: preferences.rankingStrategy)
         }
       }
       if intent.english {

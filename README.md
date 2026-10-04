@@ -37,7 +37,7 @@ Telepathy 目前仍是早期版本，支持 **搭载 Apple 芯片、运行 macOS
    "$HOME/Library/Input Methods/Telepathy.app/Contents/MacOS/Telepathy" --download-model
    ```
 
-模型文件约需 **1.8 GB 磁盘空间**，另外还需要应用本身的空间。模型下载或加载期间，普通拼音输入仍然可用。更新时，安装程序会备份已有的 Telepathy 应用和配置。
+模型文件约需 **1.8 GB 磁盘空间**，另外还需要应用本身的空间。模型下载或加载期间，普通拼音输入仍然可用。更新时，安装程序会备份已有的 Telepathy 应用和配置；安装成功后保留最近两份备份。
 
 当前版本使用临时签名（ad-hoc），尚未通过 Apple 公证。如果 macOS 阻止打开，请先尝试运行，再到 **系统设置 → 隐私与安全性** 中选择 **仍要打开**。更多安装说明见[故障排查（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/troubleshooting.md)。
 

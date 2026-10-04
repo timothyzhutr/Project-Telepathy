@@ -27,6 +27,12 @@ curl http://127.0.0.1:18765/api/health
 
 The helper is loopback-only on port 18765. It accepts copied native snapshots and ranks candidates; Rime owns all composition and commits. 
 
+## Profile recovery
+
+Telepathy repairs an incomplete compiled Rime profile using a staged copy. When it replaces an existing incomplete `build` directory, the displaced files remain in `~/Library/Telepathy/Rime/.build-incomplete-…` for manual recovery. A complete profile is left intact.
+
+Successful installs keep the two newest completed app/profile backups. Interrupted or failed installs marked as in progress are excluded from automatic pruning.
+
 ## Uninstall
 
 First switch to another input source and remove Telepathy from Keyboard settings. Then run:
@@ -38,4 +44,3 @@ rm -rf "$HOME/Library/Input Methods/Telepathy.app"
 ```
 
 Your model files, profile and install backups remain for reuse. To reclaim their space, remove `~/Library/Application Support/Telepathy` and `~/Library/Telepathy` after checking the backups. Existing Squirrel or Apple input sources are separate.
-

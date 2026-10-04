@@ -10,8 +10,6 @@ import AppKit
 import InputMethodKit
 
 final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
-  static let rimeWikiURL = URL(string: "https://github.com/rime/home/wiki")!
-  static let updateNotificationIdentifier = "TelepathyUpdateNotification"
   static let notificationIdentifier = "TelepathyNotification"
 
   let rimeAPI: RimeApi_stdbool = rime_get_api_stdbool().pointee
@@ -66,12 +64,6 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
   func openLogFolder() {
     NSWorkspace.shared.open(SquirrelApp.logDir)
   }
-
-  func openRimeFolder() {
-    NSWorkspace.shared.open(SquirrelApp.userDir)
-  }
-
-  func checkForUpdates() {}
 
   func openWiki() {
     if informationWindow == nil { informationWindow = TelepathyInformationWindow() }

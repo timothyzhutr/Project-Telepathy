@@ -1,5 +1,5 @@
 """Loopback-only native ranking service. No text/request logging."""
-import json,threading
+import gc,json,threading
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 
 def make_server(port,service,health=None,reload_model=None):
@@ -19,7 +19,7 @@ def make_server(port,service,health=None,reload_model=None):
         def do_GET(self):
             if not self.allowed(): return
             if self.path!='/api/health': self.send(404,{'error':'Unknown endpoint'});return
-            self.send(200,dict(app='Telepathy',version='0.1.11',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
+            self.send(200,dict(app='Telepathy',version='0.1.12',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
         def do_POST(self):
             if not self.allowed(): return
             if self.path not in ('/api/decision','/api/language','/api/reload','/api/shutdown'): self.send(404,{'error':'Unknown endpoint'});return
@@ -54,6 +54,13 @@ class ModelLoader:
         def load():
             self.status='loading';self.error=None
             try:
+                # Finish active inference and release the old backbone before
+                # constructing another. Ranker/scorer references form cycles.
+                with self.service.lock:
+                    mx=getattr(self.service.ranker,'mx',None)
+                    self.service.ranker=None
+                gc.collect()
+                if mx is not None:mx.clear_cache()
                 from kev_ranker import KevRanker
                 ranker=KevRanker(self.model_dir)
                 with self.service.lock:

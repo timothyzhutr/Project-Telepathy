@@ -41,7 +41,10 @@ def main():
     sdk = subprocess.check_output(['xcrun', '--show-sdk-path'], text=True).strip()
     coverage = BUILD / 'credits-coverage.o'
     run('xcrun', 'clang', '-c', '-Wall', '-Wextra', '-I' + str(dist / 'include'),
-        SOURCE / 'Sources/Coverage.c', '-o', coverage)
+        '-Dtp_candidate_ends=tp_real_candidate_ends', SOURCE / 'Sources/Coverage.c', '-o', coverage)
+    probe = BUILD / 'credits-probe.o'
+    run('xcrun', 'clang', '-c', '-Wall', '-Wextra', '-I' + str(dist / 'include'),
+        '-I' + str(SOURCE / 'Sources'), SOURCE / 'Tests/CoverageProbe.c', '-o', probe)
     run('xcrun', 'swiftc', '-swift-version', '5', '-enable-bare-slash-regex',
         '-module-name', 'TelepathyNative', '-import-objc-header',
         SOURCE / 'vendor/squirrel/sources/Squirrel-Bridging-Header.h',
@@ -52,7 +55,7 @@ def main():
         '-Xlinker', '-rpath', '-Xlinker', (dist / 'lib').resolve(),
         *[p for p in sorted((SOURCE / 'vendor/squirrel/sources').glob('*.swift')) if p.name != 'Main.swift'],
         *sorted((SOURCE / 'Sources').glob('*.swift')),
-        SOURCE / 'Tests/CreditsOpenerTests.swift', SOURCE / 'Tests/ControllerEventTests.swift', coverage,
+        SOURCE / 'Tests/CreditsOpenerTests.swift', SOURCE / 'Tests/ControllerEventTests.swift', coverage, probe,
         '-o', contents / 'MacOS/CreditsOpenerTests')
     fixture = BUILD / 'foreground-tests.app/Contents'
     (fixture / 'MacOS').mkdir(parents=True, exist_ok=True)

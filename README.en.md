@@ -37,7 +37,7 @@ You do not need to install Python, Homebrew or any build tools.
    "$HOME/Library/Input Methods/Telepathy.app/Contents/MacOS/Telepathy" --download-model
    ```
 
-The model download needs approximately **1.8 GB of disk space**, in addition to the app. Pinyin typing works while the model is downloading or loading. The installer backs up an existing Telepathy installation before replacing it.
+The model download needs approximately **1.8 GB of disk space**, in addition to the app. Pinyin typing works while the model is downloading or loading. The installer backs up an existing Telepathy installation before replacing it and retains the two newest backups after a successful install.
 
 The release is ad-hoc signed and has not been notarized by Apple. If macOS blocks it, use **System Settings → Privacy & Security → Open Anyway** after trying to open the package. See [troubleshooting](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/troubleshooting.md) for installation help.
 

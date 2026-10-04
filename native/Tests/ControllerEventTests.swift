@@ -1,4 +1,5 @@
 import AppKit
+@_silgen_name("tp_test_probe_count") private func coverageProbeCount() -> Int32
 import InputMethodKit
 import ObjectiveC
 
@@ -284,6 +285,23 @@ enum ControllerEventTests {
     let reversed = Array(all.reversed())
     let inferredColor = highlightedColor()
     controller.commitComposition(client)
+    let beforeFastTyping = coverageProbeCount()
+    client.text = "中文："; key("l"); key("e")
+    check(coverageProbeCount() == beforeFastTyping, "Fast typing must defer native coverage probes until the snapshot debounce")
+    wait(0.25)
+    check(coverageProbeCount() == beforeFastTyping + 1, "Only the settled composition needs a coverage probe")
+    controller.commitComposition(client)
+    typeLe(); key("\u{f703}", code: 124); key(" ", code: 49)
+    check(client.text == "中文：" + reversed[1], "Right must select the next displayed ranked candidate")
+    typeLe(); key("\u{f703}", code: 124); key("\u{f702}", code: 123); key(" ", code: 49)
+    check(client.text == "中文：" + reversed[0], "Left must return through the displayed ranked order")
+    typeLe(); for _ in 0..<10 { key("\u{f703}", code: 124) }; key(" ", code: 49)
+    check(client.text == "中文：" + reversed[5], "Right must stop at the last visible candidate")
+    IntentProtocol.delay = 0.25
+    client.text = "中文："; key("l"); key("e"); wait(0.12)
+    key("\u{f703}", code: 124); wait(0.35); key(" ", code: 49)
+    check(client.text == "中文：" + all[1], "A late model reply must not override Right navigation")
+    IntentProtocol.delay = 0.01
     IntentProtocol.inferenceRan = false
     typeLe()
     let ordinaryColor = highlightedColor()
@@ -405,7 +423,9 @@ enum ControllerEventTests {
     check(reversed.suffix(2).allSatisfy { renderedCandidates().contains($0) } &&
           reversed.prefix(10).allSatisfy { !renderedCandidates().contains($0) },
           "Page Down must reach the short final display page")
+    let beforeNativePage = coverageProbeCount()
     check(controller.page(up: false), "After exhausting the pool, paging must reach the next Rime page")
+    check(coverageProbeCount() == beforeNativePage, "Unranked native pages must bypass coverage probing")
     check(controller.page(up: true), "Paging back from another Rime page must succeed")
     check(all.suffix(2).allSatisfy { renderedCandidates().contains($0) } &&
           all.prefix(10).allSatisfy { !renderedCandidates().contains($0) },
@@ -416,13 +436,22 @@ enum ControllerEventTests {
     TelepathyPreferences.shared.set(false, for: .kev)
     controller.preferencesDidChange()
     let callsBeforeOff = IntentProtocol.rankCalls
+    let probesBeforeOff = coverageProbeCount()
     typeLe()
     check(all.prefix(6).allSatisfy { renderedCandidates().contains($0) } &&
           all.suffix(6).allSatisfy { !renderedCandidates().contains($0) } && IntentProtocol.rankCalls == callsBeforeOff,
           "The display limit must also apply when model assistance is off")
+    check(coverageProbeCount() == probesBeforeOff, "Assistance off must bypass coverage probing")
     check(controller.page(up: false) && controller.page(up: true), "Display paging must work without model assistance")
     key("1", code: 18)
     check(client.text == "中文：" + all[0], "Paging back must restore the visible native selection mapping")
+    TelepathyPreferences.shared.set(true, for: .kev)
+    controller.preferencesDidChange()
+    let beforeSymbols = coverageProbeCount(), requestsBeforeSymbols = IntentProtocol.rankCalls
+    client.text = "中文："; key("/"); key("f"); key("h"); wait(0.25)
+    check(coverageProbeCount() == beforeSymbols && IntentProtocol.rankCalls == requestsBeforeSymbols,
+          "Rime symbol input must bypass model requests and probing")
+    controller.commitComposition(client)
     controller.deactivateServer(client)
     IntentProtocol.reverseRanking = false
     defaults.removeObject(forKey: "TelepathyCandidatesToRank")

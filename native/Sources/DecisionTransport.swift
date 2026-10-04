@@ -6,24 +6,29 @@ final class DecisionTransport {
   static let shared = DecisionTransport()
   static let language = DecisionTransport(endpoint: "language")
   private let endpoint: String
-  init(endpoint: String = "decision") { self.endpoint = endpoint }
-  private var pending: (Data, ([String: Any]?) -> Void)?
-  private var running = false
-  private let session: URLSession = {
+  private let preferences: TelepathyPreferences
+  private let recoverWorker: () -> Void
+  private let session: URLSession
+  init(endpoint: String = "decision", preferences: TelepathyPreferences = .shared,
+       session: URLSession? = nil,
+       launchWorker: @escaping () -> Void = { TelepathyWorkerController.shared.ensureRunning() }) {
+    self.endpoint = endpoint; self.preferences = preferences; self.recoverWorker = launchWorker
     let config = URLSessionConfiguration.ephemeral
     config.timeoutIntervalForRequest = 2.5
     config.timeoutIntervalForResource = 3
-    return URLSession(configuration: config)
-  }()
+    self.session = session ?? URLSession(configuration: config)
+  }
+  private var pending: (Data, ([String: Any]?) -> Void)?
+  private var running = false
 
   func submit(_ data: Data, completion: @escaping ([String: Any]?) -> Void) {
-    guard TelepathyPreferences.shared.enabled(.kev) else { completion(nil); return }
+    guard preferences.enabled(.kev) else { completion(nil); return }
     pending = (data, completion)
     startNext()
   }
 
   private func startNext() {
-    guard TelepathyPreferences.shared.enabled(.kev) else { pending = nil; return }
+    guard preferences.enabled(.kev) else { pending = nil; return }
     guard !running, let (data, completion) = pending else { return }
     pending = nil
     running = true
@@ -38,13 +43,13 @@ final class DecisionTransport {
         guard let self = self else { return }
         self.running = false
         completion(result)
-        if !valid { self.launchWorker() }
+        if error != nil || !(response is HTTPURLResponse) { self.launchWorker() }
         self.startNext()
       }
     }.resume()
   }
 
   func launchWorker() {
-    TelepathyWorkerController.shared.ensureRunning()
+    recoverWorker()
   }
 }

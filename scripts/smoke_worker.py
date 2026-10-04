@@ -59,6 +59,21 @@ def main():
                     assert routed['status']=='ok' and routed['revision']==19,routed
                     assert routed['language']==(language if expected=='ready' else 'uncertain'),routed
                     print('Language '+expected+':',routed)
+                if expected=='ready':
+                    assert request('/api/reload',b'{}')['status']=='loading'
+                    deadline=time.monotonic()+40;loading=False
+                    while True:
+                        reloaded=request('/api/health')
+                        loading=loading or reloaded['status']=='loading'
+                        if loading and reloaded['status']=='ready':break
+                        assert reloaded['status']!='error',reloaded
+                        assert time.monotonic()<deadline,'Model reload did not finish'
+                        time.sleep(.05)
+                    check=dict(revision=25,prefix='作为消费者，我们有依法要求商家提供合格产品的',pinyin='quanli',
+                               candidates=['权力','权利'],candidate_ends=[6,6])
+                    rechecked=request('/api/decision',json.dumps(check).encode())
+                    assert rechecked['status']=='ok' and rechecked['order'][0]==1,rechecked
+                    print('Model reload replaced the ranker and resumed offline inference.')
                 try:
                     urllib.request.urlopen(urllib.request.Request(url+'/api/health',headers={'Origin':'https://example.com'}),timeout=5)
                     raise AssertionError('Foreign origin accepted')
