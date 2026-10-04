@@ -10,7 +10,7 @@ final class TelepathyPreferences {
     case rows = "TelepathyCandidatesPerRow", font = "TelepathyFontSize", appearance = "TelepathyAppearance"
     case inlinePinyin = "TelepathyInlinePinyin", annotations = "TelepathyAnnotations"
     case timing = "TelepathyRankingTiming", punctuation = "TelepathyChinesePunctuation"
-    case statusIcon = "TelepathyStatusIcon", kev = "KevEnabled"
+    case statusIcon = "TelepathyStatusIcon", kev = "KevEnabled", autoLanguage = "TelepathyAutoLanguage"
   }
   static let rowOptions = [0, 1, 2, 3, 4, 6, 12]
   let defaults: UserDefaults
@@ -29,7 +29,7 @@ final class TelepathyPreferences {
     return ["system", "light", "dark"].contains(value) ? value : "system"
   }
   func enabled(_ key: Key) -> Bool {
-    defaults.object(forKey: key.rawValue) as? Bool ?? (key != .statusIcon)
+    defaults.object(forKey: key.rawValue) as? Bool ?? (key != .statusIcon && key != .autoLanguage)
   }
   func set(_ value: Any, for key: Key) {
     defaults.set(value, forKey: key.rawValue)

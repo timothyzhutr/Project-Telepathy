@@ -52,6 +52,8 @@ private final class TestHealthProtocol: URLProtocol {
       app.run()
       return
     }
+    precondition(Bundle.main.bundleIdentifier == "local.telepathy.tests.credits")
+    UserDefaults.standard.removePersistentDomain(forName: "local.telepathy.tests.credits")
     URLProtocol.registerClass(TestHealthProtocol.self)
     defer { URLProtocol.unregisterClass(TestHealthProtocol.self) }
     // Intercept only the OS launch boundary so the real menu action can be
@@ -214,6 +216,12 @@ private final class TestHealthProtocol: URLProtocol {
     let kev = control("settings.kev", NSButton.self)
     kev.state = .off; change(kev)
     guard defaults.object(forKey: "KevEnabled") as? Bool == false else { fatalError("Settings must share the existing Kev menu preference") }
+    let automatic = control("settings.autoLanguage", NSButton.self)
+    guard automatic.state == .off else { fatalError("Automatic language mode must be opt-in") }
+    automatic.state = .on; change(automatic)
+    guard defaults.object(forKey: "TelepathyAutoLanguage") as? Bool == true else {
+      fatalError("Automatic Chinese / English typing must be available as a saved opt-in setting")
+    }
     delegate.openSettings()
     guard tabs.selectedTabViewItem?.label == "Settings", app.windows.filter({ $0.title == window.title }).count == 1 else {
       fatalError("Settings must open in the retained credits window")
@@ -222,7 +230,9 @@ private final class TestHealthProtocol: URLProtocol {
     let reset = descendants(tabs.tabViewItems[0].view!, of: NSButton.self).first(where: { $0.title == "Restore default settings" })!
     change(reset)
     guard defaults.object(forKey: "KevEnabled") == nil, rows.selectedTag() == 0,
-          font.intValue == 16, defaults.string(forKey: "UnrelatedPreference") == "preserve" else {
+          font.intValue == 16, automatic.state == .off,
+          defaults.object(forKey: "TelepathyAutoLanguage") == nil,
+          defaults.string(forKey: "UnrelatedPreference") == "preserve" else {
       fatalError("Restoring defaults must refresh controls and preserve unrelated preferences")
     }
     defaults.removeObject(forKey: "UnrelatedPreference")
@@ -281,5 +291,6 @@ private final class TestHealthProtocol: URLProtocol {
     print("PASS: native settings, persistence, panel rows/font, health, scoped reset, credits/licenses, keyboard shortcuts, reopening")
     if CommandLine.arguments.contains("--preview") { delegate.openSettings(); app.run() }
     window.close()
+    ControllerEventTests.run(delegate: delegate)
   }
 }

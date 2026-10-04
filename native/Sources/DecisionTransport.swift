@@ -4,6 +4,9 @@ import Foundation
 // Completion handlers execute on the main queue; no native Rime pointers cross it.
 final class DecisionTransport {
   static let shared = DecisionTransport()
+  static let language = DecisionTransport(endpoint: "language")
+  private let endpoint: String
+  init(endpoint: String = "decision") { self.endpoint = endpoint }
   private var pending: (Data, ([String: Any]?) -> Void)?
   private var running = false
   private var lastLaunch = Date.distantPast
@@ -23,7 +26,7 @@ final class DecisionTransport {
     guard !running, let (data, completion) = pending else { return }
     pending = nil
     running = true
-    var request = URLRequest(url: URL(string: "http://127.0.0.1:18765/api/decision")!)
+    var request = URLRequest(url: URL(string: "http://127.0.0.1:18765/api/\(endpoint)")!)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.httpBody = data

@@ -70,6 +70,7 @@ final class TelepathySettingsView: NSView {
       let button = NSButton(checkboxWithTitle: title, target: self, action: #selector(toggle(_:)))
       button.identifier = .init("settings." + key.rawValue)
       if key == .kev { button.identifier = .init("settings.kev") }
+      if key == .autoLanguage { button.identifier = .init("settings.autoLanguage") }
       toggles[key] = button
       add(button)
     }
@@ -108,6 +109,8 @@ final class TelepathySettingsView: NSView {
     heading("Typing")
     checkbox("Enable Kev assistance", .kev)
     note("Kev uses preceding text to rank candidates locally. The loaded model stays ready between decisions.")
+    checkbox("Automatic Chinese / English (experimental)", .autoLanguage)
+    note("Uses context to keep English words literal. Requires Kev assistance. Space adds a space after English; ↓ or Tab restores Chinese choices. Shift + a letter starts literal English until the next space.")
     checkbox("Use Chinese punctuation", .punctuation)
     note("Space chooses the highlighted candidate; 1–9 select candidates; Esc cancels composition. Personal dictionary learning is disabled in this prototype.")
     heading("Local model")

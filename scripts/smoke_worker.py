@@ -32,6 +32,12 @@ def main():
                 if expected=='ready':assert ranked['status']=='ok' and ranked['order'][0]==1 and ranked['order'][7:]==list(range(7,12)),ranked
                 else:assert ranked['status']=='unavailable' and ranked['order']==list(range(12)),ranked
                 print('Worker '+expected+':',ranked)
+                for prefix,language in [('I think ','english'),('天气很热，我们买点水来','chinese')]:
+                    snapshot=dict(revision=19,prefix=prefix,pinyin='he',pending='he',candidates=['和','喝','何'],candidate_ends=[2,2,2])
+                    routed=request('/api/language',json.dumps(snapshot).encode())
+                    assert routed['status']=='ok' and routed['revision']==19,routed
+                    assert routed['language']==(language if expected=='ready' else 'uncertain'),routed
+                    print('Language '+expected+':',routed)
                 try:
                     urllib.request.urlopen(urllib.request.Request(url+'/api/health',headers={'Origin':'https://example.com'}),timeout=5)
                     raise AssertionError('Foreign origin accepted')

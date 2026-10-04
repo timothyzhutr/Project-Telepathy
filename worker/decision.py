@@ -4,7 +4,8 @@ class DecisionService:
     def __init__(self,ranker=None):
         self.ranker=ranker
         self.lock=threading.Lock()
-    def decision(self,body):
+    @staticmethod
+    def snapshot(body):
         if not isinstance(body,dict): raise ValueError('Expected an object')
         revision=body.get('revision');prefix=body.get('prefix');raw=body.get('pinyin')
         pending=body.get('pending',raw);words=body.get('candidates');ends=body.get('candidate_ends')
@@ -17,6 +18,26 @@ class DecisionService:
             not isinstance(ends,list) or len(ends)!=len(words) or
             any(type(e) is not int or not -1<=e<=len(raw.encode()) for e in ends)):
             raise ValueError('Invalid native snapshot')
+        return revision,prefix,raw,pending,words,ends
+    def language(self,body):
+        revision,prefix,raw,pending,words,ends=self.snapshot(body)
+        fallback=dict(status='ok',revision=revision,language='uncertain',request_ms=0)
+        if raw!=pending or any(e<=0 for e in ends):return fallback
+        full=[w for w,e in zip(words,ends) if e==len(raw.encode())]
+        chinese=list(dict.fromkeys(w for w in full if not any(c.isascii() and c.isalpha() for c in w)))
+        if not chinese:
+            if any(w.lower()==raw.lower() and w.isascii() for w in full):
+                return dict(fallback,language='english',english_score=1)
+            return fallback
+        with self.lock:
+            if self.ranker is None:return fallback
+            try:
+                result=self.ranker.route(prefix,raw,chinese)
+                if result.get('language') not in ('english','chinese','uncertain'):return fallback
+                return dict(result,status='ok',revision=revision)
+            except Exception:return fallback
+    def decision(self,body):
+        revision,prefix,raw,pending,words,ends=self.snapshot(body)
         original=list(range(len(words)))
         unavailable=dict(status='unavailable',revision=revision,order=original)
         if any(e<=0 for e in ends): return unavailable

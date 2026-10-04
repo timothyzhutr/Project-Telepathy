@@ -23,7 +23,13 @@ class KevRanker:
         self.engine.head.temperature=ck.meta.temperature
         self.torch,self.mx=torch,mx
         self.request_type,self.record,self.answers,self.admit=SystemOneRequest,to_record,to_answers,admit
+        from language_router import LanguageRouter
+        self.language_router=LanguageRouter(self)
         self.rank('这个类可以','jicheng',['集成','继承'])
+        # Compile the LM vocabulary head and copied-cache suffix path before
+        # the worker reports ready, rather than during the first typed word.
+        self.route('I think ','he',['和','喝','何'])
+        self.route('这个职位拥有决定预算分配的','quanli',['权力','权利','全力','劝离','圈里','泉里','拳理','全利','全礼','犬吏','全里','全离'])
     @lru_cache(maxsize=32)
     def cap(self,prefix):
         start=0
@@ -42,3 +48,5 @@ class KevRanker:
         keep=choice=='keep'
         return dict(order=list(range(len(words))) if keep else order,selected_index=None if keep else int(choice[1:]),keep=keep,
             request_ms=(time.perf_counter()-started)*1000,context_tokens=len(self.tok(request['state']['prefix'],add_special_tokens=False).input_ids))
+    def route(self,prefix,raw,chinese):
+        return self.language_router.route(prefix,raw,chinese)

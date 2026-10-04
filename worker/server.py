@@ -19,10 +19,10 @@ def make_server(port,service,health=None,reload_model=None):
         def do_GET(self):
             if not self.allowed(): return
             if self.path!='/api/health': self.send(404,{'error':'Unknown endpoint'});return
-            self.send(200,dict(app='Telepathy',version='0.1.3',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
+            self.send(200,dict(app='Telepathy',version='0.1.4',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
         def do_POST(self):
             if not self.allowed(): return
-            if self.path not in ('/api/decision','/api/reload'): self.send(404,{'error':'Unknown endpoint'});return
+            if self.path not in ('/api/decision','/api/language','/api/reload'): self.send(404,{'error':'Unknown endpoint'});return
             try:
                 length=int(self.headers.get('Content-Length','-1'))
                 if not 0<=length<=8192:
@@ -31,7 +31,7 @@ def make_server(port,service,health=None,reload_model=None):
                 if self.path=='/api/reload':
                     if reload_model: reload_model()
                     self.send(202,{'status':'loading'});return
-                self.send(200,service.decision(body))
+                self.send(200,service.language(body) if self.path=='/api/language' else service.decision(body))
             except (ValueError,UnicodeError): self.send(400,{'error':'Invalid snapshot'})
     server=ThreadingHTTPServer(('127.0.0.1',port),Handler);server.daemon_threads=True
     return server

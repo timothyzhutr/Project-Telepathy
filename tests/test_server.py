@@ -25,3 +25,10 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request('/api/decision',b'{}')[0],400)
         self.assertEqual(self.request('/api/decision',b'x'*8193)[0],413)
         self.assertEqual(self.request('/compose',b'{}')[0],404)
+    def test_language_endpoint_is_local_validated_and_falls_back_without_model(self):
+        snapshot=dict(revision=19,prefix='I think ',pinyin='he',candidates=['和','喝'],candidate_ends=[2,2])
+        status,body=self.request('/api/language',json.dumps(snapshot).encode())
+        self.assertEqual((status,body['revision'],body['language']),(200,19,'uncertain'))
+        self.assertEqual(self.request('/api/language',b'{}')[0],400)
+        self.assertEqual(self.request('/api/language',b'x'*8193)[0],413)
+        self.assertEqual(self.request('/api/language',json.dumps(snapshot).encode(),{'Origin':'https://evil.example'})[0],403)

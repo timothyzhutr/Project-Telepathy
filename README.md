@@ -33,9 +33,14 @@ The input-source menu includes **Kev assistance**, which switches ranking on/off
 - Text size (12–28 pt) and appearance (follow system, light or dark).
 - Inline pinyin, candidate annotations, Kev timing and the Chinese / English menu-bar status icon.
 - Kev assistance and Chinese punctuation.
+- Automatic Chinese / English typing (experimental, off by default).
 - Local model status, model folder access, and an explicit download / repair action. Valid pinned files are reused; missing or damaged files are fetched and verified before the worker reloads them.
 
 Turning assistance off skips decisions; the loaded worker stays resident. Settings survive app updates. **Restore default settings** resets only Telepathy's controls, preserving model files and unrelated preferences.
+
+Enable **Automatic Chinese / English (experimental)** in Settings while Kev assistance is on. Telepathy compares literal keyboard text with complete Chinese candidates using up to 100 tokens of preceding text. Confident English stays literal and Space adds a space; Chinese and uncertain input keep the candidate workflow. Press **↓ or Tab** to restore Chinese choices for the current word. **Shift + a letter** starts literal English until the next space; punctuation after recognized English also stays ASCII until a space or navigation key, preserving URLs and identifiers. Caps Lock remains a manual English switch. Auto mode changes Shift's usual Rime language-toggle behavior.
+
+The language check uses the already loaded Kev backbone, with no additional model or download. It runs asynchronously before candidate ranking, during its existing debounce whenever possible. English skips pointer reranking; Chinese ranking starts at the original deadline or when a slower language check finishes. Decisions apply only to the current uncommitted snapshot. Very fast typing can outrun a decision, and short words with little context can remain ambiguous; Space uses the state visible at that instant. This is an opt-in prototype, not a calibrated intent classifier. See [the routing experiment](https://github.com/timothyzhutr/Project-Telepathy/blob/main/experiments/language-routing/README.md) for reproducible synthetic checks and limitations.
 
 **Credits and licenses…** opens the same window on Credits. The Credits tab lists the projects used; the Licenses tab lets you browse their bundled license texts. These tabs work offline and do not launch an editor. The same texts are included under `Contents/Resources/licenses/`.
 

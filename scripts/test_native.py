@@ -17,6 +17,10 @@ def main():
     run('xcrun', 'swiftc', SOURCE / 'Sources/RankingState.swift',
         SOURCE / 'Tests/RankingStateTests.swift', '-o', ranking)
     run(ranking)
+    intent = BUILD / 'intent-tests'
+    run('xcrun', 'swiftc', SOURCE / 'Sources/InputIntentState.swift',
+        SOURCE / 'Tests/InputIntentStateTests.swift', '-o', intent)
+    run(intent)
 
     contents = BUILD / 'credits-tests.app/Contents'
     (contents / 'MacOS').mkdir(parents=True, exist_ok=True)
@@ -44,7 +48,7 @@ def main():
         '-Xlinker', '-rpath', '-Xlinker', (dist / 'lib').resolve(),
         *[p for p in sorted((SOURCE / 'vendor/squirrel/sources').glob('*.swift')) if p.name != 'Main.swift'],
         *sorted((SOURCE / 'Sources').glob('*.swift')),
-        SOURCE / 'Tests/CreditsOpenerTests.swift', coverage,
+        SOURCE / 'Tests/CreditsOpenerTests.swift', SOURCE / 'Tests/ControllerEventTests.swift', coverage,
         '-o', contents / 'MacOS/CreditsOpenerTests')
     fixture = BUILD / 'foreground-tests.app/Contents'
     (fixture / 'MacOS').mkdir(parents=True, exist_ok=True)

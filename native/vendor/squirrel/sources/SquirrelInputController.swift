@@ -28,20 +28,23 @@ final class SquirrelInputController: IMKInputController {
   private var chordDuration: TimeInterval = 0
   private var currentApp: String = ""
   private var ranking = RankingState()
+  private var intent = InputIntentState()
   private var rankingDelay: DispatchWorkItem?
   private var rankingNote = ""
   private var compositionPrefix = ""
   private var fallbackHistory = ""
   private var displayedHighlight = 0
   private var rankingEnabled: Bool { TelepathyPreferences.shared.enabled(.kev) }
+  private var automaticLanguageEnabled: Bool { rankingEnabled && TelepathyPreferences.shared.enabled(.autoLanguage) }
 
-  func freezeRanking() { ranking.freeze() }
+  func freezeRanking() { ranking.freeze(); intent.forceChinese() }
 
-  private func invalidateRanking() {
+  private func invalidateRanking(resetIntent: Bool = true) {
     rankingDelay?.cancel()
     rankingDelay = nil
     ranking.invalidate()
     rankingNote = ""
+    if resetIntent { intent.invalidate(revision: ranking.revision) }
   }
 
   // swiftlint:disable:next cyclomatic_complexity
@@ -72,6 +75,10 @@ final class SquirrelInputController: IMKInputController {
         handled = true
         break
       }
+      if automaticLanguageEnabled && changes == .shift {
+        lastModifiers = modifiers
+        return true
+      }
       var rimeModifiers: UInt32 = SquirrelKeycode.osxModifiersToRime(modifiers: modifiers)
       // Some remote desktop tools send flagsChanged with keyCode 0; infer the real modifier key when needed.
       var keyCode = event.keyCode
@@ -95,6 +102,9 @@ final class SquirrelInputController: IMKInputController {
       // Process releases first because some modifier releases arrive with the next keydown.
       var buffer = [(keycode: UInt32, modifier: UInt32)]()
       for flag in [NSEvent.ModifierFlags.shift, .control, .option, .command] where changes.contains(flag) {
+        // In Auto mode Shift changes character case. It must not trigger
+        // Rime's commit_code switch and leave subsequent words in ASCII mode.
+        if automaticLanguageEnabled && flag == .shift { continue }
         if modifiers.contains(flag) {
           buffer.append((keycode: rimeKeycode, modifier: rimeModifiers))
         } else {
@@ -111,6 +121,7 @@ final class SquirrelInputController: IMKInputController {
     case .keyDown:
       // Let client apps handle Command shortcuts.
       if modifiers.contains(.command) {
+        if intent.english { commitPendingLiteral() }
         invalidateRanking()
         fallbackHistory = ""
         break
@@ -128,6 +139,7 @@ final class SquirrelInputController: IMKInputController {
                                                            shift: modifiers.contains(.shift),
                                                            caps: modifiers.contains(.capsLock))
         if rimeKeycode != 0 {
+          if let result = handleAutoKey(rimeKeycode, modifiers: modifiers) { return result }
           let rimeModifiers = SquirrelKeycode.osxModifiersToRime(modifiers: modifiers)
           handled = processKey(rimeKeycode, modifiers: rimeModifiers)
           rimeUpdate()
@@ -142,7 +154,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   func selectCandidate(_ index: Int) -> Bool {
-    ranking.freeze()
+    freezeRanking()
     let native = ranking.nativeIndex(index) ?? index
     let success = rimeAPI.select_candidate_on_current_page(session, native)
     if success {
@@ -153,6 +165,7 @@ final class SquirrelInputController: IMKInputController {
 
   // swiftlint:disable:next identifier_name
   func page(up: Bool) -> Bool {
+    intent.forceChinese()
     var handled = false
     handled = rimeAPI.change_page(session, up)
     if handled {
@@ -162,6 +175,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   func moveCaret(forward: Bool) -> Bool {
+    intent.forceChinese()
     let currentCaretPos = rimeAPI.get_caret_pos(session)
     guard let input = rimeAPI.get_input(session) else { return false }
     if forward {
@@ -243,10 +257,9 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func deactivateServer(_ sender: Any!) {
-    invalidateRanking()
-    fallbackHistory = ""
     hidePalettes()
     commitComposition(sender)
+    fallbackHistory = ""
     client = nil
   }
 
@@ -256,9 +269,10 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func commitComposition(_ sender: Any!) {
+    self.client ?= sender as? IMKTextInput
+    if intent.english { commitPendingLiteral(); return }
     invalidateRanking()
     fallbackHistory = ""
-    self.client ?= sender as? IMKTextInput
     if session != 0 {
       _ = tp_commit_composition(session)
       rimeConsumeCommittedText()
@@ -358,6 +372,52 @@ final class SquirrelInputController: IMKInputController {
 }
 
 private extension SquirrelInputController {
+
+  func commitPendingLiteral(separator: String = "") {
+    let raw = rimeAPI.get_input(session).map { String(cString: $0) } ?? ""
+    rimeAPI.clear_composition(session)
+    if !raw.isEmpty { commit(string: raw + separator) }
+    else { invalidateRanking() }
+  }
+
+  // nil means use the ordinary Rime key path; false passes the original key
+  // to the host. Nothing waits for a model on the input event thread.
+  func handleAutoKey(_ key: UInt32, modifiers: NSEvent.ModifierFlags) -> Bool? {
+    guard automaticLanguageEnabled, !rimeAPI.get_option(session, "ascii_mode") else { return nil }
+    if modifiers.contains(.control) || modifiers.contains(.option) {
+      guard intent.english || intent.literalRun else { return nil }
+      if intent.english { commitPendingLiteral() }
+      invalidateRanking(); fallbackHistory = ""
+      return false
+    }
+    func recordPassedKey() {
+      if (32...126).contains(key), let scalar = UnicodeScalar(key) {
+        fallbackHistory = String((fallbackHistory + String(scalar)).suffix(512))
+      } else { fallbackHistory = "" }
+    }
+    if intent.passLiteralKey(key) { recordPassedKey(); return false }
+    if (65...90).contains(key) {
+      commitPendingLiteral()
+      intent.startLiteralRun()
+      recordPassedKey()
+      return false
+    }
+    switch intent.action(for: key) {
+    case .none: return nil
+    case .space:
+      commitPendingLiteral(separator: " ")
+      return true
+    case .commitAndPass:
+      commitPendingLiteral()
+      if (33...126).contains(key) { intent.startLiteralRun() }
+      recordPassedKey()
+      return false
+    case .chinese:
+      freezeRanking()
+      rimeUpdate(clearReservedComments: false)
+      return true
+    }
+  }
 
   func onChordTimer(_: Timer) {
     var processedKeys = false
@@ -464,12 +524,12 @@ private extension SquirrelInputController {
       if rimeKeycode >= 49 && rimeKeycode <= 57 || rimeKeycode == 48 {
         let displayed = rimeKeycode == 48 ? 9 : Int(rimeKeycode - 49)
         if let native = ranking.nativeIndex(displayed) {
-          ranking.freeze()
+          freezeRanking()
           return rimeAPI.select_candidate_on_current_page(session, native)
         }
       }
       if rimeKeycode == UInt32(XK_Up) || rimeKeycode == UInt32(XK_Down) {
-        ranking.freeze()
+        freezeRanking()
         let step = rimeKeycode == UInt32(XK_Up) ? -1 : 1
         displayedHighlight = max(0, min(ranking.order.count - 1, displayedHighlight + step))
         if let native = ranking.nativeIndex(displayedHighlight) {
@@ -514,6 +574,27 @@ private extension SquirrelInputController {
       }
       _ = rimeAPI.free_commit(&commitText)
     }
+  }
+
+  func submitRanking(_ data: Data, revision: Int) {
+    guard ranking.revision == revision, !ranking.frozen, !intent.english else { return }
+    DecisionTransport.shared.submit(data) { [weak self] result in
+      guard let self, !self.intent.english, let result, result["status"] as? String == "ok",
+            let order = result["order"] as? [Int], self.ranking.apply(order, revision: revision) else { return }
+      self.displayedHighlight = 0
+      _ = self.rimeAPI.highlight_candidate_on_current_page(self.session, order[0])
+      if result["ranked"] as? Bool == true {
+        self.rankingNote = "Kev \(Int((result["request_ms"] as? Double) ?? 0)) ms"
+      } else { self.rankingNote = "Full phrase" }
+      self.rimeUpdate(clearReservedComments: false)
+    }
+  }
+
+  func scheduleRanking(_ data: Data, revision: Int, deadline: DispatchTime) {
+    rankingDelay?.cancel()
+    let work = DispatchWorkItem { [weak self] in self?.submitRanking(data, revision: revision) }
+    rankingDelay = work
+    DispatchQueue.main.asyncAfter(deadline: deadline, execute: work)
   }
 
   // Preserve reserved comment marks when librime requests a UI-only refresh.
@@ -624,36 +705,52 @@ private extension SquirrelInputController {
       let caret = Int(rimeAPI.get_caret_pos(session))
       let nativeHighlight = Int(ctx.menu.highlighted_candidate_index)
       let signature = "\(raw)|\(confirmed)|\(caret)|\(page)|" + candidates.joined(separator: "\u{1f}")
-      if raw.isEmpty || candidates.isEmpty || page != 0 || !rankingEnabled {
+      if raw.isEmpty || candidates.isEmpty || !rankingEnabled {
         invalidateRanking()
         compositionPrefix = ""
+      } else if page != 0 {
+        invalidateRanking(resetIntent: false)
+        intent.update(raw: raw, revision: ranking.revision)
+        intent.forceChinese()
       } else if signature != ranking.key {
         let wasEmpty = ranking.key.isEmpty
-        invalidateRanking()
+        invalidateRanking(resetIntent: false)
         if wasEmpty { compositionPrefix = precedingText() }
         let revision = ranking.reset(key: signature, count: candidates.count)
+        intent.update(raw: raw, revision: revision)
         let snapshotWords = candidates
         var ends = [Int32](repeating: -1, count: candidates.count)
         ends.withUnsafeMutableBufferPointer { tp_candidate_ends(session, Int32(candidates.count), $0.baseAddress) }
         let prefix = String((compositionPrefix + confirmed).suffix(512))
-        let work = DispatchWorkItem { [weak self] in
-          guard let self = self, self.ranking.revision == revision, !self.ranking.frozen else { return }
-          let payload: [String: Any] = ["revision": revision, "prefix": prefix, "pinyin": raw, "pending": pending,
-                                      "candidates": snapshotWords, "candidate_ends": ends.map(Int.init)]
-          guard let data = try? JSONSerialization.data(withJSONObject: payload) else { return }
-          DecisionTransport.shared.submit(data) { [weak self] result in
-            guard let self = self, let result = result, result["status"] as? String == "ok",
-                  let order = result["order"] as? [Int], self.ranking.apply(order, revision: revision) else { return }
-            self.displayedHighlight = 0
-            _ = self.rimeAPI.highlight_candidate_on_current_page(self.session, order[0])
-            if result["ranked"] as? Bool == true {
-              self.rankingNote = "Kev \(Int((result["request_ms"] as? Double) ?? 0)) ms"
-            } else { self.rankingNote = "Full phrase" }
+        let payload: [String: Any] = ["revision": revision, "prefix": prefix, "pinyin": raw, "pending": pending,
+                                    "candidates": snapshotWords, "candidate_ends": ends.map(Int.init)]
+        let data = try? JSONSerialization.data(withJSONObject: payload)
+        let deadline = DispatchTime.now() + 0.085
+        if automaticLanguageEnabled && confirmed.isEmpty && caret == raw.utf8.count, let data {
+          // Start during the existing ranking debounce. Replies can only change
+          // the current uncommitted snapshot and cannot override manual choices.
+          DecisionTransport.language.submit(data) { [weak self] result in
+            guard let self, self.automaticLanguageEnabled, !self.ranking.frozen,
+                  self.ranking.revision == revision else { return }
+            let language = result?["status"] as? String == "ok" ? result?["language"] as? String ?? "uncertain" : "uncertain"
+            // A manual language override rejects the judgment, while an edited
+            // Chinese snapshot can still use ordinary candidate ranking.
+            _ = self.intent.apply(language, revision: revision)
+            if self.intent.english { self.rankingDelay?.cancel(); self.rankingDelay = nil }
+            else { self.scheduleRanking(data, revision: revision, deadline: deadline) }
             self.rimeUpdate(clearReservedComments: false)
           }
+        } else {
+          if automaticLanguageEnabled { intent.forceChinese() }
+          else { intent.invalidate(revision: revision) }
+          if let data { scheduleRanking(data, revision: revision, deadline: deadline) }
         }
-        rankingDelay = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.085, execute: work)
+      }
+      if intent.english {
+        show(preedit: raw, selRange: NSRange(location: 0, length: raw.utf16.count), caretPos: raw.utf16.count)
+        hidePalettes()
+        _ = rimeAPI.free_context(&ctx)
+        return
       }
       var shownHighlight = nativeHighlight
       if ranking.order.count == candidates.count {
