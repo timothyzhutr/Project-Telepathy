@@ -29,7 +29,11 @@ def main():
                 snapshot=dict(revision=18,prefix='作为消费者，我们有依法要求商家提供合格产品的',pinyin='quanli',candidates=['全力','权利','权力','劝离','圈里','泉里','拳理','全','权','券','圈','泉'],candidate_ends=[6]*7+[4]*5)
                 ranked=request('/api/decision',json.dumps(snapshot).encode())
                 assert ranked['revision']==18
-                if expected=='ready':assert ranked['status']=='ok' and ranked['order'][0]==1 and ranked['order'][7:]==list(range(7,12)),ranked
+                if expected=='ready':
+                    assert ranked['status']=='ok' and ranked['order'][0]==1 and ranked['order'][7:]==list(range(7,12)),ranked
+                    repeated=request('/api/decision',json.dumps(dict(snapshot,revision=20)).encode())
+                    assert repeated['status']=='ok' and repeated['cache_hit'] and repeated['order'][0]==1,repeated
+                    print('Repeated ranking uses copied context:',repeated)
                 else:assert ranked['status']=='unavailable' and ranked['order']==list(range(12)),ranked
                 print('Worker '+expected+':',ranked)
                 for prefix,language in [('I think ','english'),('天气很热，我们买点水来','chinese')]:

@@ -10,7 +10,7 @@ class KevRanker:
         import torch
         import mlx.core as mx
         from kev.checkpoint import Checkpoint
-        from kev.model import load_tokenizer,pad_id,admit
+        from kev.model import load_tokenizer,pad_id,admit,user_tokens
         from kev.mlx_model import load_base,merge_lora,MLXDecisionModel
         from kev.api import SystemOneRequest,to_record,to_answers
         torch.set_num_threads(4);mx.set_default_device(mx.gpu)
@@ -22,7 +22,26 @@ class KevRanker:
         self.engine.head.load_state_dict(ck.meta.head);self.engine.eval()
         self.engine.head.temperature=ck.meta.temperature
         self.torch,self.mx=torch,mx
+        self.user_tokens=user_tokens
         self.request_type,self.record,self.answers,self.admit=SystemOneRequest,to_record,to_answers,admit
+        from mlx_lm.models.cache import make_prompt_cache
+        from ranking_cache import RankingCache
+        def prefill(key):
+            cache=make_prompt_cache(self.engine.lm)
+            if key:
+                self.engine.text(mx.array([key],dtype=mx.int32),cache=cache)
+                mx.eval([c.state for c in cache])
+            return len(key),cache
+        def copy(prefix):
+            length,cache=prefix
+            return length,[type(c).merge([c]) for c in cache]
+        def branch(enc,prefix):
+            length,cache=prefix
+            hidden=self.engine._hidden([enc['ids'][length:]],cache=cache)[0]
+            logits=self.engine._logits(hidden,enc['decide_idx'][0]-length,
+                                       [i-length for i in enc['opt_idx'][0]])
+            return [torch.softmax(logits,dim=-1)]
+        self.ranking_cache=RankingCache(prefill,branch,copy)
         from language_router import LanguageRouter
         self.language_router=LanguageRouter(self)
         self.rank('这个类可以','jicheng',['集成','继承'])
@@ -35,18 +54,26 @@ class KevRanker:
         start=0
         while start<len(prefix) and len(self.tok(prefix[start:],add_special_tokens=False).input_ids)>100: start+=1
         return prefix[start:]
-    def rank(self,prefix,pinyin,words):
+    @lru_cache(maxsize=1)
+    def stable_tokens(self,prefix):
+        # Tokenization can merge at the boundary. RankingCache intersects this
+        # prefix with the actual encoding before reusing any recurrent state.
+        return [self.tok.convert_tokens_to_ids('<|fim_prefix|>')]+self.user_tokens(self.tok,'prefix: '+prefix+'\npinyin:')
+    def rank(self,prefix,pinyin,words,use_cache=True):
         started=time.perf_counter()
         request=build_request(self.cap(prefix),pinyin,words)
         rec,meta=self.record(self.request_type.model_validate(request))
         enc=self.admit(self.engine,self.tok,rec,truncate=False)
         with self.torch.inference_mode(),self.mx.stream(self.mx.gpu):
-            probs=self.engine.probs(enc);self.mx.synchronize()
+            probs=(self.ranking_cache.score(enc,self.stable_tokens(request['state']['prefix']))
+                   if use_cache else self.engine.probs(enc))
+            self.mx.synchronize()
         answer=self.answers([p.tolist() for p in probs],meta)['candidate']
         choice=answer['choice'];distribution=answer['probabilities']
         order=sorted(range(len(words)),key=lambda i:(-distribution[f'c{i}'],f'c{i}'!=choice))
         keep=choice=='keep'
         return dict(order=list(range(len(words))) if keep else order,selected_index=None if keep else int(choice[1:]),keep=keep,
-            request_ms=(time.perf_counter()-started)*1000,context_tokens=len(self.tok(request['state']['prefix'],add_special_tokens=False).input_ids))
+            request_ms=(time.perf_counter()-started)*1000,context_tokens=len(self.tok(request['state']['prefix'],add_special_tokens=False).input_ids),
+            cache_hit=use_cache and self.ranking_cache.hit)
     def route(self,prefix,raw,chinese):
         return self.language_router.route(prefix,raw,chinese)
