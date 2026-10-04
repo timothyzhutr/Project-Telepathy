@@ -1,77 +1,79 @@
 # Project Telepathy
 
-**English** · [简体中文](README.zh-CN.md)
+**简体中文** · [English](README.en.md)
 
-<img src="assets/branding/Telepathy-128.png" alt="Telepathy icon" width="80" height="80">
+<img src="assets/branding/Telepathy-128.png" alt="Telepathy 图标" width="80" height="80">
 
-**Chinese typing with a little more context.**
+**让中文输入更懂上下文。**
 
-Telepathy is a native Chinese input method for macOS. Type pinyin as usual, and a small local model uses what you've already written to help put the right words first. Everything runs on your Mac—no account or API key required.
+Telepathy 是一款 macOS 原生中文输入法。照常输入拼音，小型本地模型会结合光标前的文字，帮你把合适的词语放到前面。输入过程在你的 Mac 上完成，无需账号或 API 密钥。
 
-[Download the latest release](https://github.com/timothyzhutr/Project-Telepathy/releases/latest) · [User guide](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md) · [Report an issue](https://github.com/timothyzhutr/Project-Telepathy/issues)
+[下载最新版本](https://github.com/timothyzhutr/Project-Telepathy/releases/latest) · [使用指南（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md) · [反馈问题](https://github.com/timothyzhutr/Project-Telepathy/issues)
 
-Telepathy is in early access. It currently supports **Apple Silicon Macs running macOS 26.2 or later**.
+Telepathy 目前仍是早期版本，支持 **搭载 Apple 芯片、运行 macOS 26.2 或更高版本的 Mac**。
 
-![Telepathy’s native candidate panel choosing 权利 after a sentence about consumer rights](docs/images/telepathy-native-demo.png)
+![在消费者权益相关的上下文中，Telepathy 的原生候选窗口将“权利”排在首位](docs/images/telepathy-native-demo.png)
 
-## Features
+## 功能
 
-- **Context-aware candidates.** Kev ranks Chinese words and phrases using the text before your cursor. Rime and 万象 provide the pinyin conversion and dictionaries.
-- **Native typing.** Use Telepathy in your Mac apps, with normal pinyin composition, keyboard selection and a native candidate panel.
-- **Chinese and English together.** Optional Auto mode uses context to keep English literal and convert Chinese pinyin. This feature is experimental.
-- **Automatic punctuation forms.** In Auto mode, commas, quotes and other marks follow the language of the sentence.
-- **Make it yours.** Adjust candidates per row, text size, appearance, annotations and timing indicators in Settings.
-- **Try a different ranker.** Experimental Context prediction scores which candidate naturally follows your text, using the same local model.
-- **Local inference.** After the model download, typing assistance works offline. Your writing is not sent to a cloud service.
+- **根据上下文排序。** Context prediction 使用本地 Kev 模型，判断哪个词语更适合接在光标前的文字之后；Rime 和万象提供拼音转换及词库。
+- **原生输入体验。** 在 Mac 应用中使用常规的拼音输入、键盘选词和原生候选窗口。
+- **中英混输。** 可选的 Auto 模式根据上下文判断保留英文原文还是转换中文拼音。目前为实验性功能。
+- **自动选择标点形式。** 在 Auto 模式中，根据句子语言使用中文或英文形式的逗号、引号等标点。
+- **按习惯调整。** 在设置中调整每行候选数量、字号、外观、候选注释和耗时提示。
+- **选择排序方式。** 默认使用 Context prediction，也可以在设置中切换到 Kev decision ranking。两种方式使用同一个本地模型。
+- **本地推理。** 下载模型后，输入辅助可以离线使用；你的文字不会被发送到云端服务。
 
-## Install
+## 安装
 
-You do not need to install Python, Homebrew or any build tools.
+不需要安装 Python、Homebrew 或开发工具。
 
-1. Download and extract the macOS ZIP from [Releases](https://github.com/timothyzhutr/Project-Telepathy/releases/latest).
-2. Run **Install Telepathy.command**, keeping it beside **Telepathy.app**.
-3. Add **Telepathy** in **System Settings → Keyboard → Text Input → Edit → +**, then select it from the input-source menu. If it does not appear yet, log out and back in.
-4. Run **Download Kev Model.command** to install the model. Alternatively:
+1. 从 [Releases](https://github.com/timothyzhutr/Project-Telepathy/releases/latest) 下载并解压 macOS ZIP 文件。
+2. 运行 **Install Telepathy.command**，并保持它与 **Telepathy.app** 位于同一文件夹。
+3. 在 **系统设置 → 键盘 → 文本输入 → 编辑 → +** 中添加 **Telepathy**，然后从输入法菜单中选中它。如果暂时没有出现，请退出登录后重新登录。
+4. 运行 **Download Kev Model.command** 下载模型，也可以在终端执行：
 
    ```bash
    "$HOME/Library/Input Methods/Telepathy.app/Contents/MacOS/Telepathy" --download-model
    ```
 
-The model download needs approximately **1.8 GB of disk space**, in addition to the app. Pinyin typing works while the model is downloading or loading. The installer backs up an existing Telepathy installation before replacing it.
+模型文件约需 **1.8 GB 磁盘空间**，另外还需要应用本身的空间。模型下载或加载期间，普通拼音输入仍然可用。更新时，安装程序会备份已有的 Telepathy 应用和配置。
 
-The release is ad-hoc signed and has not been notarized by Apple. If macOS blocks it, use **System Settings → Privacy & Security → Open Anyway** after trying to open the package. See [troubleshooting](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/troubleshooting.md) for installation help.
+当前版本使用临时签名（ad-hoc），尚未通过 Apple 公证。如果 macOS 阻止打开，请先尝试运行，再到 **系统设置 → 隐私与安全性** 中选择 **仍要打开**。更多安装说明见[故障排查（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/troubleshooting.md)。
 
-## Start typing
+## 开始输入
 
-Select Telepathy and type pinyin normally.
+选中 Telepathy，照常输入拼音即可。
 
-| Action | Key |
+| 操作 | 按键 |
 | --- | --- |
-| Choose the highlighted candidate | Space |
-| Choose a numbered candidate | Its number key |
-| Browse candidates | Arrow keys |
-| Use literal English manually | Caps Lock |
+| 选中高亮候选 | 空格 |
+| 选中编号候选 | 对应数字键 |
+| 浏览候选 | 方向键 |
+| 手动输入英文原文 | Caps Lock |
 
-Open **Telepathy → Settings…** from the input-source menu to change the candidate layout, try **Context prediction**, or enable **Automatic Chinese / English**. Kev remains the default ranking method. You can also switch Kev assistance on or off from the menu. With assistance off, Rime's regular candidates remain available and the model helper stops to free memory.
+从输入法菜单打开 **Telepathy → Settings…**，可以调整候选窗口、选择排序方法，或启用 **Automatic Chinese / English**。目前设置界面使用英文；默认使用 **Context prediction**，也可以选择 **Kev decision ranking**。两种方式共用已有的模型文件，无需额外下载。
 
-Auto mode keeps confident English input literal and gives Chinese or uncertain input the usual candidate choices. Press **↓ or Tab** to bring back Chinese choices for the current word, or **Shift + a letter** to start literal English until the next space. Short words and limited context can still be ambiguous.
+你也可以从菜单关闭 **Kev assistance**。关闭后，Rime 的普通候选仍然可用，模型辅助进程会停止并释放内存。重新开启时会加载模型，期间可以继续使用普通拼音输入。
 
-See the [user guide](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md) for all settings, punctuation behavior and keyboard details.
+Auto 模式在判断较有把握时保留英文原文；中文或不确定的输入仍会显示候选。按 **↓ 或 Tab** 可恢复当前词的中文候选；按 **Shift + 字母** 可开始输入英文原文，直到下一个空格。短词和上下文不足的情况仍可能误判。
 
-## Privacy and resources
+Context prediction 只对已有候选排序，不会补出列表中不存在的词；即使所有候选都不合适，它仍可能把其中一个排在前面。前文不足时会保留 Rime 的顺序。详细设置、标点行为和快捷键见[使用指南（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md)。
 
-Typing context is processed locally. Telepathy does not send it to a cloud API or write it to the worker log. Personal dictionary learning is currently disabled. The setup command downloads checksum-verified model files; inference then runs offline.
+## 隐私与资源占用
 
-Kev runs on the Apple GPU through MLX, with **MXFP8 weights by default** to reduce memory use. Backbone weights occupy about **0.78 GB**; total memory usage is higher because of caches, the inference runtime and other model components. Turning assistance off stops the helper and releases its memory. Turning it back on reloads the model while ordinary pinyin typing remains available. Candidates appear immediately while model decisions run asynchronously.
+输入上下文在本机处理，不会发送到云端 API，也不会写入模型辅助进程的日志。目前未启用个人词库学习。模型下载命令会下载并校验固定版本的模型文件，之后的推理可离线运行。
 
-Some apps expose less surrounding text than others, which can reduce contextual accuracy. [Resource and prediction details](https://github.com/timothyzhutr/Project-Telepathy/blob/main/experiments/prediction/README.md) include measurements and known limitations.
+Kev 通过 MLX 在 Apple GPU 上运行，默认使用 **MXFP8 权重量化**。骨干模型权重约占 **0.78 GB**；缓存、推理运行时及其他模型组件还会占用额外内存。关闭辅助功能会停止模型进程并释放其内存。候选先显示，模型排序异步进行，无需等模型返回才能选词。
 
-## Development
+部分应用提供的光标前文较少，可能影响上下文判断。更多测量结果和已知限制见[资源与预测说明（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/experiments/prediction/README.md)。
 
-Want to build from source or contribute? Start with the [build guide](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/development.md). Bugs, compatibility reports and focused pull requests are welcome. For a bug report, include your macOS version, the affected app and steps to reproduce; use a short example you're comfortable sharing.
+## 参与开发
 
-## Credits and license
+想从源码构建或贡献代码，可以从[构建指南（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/development.md)开始。欢迎反馈问题、应用兼容性情况，或提交聚焦具体改进的 Pull Request。反馈问题时，请附上 macOS 版本、使用的应用和复现步骤；输入示例请使用你愿意公开的内容。
 
-Telepathy builds on **鼠须管 / Squirrel, Rime, 万象, RIME-LMDG, Kev, Qwen, MLX** and the Python ecosystem. Their work makes this project possible. See [CREDITS.md](CREDITS.md) for component attribution and upstream links; the app also includes a native Credits and Licenses window.
+## 致谢与许可证
 
-Telepathy's application and integration code are licensed under [GPL-3.0](LICENSE). Dependencies and model weights retain their own licenses. Model weights are downloaded separately and are not included in the app or repository.
+Telepathy 建立在 **鼠须管 / Squirrel、Rime、万象、RIME-LMDG、Kev、Qwen、MLX** 及 Python 生态的工作之上。感谢这些项目的作者与贡献者。各组件的来源、用途和许可证见 [CREDITS.md](CREDITS.md)；应用内也提供原生的 Credits 和 Licenses 窗口。
+
+Telepathy 的应用与集成代码使用 [GPL-3.0](LICENSE) 许可证。依赖组件与模型权重保留各自的许可证。模型权重单独下载，不包含在应用或源码仓库中。

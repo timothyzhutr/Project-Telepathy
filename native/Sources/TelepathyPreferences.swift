@@ -31,7 +31,7 @@ final class TelepathyPreferences {
     return ["system", "light", "dark"].contains(value) ? value : "system"
   }
   var rankingStrategy: String {
-    defaults.string(forKey: Key.rankingStrategy.rawValue) == "continuation" ? "continuation" : "kev"
+    defaults.string(forKey: Key.rankingStrategy.rawValue) == "kev" ? "kev" : "continuation"
   }
   func enabled(_ key: Key) -> Bool {
     defaults.object(forKey: key.rawValue) as? Bool ?? (key != .statusIcon && key != .autoLanguage)

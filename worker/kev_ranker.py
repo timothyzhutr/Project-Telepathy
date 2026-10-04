@@ -1,4 +1,4 @@
-"""Offline MLX inference through Kev's official pointer head and encoder."""
+"""Offline context prediction and alternative Kev pointer-head decisions."""
 import math,os,time
 from functools import lru_cache
 from model_store import validate_models,manifest
@@ -50,11 +50,12 @@ class KevRanker:
         self.language_router=LanguageRouter(self)
         from continuation_scorer import ContinuationScorer
         self.continuation_scorer=ContinuationScorer(self)
-        self.rank('这个类可以','jicheng',['集成','继承'])
+        self.rank('这个类可以','jicheng',['集成','继承'],strategy='kev')
         # Compile the LM vocabulary head and copied-cache suffix path before
         # the worker reports ready, rather than during the first typed word.
         self.route('I think ','he',['和','喝','何'])
         self.route('这个职位拥有决定预算分配的','quanli',['权力','权利','全力','劝离','圈里','泉里','拳理','全利','全礼','犬吏','全里','全离'])
+        self.rank('这个职位拥有决定预算分配的','quanli',['权力','权利','全力','劝离','圈里','泉里','拳理','全利','全礼','犬吏','全里','全离'])
     @lru_cache(maxsize=32)
     def cap(self,prefix):
         start=0
@@ -65,7 +66,7 @@ class KevRanker:
         # Tokenization can merge at the boundary. RankingCache intersects this
         # prefix with the actual encoding before reusing any recurrent state.
         return [self.tok.convert_tokens_to_ids('<|fim_prefix|>')]+self.user_tokens(self.tok,'prefix: '+prefix+'\npinyin:')
-    def rank(self,prefix,pinyin,words,use_cache=True,*,strategy='kev'):
+    def rank(self,prefix,pinyin,words,use_cache=True,*,strategy='continuation'):
         started=time.perf_counter()
         if strategy not in ('kev','continuation'):
             raise ValueError('Unknown ranking strategy: '+str(strategy))

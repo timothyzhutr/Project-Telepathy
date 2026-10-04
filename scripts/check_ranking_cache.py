@@ -41,7 +41,7 @@ def main():
         return result
     ranker.answers=answers
     def score(case,words,cache,raw=None):
-        result=ranker.rank(case['prefix'],raw or case['pending'],words,use_cache=cache)
+        result=ranker.rank(case['prefix'],raw or case['pending'],words,use_cache=cache,strategy='kev')
         return dict(result,probabilities=dict(distribution))
     def same_choice(a,b):
         return (a['keep'],a['selected_index'])==(b['keep'],b['selected_index'])

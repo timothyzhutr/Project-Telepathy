@@ -111,7 +111,7 @@ final class TelepathySettingsView: NSView {
     heading("Typing")
     checkbox("Enable Kev assistance", .kev)
     note("Kev ranks candidates locally using preceding text. Turning assistance off stops the helper to free memory. Turning it on reloads the model while ordinary pinyin typing remains available.")
-    rankingPopup.addItems(withTitles: ["Kev (default)", "Context prediction (experimental)"])
+    rankingPopup.addItems(withTitles: ["Context prediction (default)", "Kev decision ranking"])
     rankingPopup.identifier = .init("settings.rankingStrategy"); rankingPopup.target = self; rankingPopup.action = #selector(changeRanking(_:))
     row("Ranking method", rankingPopup)
     note("Context prediction uses the same local model to score which candidate naturally follows your text. It can be faster, but may still choose a poor match when all candidates are unsuitable.")
@@ -146,7 +146,7 @@ final class TelepathySettingsView: NSView {
     rows.selectItem(withTag: preferences.candidatesPerRow)
     font.doubleValue = Double(preferences.fontSize); fontLabel.stringValue = "\(preferences.fontSize) pt"
     appearancePopup.selectItem(at: ["system", "light", "dark"].firstIndex(of: preferences.appearance) ?? 0)
-    rankingPopup.selectItem(at: preferences.rankingStrategy == "continuation" ? 1 : 0)
+    rankingPopup.selectItem(at: preferences.rankingStrategy == "kev" ? 1 : 0)
     rankingPopup.isEnabled = preferences.enabled(.kev)
     assistanceEnabled = preferences.enabled(.kev)
     toggles.forEach { $0.value.state = preferences.enabled($0.key) ? .on : .off }
@@ -157,7 +157,7 @@ final class TelepathySettingsView: NSView {
   @objc private func changeRows(_ sender: NSPopUpButton) { preferences.set(sender.selectedTag(), for: .rows) }
   @objc private func changeFont(_ sender: NSSlider) { preferences.set(Int(sender.doubleValue.rounded()), for: .font) }
   @objc private func changeAppearance(_ sender: NSPopUpButton) { preferences.set(["system", "light", "dark"][sender.indexOfSelectedItem], for: .appearance) }
-  @objc private func changeRanking(_ sender: NSPopUpButton) { preferences.set(sender.indexOfSelectedItem == 1 ? "continuation" : "kev", for: .rankingStrategy) }
+  @objc private func changeRanking(_ sender: NSPopUpButton) { preferences.set(sender.indexOfSelectedItem == 1 ? "kev" : "continuation", for: .rankingStrategy) }
   @objc private func toggle(_ sender: NSButton) {
     if let key = toggles.first(where: { $0.value === sender })?.key { preferences.set(sender.state == .on, for: key) }
   }

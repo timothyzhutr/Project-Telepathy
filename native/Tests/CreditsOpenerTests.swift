@@ -192,9 +192,15 @@ private final class TestHealthProtocol: URLProtocol {
     }
     let rows = control("settings.rows", NSPopUpButton.self)
     let strategy = control("settings.rankingStrategy", NSPopUpButton.self)
-    guard strategy.indexOfSelectedItem == 0 else { fatalError("Kev must remain the default ranking strategy") }
+    guard strategy.indexOfSelectedItem == 0, TelepathyPreferences.shared.rankingStrategy == "continuation" else {
+      fatalError("Context prediction must be the default ranking strategy")
+    }
     strategy.selectItem(at: 1); change(strategy)
-    guard defaults.string(forKey: "TelepathyRankingStrategy") == "continuation" else { fatalError("Experimental context ranking must persist") }
+    guard defaults.string(forKey: "TelepathyRankingStrategy") == "kev" else { fatalError("The alternative Kev decision ranking must persist") }
+    delegate.openSettings()
+    guard strategy.indexOfSelectedItem == 1, TelepathyPreferences.shared.rankingStrategy == "kev" else {
+      fatalError("Reopening Settings must preserve an explicit Kev selection")
+    }
     rows.selectItem(withTag: 3); change(rows)
     guard defaults.integer(forKey: "TelepathyCandidatesPerRow") == 3 else { fatalError("Row layout must persist") }
     let font = control("settings.font", NSSlider.self)
@@ -243,6 +249,7 @@ private final class TestHealthProtocol: URLProtocol {
     guard defaults.object(forKey: "KevEnabled") == nil, rows.selectedTag() == 0,
           font.intValue == 16, automatic.state == .off, punctuation.state == .on,
           strategy.indexOfSelectedItem == 0, defaults.object(forKey: "TelepathyRankingStrategy") == nil,
+          TelepathyPreferences.shared.rankingStrategy == "continuation",
           defaults.object(forKey: "TelepathyAutoLanguage") == nil,
           defaults.string(forKey: "UnrelatedPreference") == "preserve" else {
       fatalError("Restoring defaults must refresh controls and preserve unrelated preferences")

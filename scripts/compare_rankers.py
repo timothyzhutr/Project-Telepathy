@@ -62,7 +62,7 @@ def main():
     rows=[]
     for case in cases:
         words=[w for w,e in zip(case['candidates'],case['candidate_ends']) if e>=case['candidate_ends'][0]]
-        decision=ranker.rank(case['prefix'],case['pending'],words,use_cache=False)
+        decision=ranker.rank(case['prefix'],case['pending'],words,use_cache=False,strategy='kev')
         chosen=words[0] if decision['keep'] else words[decision['selected_index']]
         scores,elapsed=continuation_scores(ranker,case['prefix'],case['pending'],words)
         natural=words[max(range(len(words)),key=scores.__getitem__)]

@@ -39,7 +39,7 @@ These timings exclude the native 85 ms ranking debounce, language check, transpo
 
 ## Quality diagnostics
 
-As of v0.1.8, a new jointly tokenized, cached continuation scorer is available as **Context prediction (experimental)** in Settings. Kev's pointer head remains the default. See [the fresh comparison](continuation.md) for the updated implementation, frozen labels and results. The diagnostics below describe the earlier uncached experiment.
+v0.1.8 introduced a jointly tokenized, cached continuation scorer. As of v0.1.9, **Context prediction** is the default, with **Kev decision ranking** available as the alternative in Settings. Both reuse the same model download; explicitly saved method choices remain in effect. See [the fresh comparison](continuation.md) for the implementation, frozen labels and results. The diagnostics below describe the earlier uncached experiment.
 
 | Ranking strategy | Accepted answers / 42 |
 | --- | ---: |
@@ -48,7 +48,7 @@ As of v0.1.8, a new jointly tokenized, cached continuation scorer is available a
 | Same pointer scores, ignoring `keep` (diagnostic only) | 36 |
 | Natural continuation likelihood, same merged backbone (diagnostic only) | 39 |
 
-The continuation experiment scores the supplied Chinese alternatives after the same capped preceding text, using the loaded model's vocabulary head rather than its decision pointer head. It uses the natural-language calculation already used for Chinese/English routing, with fresh context per case. Its median was 77 ms versus 133 ms for pointer decisions in the same run. It needs no additional model or download. This earlier implementation was diagnostic only; v0.1.8's optional scorer is documented separately above.
+The continuation experiment scores the supplied Chinese alternatives after the same capped preceding text, using the loaded model's vocabulary head rather than its decision pointer head. It uses the natural-language calculation already used for Chinese/English routing, with fresh context per case. Its median was 77 ms versus 133 ms for pointer decisions in the same run. It needs no additional model or download. This earlier implementation was diagnostic only; the production scorer introduced in v0.1.8 is documented separately above.
 
 Two missing-target cases (`失事` and the specific name `李薇`) need better candidate retrieval; a ranker cannot select a word it never receives. Of the eight other strict-label Kev misses, two choices are plausible alternatives (`制订` and `像似`). Several clear misses come from `keep` winning despite a plausible correct option: `权力`, `反映`, `包袱`, `知识`. Ignoring `keep` improves those four on this fixture, but could promote unsuitable words when no candidate fits. Continuation scoring gets all supplied targets except the `权力`/`权利` distinction, but still fails both missing-target cases.
 

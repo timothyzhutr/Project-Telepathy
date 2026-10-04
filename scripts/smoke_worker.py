@@ -8,6 +8,7 @@ def main():
     env=dict(os.environ,PYTHONPATH='',PATH='/usr/bin:/bin')
     result=subprocess.run([str(app/'Contents/MacOS/Telepathy'),'--self-test','--model-dir',str(models)],env=env,capture_output=True,text=True,check=True)
     decision=json.loads(result.stdout.strip().splitlines()[-1]);assert decision['selected_index']==1,decision
+    assert decision.get('ranker')=='continuation',decision
     print('Native command reached bundled model:',decision)
     worker=app/'Contents/Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker'
     with tempfile.TemporaryDirectory(prefix='telepathy isolated worker ') as name:
@@ -33,17 +34,18 @@ def main():
                     assert health['quantization']=='mxfp8',health
                     assert 0<health['backbone_weight_bytes']<health['unquantized_backbone_weight_bytes']*.6,health
                     assert ranked['status']=='ok' and ranked['order'][0]==1 and ranked['order'][7:]==list(range(7,12)),ranked
+                    assert ranked['strategy']=='continuation' and ranked.get('ranker')=='continuation',ranked
                     repeated=request('/api/decision',json.dumps(dict(snapshot,revision=20)).encode())
                     assert repeated['status']=='ok' and repeated['cache_hit'] and repeated['order'][0]==1,repeated
                     print('Repeated ranking uses copied context:',repeated)
                     for revision in (21,22):
-                        continued=request('/api/decision',json.dumps(dict(snapshot,revision=revision,strategy='continuation')).encode())
-                        assert continued['status']=='ok' and continued['strategy']=='continuation' and continued['order'][0]==1,continued
+                        continued=request('/api/decision',json.dumps(dict(snapshot,revision=revision,strategy='kev')).encode())
+                        assert continued['status']=='ok' and continued['strategy']=='kev' and continued.get('ranker')!='continuation' and continued['order'][0]==1,continued
                         assert continued['order'][7:]==list(range(7,12)),continued
                         if revision==22:assert continued['cache_hit'],continued
                     empty=request('/api/decision',json.dumps(dict(snapshot,revision=23,prefix='',strategy='continuation')).encode())
                     assert empty['keep'] and empty['order']==list(range(12)),empty
-                    print('Experimental continuation and empty-context fallback:',continued,empty)
+                    print('Alternative Kev decision ranking and empty-context fallback:',continued,empty)
                 else:assert ranked['status']=='unavailable' and ranked['order']==list(range(12)),ranked
                 print('Worker '+expected+':',ranked)
                 for prefix,language in [('I think ','english'),('天气很热，我们买点水来','chinese')]:

@@ -5,12 +5,21 @@ from decision import DecisionService
 class Ranker:
     seen=None
     def cap(self,p): return p
-    def rank(self,prefix,pinyin,words):
+    def rank(self,prefix,pinyin,words,*,strategy='kev'):
+        self.strategy=strategy
         self.seen=(prefix,pinyin,words)
         return dict(order=list(reversed(range(len(words)))),selected_index=len(words)-1,keep=False,request_ms=10)
 class DecisionTests(unittest.TestCase):
     def request(self,**kw):
         return dict(revision=12,prefix='这个职位拥有决定预算分配的',pinyin='quanli',pending='quanli',candidates=['权利','全','权力'],candidate_ends=[6,4,6],**kw)
+    def test_omitted_strategy_uses_context_prediction(self):
+        ranker=Ranker();result=DecisionService(ranker).decision(self.request())
+        self.assertEqual(ranker.strategy,'continuation')
+        self.assertEqual(result['strategy'],'continuation')
+    def test_explicit_kev_uses_decision_head(self):
+        ranker=Ranker();result=DecisionService(ranker).decision(self.request(strategy='kev'))
+        self.assertEqual(ranker.strategy,'kev')
+        self.assertEqual(result['strategy'],'kev')
     def test_rank_remaps_visible_indexes_and_excludes_shorter_fragments(self):
         ranker=Ranker(); result=DecisionService(ranker).decision(self.request())
         self.assertEqual(result.get('order'),[2,0,1]);self.assertEqual(result['revision'],12)

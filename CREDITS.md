@@ -10,7 +10,7 @@ Project Telepathy builds on the work of these open-source communities. Thank you
 | librime-octagram | Context scoring using the Wanxiang grammar | [lotem/librime-octagram](https://github.com/lotem/librime-octagram/tree/dfcc151), BSD-3-Clause |
 | 万象 / rime-wanxiang v18.0.15 | Full-pinyin schema, required compiled Chinese/English/mixed/reverse dictionaries, Lua utilities and conversion data | [amzxyz/rime-wanxiang](https://github.com/amzxyz/rime-wanxiang/tree/v18.0.15), CC-BY-4.0; see its upstream acknowledgments for dictionary/data contributors |
 | RIME-LMDG | `wanxiang-lts-zh-hans.gram`, the active statistical grammar | [amzxyz/RIME-LMDG](https://github.com/amzxyz/RIME-LMDG), CC-BY-4.0 |
-| Kev 0.8B | Encoder, adapter and pointer-head candidate decisions; loaded backbone reused for contextual language routing and optional continuation ranking; inference source subset | [jaredpalmer/kev](https://github.com/jaredpalmer/kev/tree/84847f0a883d900f7de5b7a57eaa341ca7f9a6b4), Apache-2.0; [model](https://huggingface.co/jaredpalmer/kev-0.8b) downloaded separately |
+| Kev 0.8B | Adapter and backbone for default continuation ranking and contextual language routing; encoder and pointer head for alternative decision ranking; inference source subset | [jaredpalmer/kev](https://github.com/jaredpalmer/kev/tree/84847f0a883d900f7de5b7a57eaa341ca7f9a6b4), Apache-2.0; [model](https://huggingface.co/jaredpalmer/kev-0.8b) downloaded separately |
 | Qwen3.5 0.8B Base | Kev's underlying text model and tokenizer, downloaded separately | [Qwen/Qwen3.5-0.8B-Base](https://huggingface.co/Qwen/Qwen3.5-0.8B-Base), Apache-2.0 |
 | MLX and MLX-LM | Apple Silicon Metal inference | [ml-explore/mlx](https://github.com/ml-explore/mlx), [ml-explore/mlx-lm](https://github.com/ml-explore/mlx-lm), MIT |
 | PyTorch | Kev pointer head and checkpoint loading | [pytorch/pytorch](https://github.com/pytorch/pytorch), BSD-3-Clause and bundled third-party notices |
@@ -35,7 +35,7 @@ Telepathy's ranking integration additionally retains one token-matched preceding
 
 Telepathy's language router is an additional implementation that compares natural continuation likelihoods through that same loaded backbone. Its normalized alternative scores are separate from Kev's calibrated pointer-head outputs and are not calibrated probabilities of human language intent.
 
-Telepathy's optional continuation ranker is original integration code using the same merged backbone and vocabulary head. It scores jointly tokenized prefix/candidate text on copied attention and recurrent caches, with FP32 normalization and summed log likelihoods. These scores are separate from Kev's pointer-head decisions and do not have an explicit no-fit judgment.
+Telepathy's default continuation ranker is original integration code using the same merged backbone and vocabulary head. It scores jointly tokenized prefix/candidate text on copied attention and recurrent caches, with FP32 normalization and summed log likelihoods. These scores are separate from Kev's alternative pointer-head decisions and do not have an explicit no-fit judgment.
 
 The Telepathy app and menu icons are original GPL-3.0 artwork; they incorporate no upstream logo artwork. Rendering sources and the synthetic native-panel demo are in `assets/branding/`, `scripts/` and `docs/branding/`.
 

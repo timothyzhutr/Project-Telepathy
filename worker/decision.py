@@ -9,7 +9,7 @@ class DecisionService:
         if not isinstance(body,dict): raise ValueError('Expected an object')
         revision=body.get('revision');prefix=body.get('prefix');raw=body.get('pinyin')
         pending=body.get('pending',raw);words=body.get('candidates');ends=body.get('candidate_ends')
-        strategy=body.get('strategy','kev')
+        strategy=body.get('strategy','continuation')
         alphabet="abcdefghijklmnopqrstuvwxyz'"
         if (not isinstance(strategy,str) or strategy not in ('kev','continuation') or
             type(revision) is not int or revision<0 or
@@ -50,11 +50,11 @@ class DecisionService:
         with self.lock:
             if self.ranker is None: return unavailable
             try:
-                options={'strategy':'continuation'} if body.get('strategy')=='continuation' else {}
-                result=self.ranker.rank(prefix,pending,[words[i] for i in eligible],**options)
+                strategy=body.get('strategy','continuation')
+                result=self.ranker.rank(prefix,pending,[words[i] for i in eligible],strategy=strategy)
                 if sorted(result['order']) != list(range(len(eligible))): return unavailable
                 selected=result.get('selected_index')
-                return dict(result,status='ok',revision=revision,ranked=True,strategy=body.get('strategy','kev'),
+                return dict(result,status='ok',revision=revision,ranked=True,strategy=strategy,
                     order=[eligible[i] for i in result['order']]+shorter,
                     selected_index=eligible[selected] if selected is not None else None)
             except Exception: return unavailable

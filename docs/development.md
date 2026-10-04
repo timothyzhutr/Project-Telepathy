@@ -1,6 +1,6 @@
 # Building Telepathy
 
-[Back to the README](../README.md)
+[Back to the English README](../README.en.md)
 
 ## Requirements and build
 

@@ -1,6 +1,6 @@
 # Troubleshooting and uninstalling
 
-[Back to the README](../README.md)
+[Back to the English README](../README.en.md)
 
 ## Input source does not appear
 

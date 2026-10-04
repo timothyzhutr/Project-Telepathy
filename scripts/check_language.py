@@ -37,7 +37,7 @@ def main():
     ranker.route('天气很热，我们买点水来','he',words)
     fresh=ranker.route(prefix,'he',words)
     assert abs(first['english_score']-fresh['english_score'])<1e-5,(first,fresh)
-    assert ranker.rank('作为消费者，我们有依法要求商家提供合格产品的','quanli',['权力','权利'])['selected_index']==1
+    assert ranker.rank('作为消费者，我们有依法要求商家提供合格产品的','quanli',['权力','权利'],strategy='kev')['selected_index']==1
     print('PASS: cache reuse, context invalidation and unchanged pointer ranking')
     if args.output:
         args.output.parent.mkdir(parents=True,exist_ok=True)
