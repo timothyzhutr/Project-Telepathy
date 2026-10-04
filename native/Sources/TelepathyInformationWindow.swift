@@ -34,6 +34,7 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
     window.title = "Telepathy"
     window.minSize = NSSize(width: 620, height: 420)
     window.isReleasedWhenClosed = false
+    window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary, .canJoinAllApplications]
     super.init(window: window)
     window.setFrameAutosaveName("TelepathyInformationWindow")
     window.center()
@@ -131,6 +132,17 @@ final class TelepathyInformationWindow: NSWindowController, NSTableViewDataSourc
   }
 
   required init?(coder: NSCoder) { nil }
+
+  func present(tab identifier: String) {
+    selectTab(identifier)
+    window?.deminiaturize(nil)
+    showWindow(nil)
+    NSApp.activate()
+    window?.makeKeyAndOrderFront(nil)
+    // An IME serves another app, which may keep activation. Showing its
+    // utility window must not depend on that app yielding focus.
+    window?.orderFrontRegardless()
+  }
 
   func selectTab(_ identifier: String) {
     if let tab = tabs.tabViewItems.first(where: { $0.identifier as? String == identifier }) {

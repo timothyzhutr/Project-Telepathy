@@ -46,6 +46,15 @@ def main():
         *sorted((SOURCE / 'Sources').glob('*.swift')),
         SOURCE / 'Tests/CreditsOpenerTests.swift', coverage,
         '-o', contents / 'MacOS/CreditsOpenerTests')
+    fixture = BUILD / 'foreground-tests.app/Contents'
+    (fixture / 'MacOS').mkdir(parents=True, exist_ok=True)
+    (fixture / 'Info.plist').write_bytes(plistlib.dumps({
+        'CFBundleIdentifier': 'local.telepathy.tests.foreground',
+        'CFBundleExecutable': 'CreditsOpenerTests',
+        'CFBundlePackageType': 'APPL',
+    }))
+    shutil.copyfile(contents / 'MacOS/CreditsOpenerTests', fixture / 'MacOS/CreditsOpenerTests')
+    (fixture / 'MacOS/CreditsOpenerTests').chmod(0o755)
     run(contents / 'MacOS/CreditsOpenerTests')
 
 if __name__ == '__main__':

@@ -74,16 +74,12 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
 
   func openWiki() {
     if informationWindow == nil { informationWindow = TelepathyInformationWindow() }
-    informationWindow?.selectTab("credits")
-    informationWindow?.showWindow(nil)
-    NSApp.activate()
+    informationWindow?.present(tab: "credits")
   }
 
   func openSettings() {
     if informationWindow == nil { informationWindow = TelepathyInformationWindow() }
-    informationWindow?.selectTab("settings")
-    informationWindow?.showWindow(nil)
-    NSApp.activate()
+    informationWindow?.present(tab: "settings")
   }
 
   static func showMessage(msgText: String?) {

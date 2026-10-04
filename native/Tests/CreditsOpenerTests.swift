@@ -30,6 +30,24 @@ private final class TestHealthProtocol: URLProtocol {
 
 @main struct CreditsOpenerTests {
   static func main() {
+    if CommandLine.arguments.contains("--foreground-fixture") {
+      let app = NSApplication.shared
+      app.setActivationPolicy(.regular)
+      app.finishLaunching()
+      let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 700),
+                            styleMask: [.titled, .closable], backing: .buffered, defer: false)
+      window.title = "Telepathy foreground fixture"
+      window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary, .canJoinAllApplications]
+      window.center(); window.makeKeyAndOrderFront(nil); window.orderFrontRegardless()
+      if let argument = CommandLine.arguments.last, let parent = Int32(argument), parent > 0 {
+        Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+          if kill(parent, 0) != 0 { app.terminate(nil) }
+        }
+      }
+      app.activate()
+      app.run()
+      return
+    }
     URLProtocol.registerClass(TestHealthProtocol.self)
     defer { URLProtocol.unregisterClass(TestHealthProtocol.self) }
     // Intercept only the OS launch boundary so the real menu action can be
@@ -54,6 +72,32 @@ private final class TestHealthProtocol: URLProtocol {
     let app = NSApplication.shared
     app.setActivationPolicy(.accessory)
     app.finishLaunching()
+    let configuration = NSWorkspace.OpenConfiguration()
+    configuration.arguments = ["--foreground-fixture", String(getpid())]
+    configuration.activates = true
+    configuration.createsNewApplicationInstance = true
+    var foreground: NSRunningApplication?
+    let fixtureURL = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("foreground-tests.app")
+    NSWorkspace.shared.openApplication(at: fixtureURL, configuration: configuration) { running, _ in foreground = running }
+    let launchDeadline = Date().addingTimeInterval(5)
+    func fixtureIsInFront() -> Bool {
+      guard let foreground else { return false }
+      let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as! [[String: Any]]
+      let first = windows.first { ($0[kCGWindowLayer as String] as? Int) == 0 }
+      return (first?[kCGWindowOwnerPID as String] as? Int32) == foreground.processIdentifier
+    }
+    while !fixtureIsInFront() {
+      guard Date() < launchDeadline else { fatalError("Covering fixture did not reach the front") }
+      RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+    }
+    defer { foreground?.terminate() }
+    // App activation is a request and can be denied. Make that OS boundary
+    // deterministic; the actual window and WindowServer order stay real.
+    app.deactivate()
+    let activate = class_getInstanceMethod(NSApplication.self, NSSelectorFromString("activate"))!
+    let denyActivation: @convention(c) (AnyObject, Selector) -> Void = { _, _ in }
+    let previousActivate = method_setImplementation(activate, unsafeBitCast(denyActivation, to: IMP.self))
+    defer { method_setImplementation(activate, previousActivate) }
     let cache = Bundle.main.resourceURL!.appendingPathComponent("licenses/__pycache__/test.pyc")
     try! FileManager.default.createDirectory(at: cache.deletingLastPathComponent(), withIntermediateDirectories: true)
     try! Data([0xff]).write(to: cache)
@@ -85,6 +129,23 @@ private final class TestHealthProtocol: URLProtocol {
     }
     guard tabs.selectedTabViewItem === tabs.tabViewItems[1] else {
       fatalError("The window must open on Credits")
+    }
+    func utilityIsInFront() -> Bool {
+      let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as! [[String: Any]]
+      let utilityIndex = windows.firstIndex { ($0[kCGWindowNumber as String] as? Int) == window.windowNumber }
+      let foregroundIndex = windows.firstIndex {
+        ($0[kCGWindowOwnerPID as String] as? Int32) == foreground!.processIdentifier &&
+        ($0[kCGWindowLayer as String] as? Int) == 0
+      }
+      return utilityIndex != nil && foregroundIndex != nil && utilityIndex! < foregroundIndex!
+    }
+    let presentationDeadline = Date().addingTimeInterval(1)
+    while !utilityIsInFront(), Date() < presentationDeadline {
+      RunLoop.current.run(until: Date().addingTimeInterval(0.01))
+    }
+    guard utilityIsInFront() else {
+      fputs("Utility visible=\(window.isVisible) activeSpace=\(window.isOnActiveSpace) appActive=\(app.isActive)\n", stderr)
+      fatalError("The IME utility window must open in front of the other app even when activation is denied")
     }
     // Clicking the tab itself must refresh health, even when Settings was not
     // opened through the input-source menu. Stub only the HTTP boundary.
