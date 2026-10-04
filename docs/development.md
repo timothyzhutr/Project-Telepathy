@@ -35,4 +35,6 @@ The included licenses and upstream credits are collected from pinned native proj
 
 - [Release verification](verification.md)
 - [Prediction speed, precision and quality](../experiments/prediction/README.md)
+- [Continuation ranking comparison](../experiments/prediction/continuation.md)
+- [Original artwork and native demo](branding/README.md)
 - [Automatic language routing](../experiments/language-routing/README.md)

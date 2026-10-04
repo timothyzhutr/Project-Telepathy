@@ -27,6 +27,18 @@ class DecisionTests(unittest.TestCase):
         body=self.request();body.update(pinyin='butaixing',pending='butaixing',candidates=['不太行','不'],candidate_ends=[9,2])
         result=DecisionService(Ranker()).decision(body)
         self.assertEqual(result.get('order'),[0,1]);self.assertFalse(result['ranked'])
+    def test_continuation_strategy_preserves_native_index_mapping(self):
+        class ContinuationRanker(Ranker):
+            def rank(self,prefix,pinyin,words,*,strategy='kev'):
+                result=super().rank(prefix,pinyin,words)
+                return dict(result,strategy=strategy)
+        result=DecisionService(ContinuationRanker()).decision(self.request(strategy='continuation'))
+        self.assertEqual(result['strategy'],'continuation')
+        self.assertEqual(result['order'],[2,0,1]);self.assertEqual(result['selected_index'],2)
+    def test_unsupported_strategy_is_rejected(self):
+        for value in ('unknown',None,[],True):
+            with self.assertRaises(ValueError):
+                DecisionService(Ranker()).decision(self.request(strategy=value))
     def test_rejects_invalid_snapshot(self):
         for field,value in [('revision',True),('pending','not pinyin'),('candidates',['x']*13),('candidate_ends',[10]*3)]:
             body=self.request();body[field]=value

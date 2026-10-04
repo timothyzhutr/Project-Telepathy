@@ -9,6 +9,7 @@ private final class IntentProtocol: URLProtocol {
   static var languageCalls = 0
   static var delay = 0.01
   static var failLanguage = false
+  static var lastRankingStrategy: String?
   private var work: DispatchWorkItem?
   override class func canInit(with request: URLRequest) -> Bool {
     request.url?.path == "/api/language" || request.url?.path == "/api/decision"
@@ -27,7 +28,7 @@ private final class IntentProtocol: URLProtocol {
     }
     let body = (try! JSONSerialization.jsonObject(with: data)) as! [String: Any]
     let isRank = request.url!.path == "/api/decision"
-    if isRank { Self.rankCalls += 1 }
+    if isRank { Self.rankCalls += 1; Self.lastRankingStrategy = body["strategy"] as? String }
     else { Self.languageCalls += 1 }
     let result: [String: Any] = isRank
       ? ["status": "ok", "revision": body["revision"]!, "order": Array(0..<(body["candidates"] as! [String]).count), "ranked": false]
@@ -176,10 +177,15 @@ enum ControllerEventTests {
     check(key("w", flags: .control) && client.marked != beforeEdit, "Chinese Control+w must retain Rime word deletion")
     controller.commitComposition(client)
     client.text = "I think "
+    TelepathyPreferences.shared.set("continuation", for: .rankingStrategy)
+    controller.preferencesDidChange()
     IntentProtocol.failLanguage = true; IntentProtocol.rankCalls = 0
     key("h"); key("e"); wait(0.2)
     check(IntentProtocol.rankCalls > 0, "A failed language decision must retain Chinese reranking")
+    check(IntentProtocol.lastRankingStrategy == "continuation", "The native controller must send the selected experimental strategy to the worker")
     controller.commitComposition(client)
+    TelepathyPreferences.shared.set("kev", for: .rankingStrategy)
+    controller.preferencesDidChange()
     IntentProtocol.failLanguage = false
     IntentProtocol.delay = 0.25
     key("h"); key("e")

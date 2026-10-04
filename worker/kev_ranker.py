@@ -1,5 +1,5 @@
 """Offline MLX inference through Kev's official pointer head and encoder."""
-import os,time
+import math,os,time
 from functools import lru_cache
 from model_store import validate_models,manifest
 from prompt import build_request
@@ -48,6 +48,8 @@ class KevRanker:
         self.ranking_cache=RankingCache(prefill,branch,copy)
         from language_router import LanguageRouter
         self.language_router=LanguageRouter(self)
+        from continuation_scorer import ContinuationScorer
+        self.continuation_scorer=ContinuationScorer(self)
         self.rank('这个类可以','jicheng',['集成','继承'])
         # Compile the LM vocabulary head and copied-cache suffix path before
         # the worker reports ready, rather than during the first typed word.
@@ -63,8 +65,20 @@ class KevRanker:
         # Tokenization can merge at the boundary. RankingCache intersects this
         # prefix with the actual encoding before reusing any recurrent state.
         return [self.tok.convert_tokens_to_ids('<|fim_prefix|>')]+self.user_tokens(self.tok,'prefix: '+prefix+'\npinyin:')
-    def rank(self,prefix,pinyin,words,use_cache=True):
+    def rank(self,prefix,pinyin,words,use_cache=True,*,strategy='kev'):
         started=time.perf_counter()
+        if strategy not in ('kev','continuation'):
+            raise ValueError('Unknown ranking strategy: '+str(strategy))
+        if strategy=='continuation':
+            scored=self.continuation_scorer.score(prefix,words,use_cache=use_cache)
+            scores=scored['scores'];original=list(range(len(words)))
+            usable=(scores is not None and len(scores)==len(words) and bool(scores)
+                    and all(math.isfinite(value) for value in scores))
+            keep=not usable or max(scores)==min(scores)
+            order=original if keep else sorted(original,key=lambda i:-scores[i])
+            return dict(order=order,selected_index=None if keep else order[0],keep=keep,
+                request_ms=(time.perf_counter()-started)*1000,
+                context_tokens=scored['context_tokens'],cache_hit=scored['cache_hit'],ranker='continuation')
         request=build_request(self.cap(prefix),pinyin,words)
         rec,meta=self.record(self.request_type.model_validate(request))
         enc=self.admit(self.engine,self.tok,rec,truncate=False)

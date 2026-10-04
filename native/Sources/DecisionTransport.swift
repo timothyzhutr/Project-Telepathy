@@ -9,7 +9,6 @@ final class DecisionTransport {
   init(endpoint: String = "decision") { self.endpoint = endpoint }
   private var pending: (Data, ([String: Any]?) -> Void)?
   private var running = false
-  private var lastLaunch = Date.distantPast
   private let session: URLSession = {
     let config = URLSessionConfiguration.ephemeral
     config.timeoutIntervalForRequest = 2.5
@@ -18,11 +17,13 @@ final class DecisionTransport {
   }()
 
   func submit(_ data: Data, completion: @escaping ([String: Any]?) -> Void) {
+    guard TelepathyPreferences.shared.enabled(.kev) else { completion(nil); return }
     pending = (data, completion)
     startNext()
   }
 
   private func startNext() {
+    guard TelepathyPreferences.shared.enabled(.kev) else { pending = nil; return }
     guard !running, let (data, completion) = pending else { return }
     pending = nil
     running = true
@@ -44,13 +45,6 @@ final class DecisionTransport {
   }
 
   func launchWorker() {
-    guard Date().timeIntervalSince(lastLaunch) > 15 else { return }
-    lastLaunch = Date()
-    let process = Process()
-    process.executableURL = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker")
-    process.arguments = ["--serve"]
-    process.standardOutput = FileHandle.nullDevice
-    process.standardError = FileHandle.nullDevice
-    try? process.run()
+    TelepathyWorkerController.shared.ensureRunning()
   }
 }

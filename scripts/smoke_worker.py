@@ -36,6 +36,14 @@ def main():
                     repeated=request('/api/decision',json.dumps(dict(snapshot,revision=20)).encode())
                     assert repeated['status']=='ok' and repeated['cache_hit'] and repeated['order'][0]==1,repeated
                     print('Repeated ranking uses copied context:',repeated)
+                    for revision in (21,22):
+                        continued=request('/api/decision',json.dumps(dict(snapshot,revision=revision,strategy='continuation')).encode())
+                        assert continued['status']=='ok' and continued['strategy']=='continuation' and continued['order'][0]==1,continued
+                        assert continued['order'][7:]==list(range(7,12)),continued
+                        if revision==22:assert continued['cache_hit'],continued
+                    empty=request('/api/decision',json.dumps(dict(snapshot,revision=23,prefix='',strategy='continuation')).encode())
+                    assert empty['keep'] and empty['order']==list(range(12)),empty
+                    print('Experimental continuation and empty-context fallback:',continued,empty)
                 else:assert ranked['status']=='unavailable' and ranked['order']==list(range(12)),ranked
                 print('Worker '+expected+':',ranked)
                 for prefix,language in [('I think ','english'),('天气很热，我们买点水来','chinese')]:
@@ -48,8 +56,11 @@ def main():
                     urllib.request.urlopen(urllib.request.Request(url+'/api/health',headers={'Origin':'https://example.com'}),timeout=5)
                     raise AssertionError('Foreign origin accepted')
                 except urllib.error.HTTPError as error:assert error.code==403
+                stopped=request('/api/shutdown',b'{}');assert stopped['status']=='stopping',stopped
+                assert process.wait(timeout=15)==0,'Helper did not exit cleanly'
+                print('Helper process exited; model and runtime memory released.')
             finally:
-                process.terminate()
+                if process.poll() is None:process.terminate()
                 try:process.wait(timeout=10)
                 except subprocess.TimeoutExpired:process.kill();process.wait()
     print('Relocated packaged-worker smoke checks passed.')

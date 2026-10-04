@@ -9,8 +9,10 @@ class DecisionService:
         if not isinstance(body,dict): raise ValueError('Expected an object')
         revision=body.get('revision');prefix=body.get('prefix');raw=body.get('pinyin')
         pending=body.get('pending',raw);words=body.get('candidates');ends=body.get('candidate_ends')
+        strategy=body.get('strategy','kev')
         alphabet="abcdefghijklmnopqrstuvwxyz'"
-        if (type(revision) is not int or revision<0 or
+        if (not isinstance(strategy,str) or strategy not in ('kev','continuation') or
+            type(revision) is not int or revision<0 or
             not isinstance(prefix,str) or len(prefix)>512 or '\x00' in prefix or
             any(not isinstance(p,str) or not 0<len(p)<=64 or any(c not in alphabet for c in p) for p in (raw,pending)) or
             not isinstance(words,list) or not 1<=len(words)<=12 or
@@ -48,10 +50,11 @@ class DecisionService:
         with self.lock:
             if self.ranker is None: return unavailable
             try:
-                result=self.ranker.rank(prefix,pending,[words[i] for i in eligible])
+                options={'strategy':'continuation'} if body.get('strategy')=='continuation' else {}
+                result=self.ranker.rank(prefix,pending,[words[i] for i in eligible],**options)
                 if sorted(result['order']) != list(range(len(eligible))): return unavailable
                 selected=result.get('selected_index')
-                return dict(result,status='ok',revision=revision,ranked=True,
+                return dict(result,status='ok',revision=revision,ranked=True,strategy=body.get('strategy','kev'),
                     order=[eligible[i] for i in result['order']]+shorter,
                     selected_index=eligible[selected] if selected is not None else None)
             except Exception: return unavailable

@@ -1,0 +1,523 @@
+[
+  {
+    "id": "fresh-01",
+    "category": "short",
+    "prefix": "把垃圾扔进垃圾",
+    "pinyin": "tong",
+    "pending": "tong",
+    "acceptable": [
+      "桶"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-02",
+    "category": "short",
+    "prefix": "这张照片太暗了，调高一点亮",
+    "pinyin": "du",
+    "pending": "du",
+    "acceptable": [
+      "度"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-03",
+    "category": "short",
+    "prefix": "我没带伞，只好在屋檐下躲",
+    "pinyin": "yu",
+    "pending": "yu",
+    "acceptable": [
+      "雨"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-04",
+    "category": "short",
+    "prefix": "晚上早点睡，别再熬",
+    "pinyin": "ye",
+    "pending": "ye",
+    "acceptable": [
+      "夜"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-05",
+    "category": "short",
+    "prefix": "菜太淡，再放一点",
+    "pinyin": "yan",
+    "pending": "yan",
+    "acceptable": [
+      "盐"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-06",
+    "category": "short",
+    "prefix": "孩子发烧了，先测一下体",
+    "pinyin": "wen",
+    "pending": "wen",
+    "acceptable": [
+      "温"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-07",
+    "category": "short",
+    "prefix": "对不起啊，刚才是我听",
+    "pinyin": "cuo",
+    "pending": "cuo",
+    "acceptable": [
+      "错"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-08",
+    "category": "short",
+    "prefix": "这事儿你先别着",
+    "pinyin": "ji",
+    "pending": "ji",
+    "acceptable": [
+      "急"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-09",
+    "category": "chat",
+    "prefix": "哈哈，这个段子让我差点笑出",
+    "pinyin": "sheng",
+    "pending": "sheng",
+    "acceptable": [
+      "声"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-10",
+    "category": "chat",
+    "prefix": "昨晚熬夜赶作业，今天早上起来有点",
+    "pinyin": "touyun",
+    "pending": "touyun",
+    "acceptable": [
+      "头晕"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-11",
+    "category": "chat",
+    "prefix": "快迟到了，要不我们直接打",
+    "pinyin": "che",
+    "pending": "che",
+    "acceptable": [
+      "车"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-12",
+    "category": "chat",
+    "prefix": "这双鞋穿着太紧了，能不能换个大一号的尺",
+    "pinyin": "ma",
+    "pending": "ma",
+    "acceptable": [
+      "码"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-13",
+    "category": "long",
+    "prefix": "山里连续下了三天暴雨，河水迅速上涨。为了保证下游居民安全，村委会决定提前组织大家转",
+    "pinyin": "yi",
+    "pending": "yi",
+    "acceptable": [
+      "移"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-14",
+    "category": "long",
+    "prefix": "装修工人检查后发现，墙角发霉并不是通风不好，而是楼上厨房的水管破裂，导致持续",
+    "pinyin": "loushui",
+    "pending": "loushui",
+    "acceptable": [
+      "漏水"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-15",
+    "category": "long",
+    "prefix": "这座城市拆除了旧厂房，把空地改成公园。附近的居民终于有了可以散步和锻炼的公共空",
+    "pinyin": "jian",
+    "pending": "jian",
+    "acceptable": [
+      "间"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-16",
+    "category": "long",
+    "prefix": "第一批实验样本已经完成检测，结果还需要由另一组研究人员独立重复，才能判断结论是否可",
+    "pinyin": "kao",
+    "pending": "kao",
+    "acceptable": [
+      "靠"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-17",
+    "category": "domain",
+    "prefix": "这笔报销不能只凭聊天记录，财务要求提供正式发",
+    "pinyin": "piao",
+    "pending": "piao",
+    "acceptable": [
+      "票"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-18",
+    "category": "domain",
+    "prefix": "这个函数会把输入数组从小到大排",
+    "pinyin": "xu",
+    "pending": "xu",
+    "acceptable": [
+      "序"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-19",
+    "category": "domain",
+    "prefix": "为了避免重复扣款，支付接口必须保证幂",
+    "pinyin": "deng",
+    "pending": "deng",
+    "acceptable": [
+      "等"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-20",
+    "category": "domain",
+    "prefix": "显微镜下可以看到细胞正在分",
+    "pinyin": "lie",
+    "pending": "lie",
+    "acceptable": [
+      "裂"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-21",
+    "category": "domain",
+    "prefix": "乐团演奏前，首席小提琴手先带大家调",
+    "pinyin": "yin",
+    "pending": "yin",
+    "acceptable": [
+      "音"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-22",
+    "category": "domain",
+    "prefix": "这台电机外壳温度过高，需要检查散热风",
+    "pinyin": "shan",
+    "pending": "shan",
+    "acceptable": [
+      "扇"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-23",
+    "category": "domain",
+    "prefix": "病人对这种药物过敏，医生决定更换治疗方",
+    "pinyin": "an",
+    "pending": "an",
+    "acceptable": [
+      "案"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-24",
+    "category": "mixed",
+    "prefix": "跑完 pytest 之后发现，失败的原因是配置文件里的路",
+    "pinyin": "jing",
+    "pending": "jing",
+    "acceptable": [
+      "径"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-25",
+    "category": "mixed",
+    "prefix": "SQLite 数据库被两个进程同时写入，所以出现了锁冲",
+    "pinyin": "tu",
+    "pending": "tu",
+    "acceptable": [
+      "突"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-26",
+    "category": "mixed",
+    "prefix": "Chen 在 review 中指出，这个变量名的含义不够清",
+    "pinyin": "xi",
+    "pending": "xi",
+    "acceptable": [
+      "晰"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-27",
+    "category": "mixed",
+    "prefix": "这次 API 调用返回 401，需要先检查访问令",
+    "pinyin": "pai",
+    "pending": "pai",
+    "acceptable": [
+      "牌"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-28",
+    "category": "names",
+    "prefix": "新同事姓赵，名字的第二个字是表示晨光的“曦”，他的名字叫赵晨",
+    "pinyin": "xi",
+    "pending": "xi",
+    "acceptable": [
+      "曦"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-29",
+    "category": "names",
+    "prefix": "主持人介绍，这位选手姓欧阳，名叫修，因此全名是欧阳",
+    "pinyin": "xiu",
+    "pending": "xiu",
+    "acceptable": [
+      "修"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-30",
+    "category": "alternatives",
+    "prefix": "市里的旅游管理部门正在",
+    "pinyin": "zhiding",
+    "pending": "zhiding",
+    "acceptable": [
+      "制定",
+      "制订"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-31",
+    "category": "alternatives",
+    "prefix": "这件事由你来处理，我完全",
+    "pinyin": "xiangxin",
+    "pending": "xiangxin",
+    "acceptable": [
+      "相信"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-32",
+    "category": "alternatives",
+    "prefix": "收到你的帮助，真的非常感",
+    "pinyin": "xie",
+    "pending": "xie",
+    "acceptable": [
+      "谢"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-33",
+    "category": "unequal",
+    "prefix": "赶了两小时路，大家都累了。到了旅馆先休",
+    "pinyin": "xi",
+    "pending": "xi",
+    "acceptable": [
+      "息"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-34",
+    "category": "unequal",
+    "prefix": "比赛结束后，队长说能赢全靠大家的团结协",
+    "pinyin": "zuo",
+    "pending": "zuo",
+    "acceptable": [
+      "作"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-35",
+    "category": "unequal",
+    "prefix": "把这些零散记录整理成一份完整的工作总",
+    "pinyin": "jie",
+    "pending": "jie",
+    "acceptable": [
+      "结"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-36",
+    "category": "long-capped",
+    "prefix": "我们每周都做一次例会，回顾上周的任务、讨论新的需求、检查文档和代码，也听取其他团队的反馈。今天大家花了很长时间讨论服务上线后的稳定性问题，包括日志存储、访问权限、错误告警、回滚流程和夜间值班。讨论结束后，负责人提醒我们，真正发生故障时，首先要确定问题的原",
+    "pinyin": "yin",
+    "pending": "yin",
+    "acceptable": [
+      "因"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-37",
+    "category": "literal-english",
+    "prefix": "To undo the previous Git commit, use git ",
+    "pinyin": "reset",
+    "pending": "reset",
+    "acceptable": [
+      "reset"
+    ],
+    "expected_language": "english",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-38",
+    "category": "literal-english",
+    "prefix": "The parser should return a Python ",
+    "pinyin": "dict",
+    "pending": "dict",
+    "acceptable": [
+      "dict"
+    ],
+    "expected_language": "english",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-39",
+    "category": "no-context",
+    "prefix": "",
+    "pinyin": "shi",
+    "pending": "shi",
+    "acceptable": [],
+    "expected_language": "uncertain",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-40",
+    "category": "no-context",
+    "prefix": "   ",
+    "pinyin": "an",
+    "pending": "an",
+    "acceptable": [],
+    "expected_language": "uncertain",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-41",
+    "category": "no-fit",
+    "prefix": "我忘了密码，需要点击“重置密码”按钮。按钮上的字应该是重置密",
+    "pinyin": "tong",
+    "pending": "tong",
+    "acceptable": [],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-42",
+    "category": "no-fit",
+    "prefix": "请补全算式：三乘以三等于",
+    "pinyin": "mao",
+    "pending": "mao",
+    "acceptable": [],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-43",
+    "category": "missing-target",
+    "prefix": "同事名叫林汐，最后一个字是三点水旁加一个“夕”。我准备在邮件里写：你好，林",
+    "pinyin": "xi",
+    "pending": "xi",
+    "acceptable": [
+      "汐"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  },
+  {
+    "id": "fresh-44",
+    "category": "ambiguous",
+    "prefix": "到了路口，大家都停下来等那个穿红衣服的",
+    "pinyin": "ren",
+    "pending": "ren",
+    "acceptable": [
+      "人"
+    ],
+    "expected_language": "chinese",
+    "source": "packaged-static-rime"
+  }
+]

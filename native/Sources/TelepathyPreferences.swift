@@ -12,6 +12,7 @@ final class TelepathyPreferences {
     case timing = "TelepathyRankingTiming", punctuation = "TelepathyChinesePunctuation"
     case statusIcon = "TelepathyStatusIcon", kev = "KevEnabled", autoLanguage = "TelepathyAutoLanguage"
     case autoPunctuation = "TelepathyAutoPunctuation"
+    case rankingStrategy = "TelepathyRankingStrategy"
   }
   static let rowOptions = [0, 1, 2, 3, 4, 6, 12]
   let defaults: UserDefaults
@@ -28,6 +29,9 @@ final class TelepathyPreferences {
   var appearance: String {
     let value = defaults.string(forKey: Key.appearance.rawValue) ?? "system"
     return ["system", "light", "dark"].contains(value) ? value : "system"
+  }
+  var rankingStrategy: String {
+    defaults.string(forKey: Key.rankingStrategy.rawValue) == "continuation" ? "continuation" : "kev"
   }
   func enabled(_ key: Key) -> Bool {
     defaults.object(forKey: key.rawValue) as? Bool ?? (key != .statusIcon && key != .autoLanguage)

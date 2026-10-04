@@ -11,10 +11,12 @@ final class TelepathySettingsView: NSView {
   private let font = NSSlider(value: 16, minValue: 12, maxValue: 28, target: nil, action: nil)
   private let fontLabel = NSTextField(labelWithString: "16 pt")
   private let appearancePopup = NSPopUpButton()
+  private let rankingPopup = NSPopUpButton()
   private let preview = NSTextField(wrappingLabelWithString: "")
   private let modelStatus = NSTextField(wrappingLabelWithString: "Checking model status…")
   private var toggles = [TelepathyPreferences.Key: NSButton]()
   private var observer: NSObjectProtocol?
+  private var assistanceEnabled: Bool?
   private var download: Process?
   private let downloadButton = NSButton(title: "Download / repair model", target: nil, action: nil)
 
@@ -104,11 +106,15 @@ final class TelepathySettingsView: NSView {
     add(previewBox)
     checkbox("Show pinyin in the text field", .inlinePinyin)
     checkbox("Show candidate annotations", .annotations)
-    checkbox("Show Kev timing on the chosen candidate", .timing)
+    checkbox("Show model timing on the chosen candidate", .timing)
     checkbox("Show the Chinese / English status icon in the menu bar", .statusIcon)
     heading("Typing")
     checkbox("Enable Kev assistance", .kev)
-    note("Kev uses preceding text to rank candidates locally. The loaded model stays ready between decisions.")
+    note("Kev ranks candidates locally using preceding text. Turning assistance off stops the helper to free memory. Turning it on reloads the model while ordinary pinyin typing remains available.")
+    rankingPopup.addItems(withTitles: ["Kev (default)", "Context prediction (experimental)"])
+    rankingPopup.identifier = .init("settings.rankingStrategy"); rankingPopup.target = self; rankingPopup.action = #selector(changeRanking(_:))
+    row("Ranking method", rankingPopup)
+    note("Context prediction uses the same local model to score which candidate naturally follows your text. It can be faster, but may still choose a poor match when all candidates are unsuitable.")
     checkbox("Automatic Chinese / English (experimental)", .autoLanguage)
     note("Uses context to keep English words literal. Requires Kev assistance. Space adds a space after English; ↓ or Tab restores Chinese choices. Shift + a letter starts literal English until the next space.")
     checkbox("Use Chinese punctuation", .punctuation)
@@ -125,7 +131,12 @@ final class TelepathySettingsView: NSView {
     let reset = NSButton(title: "Restore default settings", target: self, action: #selector(resetSettings))
     add(NSStackView(views: [reset, NSView()]))
     note("Changes save automatically and apply to the next composition. Restoring defaults only resets these preferences.")
-    observer = NotificationCenter.default.addObserver(forName: .telepathyPreferencesChanged, object: preferences, queue: .main) { [weak self] _ in self?.reload() }
+    observer = NotificationCenter.default.addObserver(forName: .telepathyPreferencesChanged, object: preferences, queue: .main) { [weak self] _ in
+      guard let self else { return }
+      let assistanceChanged = self.assistanceEnabled != self.preferences.enabled(.kev)
+      self.reload()
+      if assistanceChanged { self.refreshModelStatus() }
+    }
     reload()
   }
   required init?(coder: NSCoder) { nil }
@@ -135,6 +146,9 @@ final class TelepathySettingsView: NSView {
     rows.selectItem(withTag: preferences.candidatesPerRow)
     font.doubleValue = Double(preferences.fontSize); fontLabel.stringValue = "\(preferences.fontSize) pt"
     appearancePopup.selectItem(at: ["system", "light", "dark"].firstIndex(of: preferences.appearance) ?? 0)
+    rankingPopup.selectItem(at: preferences.rankingStrategy == "continuation" ? 1 : 0)
+    rankingPopup.isEnabled = preferences.enabled(.kev)
+    assistanceEnabled = preferences.enabled(.kev)
     toggles.forEach { $0.value.state = preferences.enabled($0.key) ? .on : .off }
     let samples = ["你好", "拟好", "你号", "倪好", "泥好", "你好啊"]
     preview.font = .systemFont(ofSize: CGFloat(preferences.fontSize))
@@ -143,6 +157,7 @@ final class TelepathySettingsView: NSView {
   @objc private func changeRows(_ sender: NSPopUpButton) { preferences.set(sender.selectedTag(), for: .rows) }
   @objc private func changeFont(_ sender: NSSlider) { preferences.set(Int(sender.doubleValue.rounded()), for: .font) }
   @objc private func changeAppearance(_ sender: NSPopUpButton) { preferences.set(["system", "light", "dark"][sender.indexOfSelectedItem], for: .appearance) }
+  @objc private func changeRanking(_ sender: NSPopUpButton) { preferences.set(sender.indexOfSelectedItem == 1 ? "continuation" : "kev", for: .rankingStrategy) }
   @objc private func toggle(_ sender: NSButton) {
     if let key = toggles.first(where: { $0.value === sender })?.key { preferences.set(sender.state == .on, for: key) }
   }
@@ -154,6 +169,10 @@ final class TelepathySettingsView: NSView {
   }
   @objc func refreshModelStatus() {
     if download != nil { return }
+    guard preferences.enabled(.kev) else {
+      modelStatus.stringValue = "Kev assistance is off. The model helper stops to free memory."
+      return
+    }
     modelStatus.stringValue = "Checking model status…"
     var request = URLRequest(url: URL(string: "http://127.0.0.1:18765/api/health")!)
     request.timeoutInterval = 3
@@ -162,7 +181,7 @@ final class TelepathySettingsView: NSView {
       let valid = (response as? HTTPURLResponse)?.statusCode == 200 && json?["app"] as? String == "Telepathy"
       let status = valid ? json?["status"] as? String : nil
       DispatchQueue.main.async {
-        guard let self, self.download == nil else { return }
+        guard let self, self.download == nil, self.preferences.enabled(.kev) else { return }
         self.modelStatus.stringValue = switch status {
         case "ready": "Kev is ready · Runs on this Mac"
         case "loading": "Kev is loading… Refresh in a moment."
@@ -194,6 +213,10 @@ final class TelepathySettingsView: NSView {
   }
 
   private func reloadModel() {
+    guard preferences.enabled(.kev) else {
+      modelStatus.stringValue = "Model files installed. Enable Kev assistance to load them."
+      return
+    }
     modelStatus.stringValue = "Model files verified. Loading Kev…"
     var request = URLRequest(url: URL(string: "http://127.0.0.1:18765/api/reload")!)
     request.httpMethod = "POST"; request.httpBody = Data("{}".utf8)

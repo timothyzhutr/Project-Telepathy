@@ -31,11 +31,12 @@ The input-source menu includes **Kev assistance**, which switches ranking on/off
 - Text size (12–28 pt) and appearance (follow system, light or dark).
 - Inline pinyin, candidate annotations, Kev timing and the Chinese / English menu-bar status icon.
 - Kev assistance and Chinese punctuation.
+- Ranking method: **Kev (default)** or **Context prediction (experimental)**. Both use the same local model and download. Context prediction ranks natural continuations of your preceding text; it can be faster but lacks Kev's explicit “keep the original order” decision when every supplied candidate is unsuitable. With no usable context it retains Rime's order. A `Context … ms` annotation identifies this method when timing is enabled; `Kev … ms` identifies the pointer ranker. Scores are not probabilities of your intent. See [the fresh comparison](../experiments/prediction/continuation.md) for synthetic results and limitations.
 - Automatic Chinese / English typing (experimental, off by default).
 - Automatic punctuation forms in Auto mode (on by default): Chinese or ASCII forms of the mark you press.
 - Local model status, model folder access, and an explicit download / repair action. Valid pinned files are reused; missing or damaged files are fetched and verified before the worker reloads them.
 
-Turning assistance off skips decisions; the loaded worker stays resident. Settings survive app updates. **Restore default settings** resets only Telepathy's controls, preserving model files and unrelated preferences.
+Turning assistance off stops the model helper, releasing its model, caches and inference runtime. Turning it on starts the helper again; ordinary Rime typing stays available while the model reloads. Model files remain on disk. Settings survive app updates. **Restore default settings** resets only Telepathy's controls, preserving model files and unrelated preferences.
 
 Enable **Automatic Chinese / English (experimental)** in Settings while Kev assistance is on. Telepathy compares literal keyboard text with complete Chinese candidates using up to 100 tokens of preceding text. Confident English stays literal and Space adds a space; Chinese and uncertain input keep the candidate workflow. Press **↓ or Tab** to restore Chinese choices for the current word. **Shift + a letter** starts literal English until the next space. Caps Lock remains a manual English switch. Auto mode changes Shift's usual Rime language-toggle behavior.
 
@@ -45,7 +46,7 @@ The language check uses the already loaded Kev backbone, with no additional mode
 
 **Credits and licenses…** opens the same window on Credits. The Credits tab lists the projects used; the Licenses tab lets you browse their bundled license texts. These tabs work offline. The same texts are included under `Contents/Resources/licenses/`.
 
-Kev's backbone runs on the Apple GPU through MLX with **MXFP8 weight quantization by default**; its small pointer head stays FP32 on the CPU through PyTorch. On the development M2 Pro, backbone weight storage falls from **1.50 GB to 0.78 GB**. Activations, normalization, recurrent state, inference caches and runtime memory are additional, so this does not halve total worker memory. The helper loads the model once and stays resident. Decisions are asynchronous, so native candidates appear without waiting for inference.
+Kev's backbone runs on the Apple GPU through MLX with **MXFP8 weight quantization by default**; its small pointer head stays FP32 on the CPU through PyTorch. On the development M2 Pro, backbone weight storage falls from **1.50 GB to 0.78 GB**. Activations, normalization, recurrent state, inference caches and runtime memory are additional, so this does not halve total worker memory. The helper stays resident while assistance is enabled. Decisions are asynchronous, so native candidates appear without waiting for inference.
 
 At startup, Telepathy verifies the pinned original model files, merges Kev's adapter into the BF16 backbone, then compresses its linear/embedding weights with MXFP8 groups of 32 before creating inference caches. Temporary conversion buffers are released. Loading/conversion briefly needs the original weights in memory. The downloaded files still occupy about 1.8 GB on disk; no extra download or second model copy is required. Worker health reports the active quantization and backbone weight bytes.
 

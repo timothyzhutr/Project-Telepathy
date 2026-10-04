@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <title>Telepathy — Context link</title>
+  <desc>Original Telepathy mark: text brackets around two connected points. Copyright 2026 Project Telepathy contributors. Licensed under GPL-3.0-only.</desc>
+  <g fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 7 4 H 3.5 V 20 H 7"/>
+    <path d="M 17 4 H 20.5 V 20 H 17"/>
+    <path d="M 8 15.5 C 12 15.5 12 8.5 16 8.5"/>
+  </g>
+  <g fill="#000000">
+    <circle cx="8" cy="15.5" r="1.65"/>
+    <circle cx="16" cy="8.5" r="1.65"/>
+  </g>
+</svg>

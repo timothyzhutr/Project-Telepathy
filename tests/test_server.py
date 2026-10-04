@@ -5,7 +5,7 @@ from decision import DecisionService
 from server import make_server
 class ServerTests(unittest.TestCase):
     def setUp(self):
-        self.server=make_server(0,DecisionService());threading.Thread(target=self.server.serve_forever,daemon=True).start()
+        self.server=make_server(0,DecisionService());self.thread=threading.Thread(target=self.server.serve_forever,daemon=True);self.thread.start()
         self.url='http://127.0.0.1:'+str(self.server.server_port)
     def tearDown(self): self.server.shutdown();self.server.server_close()
     def request(self,path,data=None,headers=None):
@@ -32,3 +32,11 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request('/api/language',b'{}')[0],400)
         self.assertEqual(self.request('/api/language',b'x'*8193)[0],413)
         self.assertEqual(self.request('/api/language',json.dumps(snapshot).encode(),{'Origin':'https://evil.example'})[0],403)
+    def test_shutdown_acknowledges_then_stops_accepting_requests(self):
+        status,body=self.request('/api/shutdown',b'{}')
+        self.assertEqual((status,body.get('status')),(202,'stopping'))
+        self.thread.join(timeout=2)
+        self.assertFalse(self.thread.is_alive(),'Worker server must finish so the helper can release its runtime')
+    def test_foreign_origin_cannot_shutdown_helper(self):
+        self.assertEqual(self.request('/api/shutdown',b'{}',{'Origin':'https://evil.example'})[0],403)
+        self.assertEqual(self.request('/api/health')[0],200)

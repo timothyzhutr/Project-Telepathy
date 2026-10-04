@@ -33,6 +33,7 @@ final class SquirrelApplicationDelegate: NSObject, NSApplicationDelegate {
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    TelepathyWorkerController.shared.shutdown()
     if let preferencesObserver { NotificationCenter.default.removeObserver(preferencesObserver) }
     // swiftlint:disable:next notification_center_detachment
     NotificationCenter.default.removeObserver(self)
@@ -311,7 +312,7 @@ private extension SquirrelApplicationDelegate {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     if let button = item.button {
       button.font = NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-      button.toolTip = NSLocalizedString("Squirrel", comment: "")
+      button.toolTip = "Telepathy"
     }
     statusItem = item
     applyStatusIcon(asciiMode: false, schemaLabel: nil)
@@ -348,11 +349,14 @@ private extension SquirrelApplicationDelegate {
 
   func applyStatusIcon(asciiMode: Bool, schemaLabel: String?) {
     guard let button = statusItem?.button else { return }
-    if let schemaLabel = schemaLabel, !schemaLabel.isEmpty {
-      button.title = schemaLabel
+    button.image = nil
+    if !asciiMode, let url = Bundle.main.url(forResource: "Telepathy", withExtension: "pdf"), let image = NSImage(contentsOf: url) {
+      image.isTemplate = true; image.size = NSSize(width: 18, height: 18)
+      button.title = ""; button.image = image
     } else {
-      button.title = asciiMode ? "Ａ" : "中"
+      button.title = schemaLabel?.isEmpty == false ? schemaLabel! : (asciiMode ? "Ａ" : "中")
     }
+    button.toolTip = asciiMode ? "Telepathy · English" : "Telepathy · Chinese"
   }
 
   func shutdownRime() {

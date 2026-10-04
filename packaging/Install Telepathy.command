@@ -26,6 +26,32 @@ telepathy_rollback() {
 trap telepathy_rollback ERR
 if [[ -d "$telepathy_target" ]]; then
   "$telepathy_target/Contents/MacOS/Telepathy" --quit || true
+  # Older native releases did not stop their helper on quit. Stop only this
+  # user's helper at the installation being replaced, never a development app.
+  telepathy_worker="$telepathy_target/Contents/Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker"
+  telepathy_workers=""
+  while read -r telepathy_pid telepathy_command; do
+    case "$telepathy_command" in
+      "$telepathy_worker --serve"|"$telepathy_worker --serve "*)
+        telepathy_workers="$telepathy_workers $telepathy_pid"
+        kill -TERM "$telepathy_pid" 2>/dev/null || true
+        ;;
+    esac
+  done < <(/bin/ps -ww -U "$(id -u)" -o pid= -o command=)
+  for telepathy_pid in $telepathy_workers; do
+    telepathy_exited=false
+    for ((telepathy_attempt=0; telepathy_attempt<100; telepathy_attempt++)); do
+      telepathy_state=$(/bin/ps -p "$telepathy_pid" -o state= 2>/dev/null || true)
+      if [[ -z "$telepathy_state" || "$telepathy_state" == *Z* ]]; then
+        telepathy_exited=true; break
+      fi
+      sleep 0.1
+    done
+    if ! $telepathy_exited; then
+      echo 'The previous model helper is still stopping. Please retry installation.'
+      false
+    fi
+  done
   mv "$telepathy_target" "$telepathy_backup/Telepathy.app"
   telepathy_moved_app=true
 fi

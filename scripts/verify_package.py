@@ -8,6 +8,13 @@ def verify(app):
     assert info['CFBundleIdentifier']=='local.telepathy.inputmethod.Telepathy'
     assert info['LSMinimumSystemVersion']=='26.2'
     assert 'TelepathyProjectRoot' not in info
+    assert info['CFBundleIconFile']=='Telepathy'
+    resources=contents/'Resources'
+    assert (resources/'Telepathy.icns').is_file() and (resources/'Telepathy.pdf').is_file()
+    assert not any((resources/name).exists() for name in ('Rime.icns','rime.pdf'))
+    for mode in info['ComponentInputModeDict']['tsInputModeListKey'].values():
+        for key in ('tsInputModeMenuIconFileKey','tsInputModeAlternateMenuIconFileKey','tsInputModePaletteIconFileKey'):
+            assert mode[key]=='Telepathy.pdf' and (resources/mode[key]).is_file()
     inventory=json.loads((contents/'Resources/data-inventory.json').read_text())
     actual={str(p.relative_to(contents)) for folder in ('Resources/Profile','SharedSupport') for p in (contents/folder).rglob('*') if p.is_file()}
     assert actual==set(inventory),'Runtime files outside the audited inventory: '+str(actual-set(inventory))

@@ -612,14 +612,15 @@ private extension SquirrelInputController {
   }
 
   func submitRanking(_ data: Data, revision: Int) {
-    guard ranking.revision == revision, !ranking.frozen, !intent.english else { return }
+    guard rankingEnabled, ranking.revision == revision, !ranking.frozen, !intent.english else { return }
     DecisionTransport.shared.submit(data) { [weak self] result in
       guard let self, !self.intent.english, let result, result["status"] as? String == "ok",
             let order = result["order"] as? [Int], self.ranking.apply(order, revision: revision) else { return }
       self.displayedHighlight = 0
       _ = self.rimeAPI.highlight_candidate_on_current_page(self.session, order[0])
       if result["ranked"] as? Bool == true {
-        self.rankingNote = "Kev \(Int((result["request_ms"] as? Double) ?? 0)) ms"
+        let name = result["strategy"] as? String == "continuation" ? "Context" : "Kev"
+        self.rankingNote = "\(name) \(Int((result["request_ms"] as? Double) ?? 0)) ms"
       } else { self.rankingNote = "Full phrase" }
       self.rimeUpdate(clearReservedComments: false)
     }
@@ -758,7 +759,8 @@ private extension SquirrelInputController {
         ends.withUnsafeMutableBufferPointer { tp_candidate_ends(session, Int32(candidates.count), $0.baseAddress) }
         let prefix = String((compositionPrefix + confirmed).suffix(512))
         let payload: [String: Any] = ["revision": revision, "prefix": prefix, "pinyin": raw, "pending": pending,
-                                    "candidates": snapshotWords, "candidate_ends": ends.map(Int.init)]
+                                    "candidates": snapshotWords, "candidate_ends": ends.map(Int.init),
+                                    "strategy": TelepathyPreferences.shared.rankingStrategy]
         let data = try? JSONSerialization.data(withJSONObject: payload)
         let deadline = DispatchTime.now() + 0.085
         if automaticLanguageEnabled && confirmed.isEmpty && caret == raw.utf8.count, let data {

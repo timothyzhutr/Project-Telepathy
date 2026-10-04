@@ -1,0 +1,61 @@
+{
+  "decision" : {
+    "cache_hit" : false,
+    "context_tokens" : 10,
+    "keep" : false,
+    "order" : [
+      1,
+      2,
+      0,
+      5,
+      6,
+      4,
+      3,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "ranked" : true,
+    "request_ms" : 438.46000000485219,
+    "revision" : 1,
+    "selected_index" : 1,
+    "status" : "ok"
+  },
+  "request" : {
+    "candidate_ends" : [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "candidates" : [
+      "全力",
+      "权利",
+      "权力",
+      "劝离",
+      "圈里",
+      "泉里",
+      "拳理",
+      "全",
+      "权",
+      "券",
+      "圈",
+      "泉"
+    ],
+    "pending" : "quanli",
+    "pinyin" : "quanli",
+    "prefix" : "作为消费者，我们有依法要求商家提供合格产品的",
+    "revision" : 1
+  },
+  "source" : "Bundled wanxiang schema and one local Kev decision; entirely synthetic text."
+}

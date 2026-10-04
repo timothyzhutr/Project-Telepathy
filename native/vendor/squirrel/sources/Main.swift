@@ -60,7 +60,7 @@ import InputMethodKit
     delegate.setupRime()
     delegate.startRime(fullCheck: false)
     delegate.loadSettings()
-    DecisionTransport.shared.launchWorker()
+    TelepathyWorkerController.shared.start()
     withExtendedLifetime(server) { app.run() }
     rime_get_api_stdbool().pointee.finalize()
   }

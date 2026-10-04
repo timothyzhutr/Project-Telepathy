@@ -191,6 +191,10 @@ private final class TestHealthProtocol: URLProtocol {
       app.sendAction(action, to: control.target, from: control)
     }
     let rows = control("settings.rows", NSPopUpButton.self)
+    let strategy = control("settings.rankingStrategy", NSPopUpButton.self)
+    guard strategy.indexOfSelectedItem == 0 else { fatalError("Kev must remain the default ranking strategy") }
+    strategy.selectItem(at: 1); change(strategy)
+    guard defaults.string(forKey: "TelepathyRankingStrategy") == "continuation" else { fatalError("Experimental context ranking must persist") }
     rows.selectItem(withTag: 3); change(rows)
     guard defaults.integer(forKey: "TelepathyCandidatesPerRow") == 3 else { fatalError("Row layout must persist") }
     let font = control("settings.font", NSSlider.self)
@@ -216,6 +220,7 @@ private final class TestHealthProtocol: URLProtocol {
     let kev = control("settings.kev", NSButton.self)
     kev.state = .off; change(kev)
     guard defaults.object(forKey: "KevEnabled") as? Bool == false else { fatalError("Settings must share the existing Kev menu preference") }
+    guard status.stringValue == "Kev assistance is off. The model helper stops to free memory." else { fatalError("Settings must explain that disabling assistance releases the helper") }
     let automatic = control("settings.autoLanguage", NSButton.self)
     guard automatic.state == .off else { fatalError("Automatic language mode must be opt-in") }
     automatic.state = .on; change(automatic)
@@ -237,6 +242,7 @@ private final class TestHealthProtocol: URLProtocol {
     change(reset)
     guard defaults.object(forKey: "KevEnabled") == nil, rows.selectedTag() == 0,
           font.intValue == 16, automatic.state == .off, punctuation.state == .on,
+          strategy.indexOfSelectedItem == 0, defaults.object(forKey: "TelepathyRankingStrategy") == nil,
           defaults.object(forKey: "TelepathyAutoLanguage") == nil,
           defaults.string(forKey: "UnrelatedPreference") == "preserve" else {
       fatalError("Restoring defaults must refresh controls and preserve unrelated preferences")

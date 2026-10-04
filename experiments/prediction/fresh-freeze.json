@@ -1,0 +1,6 @@
+{
+  "labels_sha256": "459f270b621eacaecabd1107349fddc9ed64f45d6c5992b03126c20abe9e253a",
+  "case_count": 44,
+  "authored_before_scoring": true,
+  "selection_policy": "All authored cases retained, first native page (maximum 12); no label or candidate edits after scoring."
+}

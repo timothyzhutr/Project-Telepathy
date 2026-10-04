@@ -19,15 +19,21 @@ def make_server(port,service,health=None,reload_model=None):
         def do_GET(self):
             if not self.allowed(): return
             if self.path!='/api/health': self.send(404,{'error':'Unknown endpoint'});return
-            self.send(200,dict(app='Telepathy',version='0.1.7',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
+            self.send(200,dict(app='Telepathy',version='0.1.8',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
         def do_POST(self):
             if not self.allowed(): return
-            if self.path not in ('/api/decision','/api/language','/api/reload'): self.send(404,{'error':'Unknown endpoint'});return
+            if self.path not in ('/api/decision','/api/language','/api/reload','/api/shutdown'): self.send(404,{'error':'Unknown endpoint'});return
             try:
                 length=int(self.headers.get('Content-Length','-1'))
                 if not 0<=length<=8192:
                     self.send(413,{'error':'Body too large or missing length'});return
                 body=json.loads(self.rfile.read(length))
+                if self.path=='/api/shutdown':
+                    if body!={}:raise ValueError('Invalid shutdown request')
+                    self.send(202,{'status':'stopping'})
+                    # shutdown must run outside serve_forever's thread. The
+                    # main process then closes resources and exits entirely.
+                    threading.Thread(target=self.server.shutdown,daemon=True).start();return
                 if self.path=='/api/reload':
                     if reload_model: reload_model()
                     self.send(202,{'status':'loading'});return
