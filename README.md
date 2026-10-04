@@ -20,7 +20,7 @@ Telepathy 目前仍是早期版本，支持 **搭载 Apple 芯片、运行 macOS
 - **原生输入体验。** 在 Mac 应用中使用常规的拼音输入、键盘选词和原生候选窗口。
 - **中英混输。** 可选的 Auto 模式根据上下文判断保留英文原文还是转换中文拼音。目前为实验性功能。
 - **自动选择标点形式。** 在 Auto 模式中，根据句子语言使用中文或英文形式的逗号、引号等标点。
-- **按习惯调整。** 分别设置参与排序的候选数量、每页显示数量和每行数量，也可以调整字号、外观、候选注释和耗时提示。
+- **按习惯调整。** 分别设置参与排序的候选数量、每页显示数量和每行数量，也可以调整字号、外观、候选注释和模型辅助高亮。
 - **选择排序方式。** 默认使用 Context prediction，也可以在设置中切换到 Kev decision ranking。两种方式使用同一个本地模型。
 - **本地推理。** 下载模型后，输入辅助可以离线使用；你的文字不会被发送到云端服务。
 
@@ -52,7 +52,7 @@ Telepathy 目前仍是早期版本，支持 **搭载 Apple 芯片、运行 macOS
 | 浏览候选 | 方向键 |
 | 手动输入英文原文 | Caps Lock |
 
-从输入法菜单打开 **Telepathy → Settings…**，可以调整候选窗口、选择排序方法，或启用 **Automatic Chinese / English**。目前设置界面使用英文；默认使用 **Context prediction**，也可以选择 **Kev decision ranking**。两种方式共用已有的模型文件，无需额外下载。
+从输入法菜单打开 **Telepathy → Settings…**，可以调整候选窗口、选择排序方法，或启用 **Automatic Chinese / English**。目前设置界面使用英文；默认使用 **Context prediction**，也可以选择 **Kev decision ranking**。两种方式共用已有的模型文件，无需额外下载。模型实际参与评分时，当前选中的候选会使用青绿色高亮；可以通过 **Highlight model-assisted candidates** 关闭。
 
 默认对最多 **12 个候选排序，每页显示 6 个**。**Candidates to rank** 控制参与排序的数量，**Candidates to show** 控制每页显示的总数，**Candidates per row** 只控制排版；前两项可分别设置为 1–12。按 **Page Down 或 =** 查看其余候选，按 **Page Up 或 -** 返回。显示数量可以多于排序数量，未参与排序的候选保留原顺序。
 
@@ -60,7 +60,7 @@ Telepathy 目前仍是早期版本，支持 **搭载 Apple 芯片、运行 macOS
 
 Auto 模式在判断较有把握时保留英文原文；中文或不确定的输入仍会显示候选。按 **↓ 或 Tab** 可恢复当前词的中文候选；按 **Shift + 字母** 可开始输入英文原文，直到下一个空格。短词和上下文不足的情况仍可能误判。
 
-Context prediction 只对已有候选排序，不会补出列表中不存在的词；即使所有候选都不合适，它仍可能把其中一个排在前面。前文不足时会保留 Rime 的顺序。详细设置、标点行为和快捷键见[使用指南（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md)。
+模型只对 Rime/万象提供的候选排序。万象可以提供词句补全，模型可能将较长的补全候选排到前面；模型本身不生成新词句。即使所有候选都不合适，Context prediction 仍可能把其中一个排在前面。前文不足时会保留 Rime 的顺序。详细设置、标点行为和快捷键见[使用指南（英文）](https://github.com/timothyzhutr/Project-Telepathy/blob/main/docs/user-guide.md)。
 
 ## 隐私与资源占用
 

@@ -31,6 +31,25 @@ final class SquirrelTheme {
   private(set) var native = true
   private(set) var memorizeSize = true
   private var colorSpace: RimeColorSpace = .sRGB
+  private var dark = false
+
+  // A model-status accent, independent of Rime's semantic comment colors.
+  var inferredBackColor: NSColor {
+    dark ? NSColor(srgbRed: 0.10, green: 0.30, blue: 0.31, alpha: 1)
+         : NSColor(srgbRed: 0.84, green: 0.95, blue: 0.93, alpha: 1)
+  }
+  private var inferredTextColor: NSColor {
+    dark ? NSColor(srgbRed: 0.80, green: 0.98, blue: 0.95, alpha: 1)
+         : NSColor(srgbRed: 0.07, green: 0.28, blue: 0.28, alpha: 1)
+  }
+  var inferredAttrs: [NSAttributedString.Key: Any] { inferred(highlightedAttrs) }
+  var inferredLabelAttrs: [NSAttributedString.Key: Any] { inferred(labelHighlightedAttrs) }
+  var inferredCommentAttrs: [NSAttributedString.Key: Any] { inferred(commentHighlightedAttrs) }
+  private func inferred(_ attributes: [NSAttributedString.Key: Any]) -> [NSAttributedString.Key: Any] {
+    var attributes = attributes
+    attributes[.foregroundColor] = inferredTextColor
+    return attributes
+  }
 
   var backgroundColor: NSColor = .windowBackgroundColor
   var highlightedPreeditColor: NSColor?
@@ -206,6 +225,7 @@ final class SquirrelTheme {
   }
 
   func load(config: SquirrelConfig, dark: Bool) {
+    self.dark = dark
     linear ?= config.getString("style/candidate_list_layout").map { $0 == "linear" }
     vertical ?= config.getString("style/text_orientation").map { $0 == "vertical" }
     inlinePreedit ?= config.getBool("style/inline_preedit")

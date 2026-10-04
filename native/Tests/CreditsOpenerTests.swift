@@ -190,6 +190,13 @@ private final class TestHealthProtocol: URLProtocol {
       guard let action = control.action else { fatalError("Settings controls must be functional") }
       app.sendAction(action, to: control.target, from: control)
     }
+    let accent = control("settings.TelepathyInferenceAccent", NSButton.self)
+    guard accent.state == .on else { fatalError("The model accent must default on") }
+    accent.state = .off; change(accent)
+    guard defaults.object(forKey: "TelepathyInferenceAccent") as? Bool == false else {
+      fatalError("The model accent toggle must persist")
+    }
+    accent.state = .on; change(accent)
     let rows = control("settings.rows", NSPopUpButton.self)
     let rankCount = control("settings.rankCount", NSPopUpButton.self)
     let shownCount = control("settings.shownCount", NSPopUpButton.self)
@@ -237,6 +244,16 @@ private final class TestHealthProtocol: URLProtocol {
     let wordOffset = (rendered as NSString).range(of: "甲").location
     let wordFont = candidateText.textContentStorage?.attributedString?.attribute(.font, at: wordOffset, effectiveRange: nil) as? NSFont
     guard wordFont?.pointSize == 22 else { fatalError("The actual typing panel must apply the saved text size") }
+    let candidateView = descendants(panel.contentView!, of: SquirrelView.self).first!
+    for (update, highlighted, inferred) in [(true, 0, Set([0, 1])), (false, 1, Set<Int>()), (true, 0, Set<Int>())] {
+      panel.update(preedit: "", selRange: .empty, caretPos: 0,
+                   candidates: samples, comments: Array(repeating: "", count: 12),
+                   labels: (1...12).map(String.init), highlighted: highlighted, page: 0, lastPage: true,
+                   update: update, inferredCandidates: inferred)
+      guard candidateView.inferredCandidates == (update ? inferred : [0, 1]), candidateView.hilightedIndex == highlighted else {
+        fatalError("Mouse redraws must retain inference metadata; new ordinary pages must clear it")
+      }
+    }
     panel.hide()
     let kev = control("settings.kev", NSButton.self)
     kev.state = .off; change(kev)
@@ -262,7 +279,8 @@ private final class TestHealthProtocol: URLProtocol {
     let reset = descendants(tabs.tabViewItems[0].view!, of: NSButton.self).first(where: { $0.title == "Restore default settings" })!
     change(reset)
     guard defaults.object(forKey: "KevEnabled") == nil, rows.selectedTag() == 0,
-          font.intValue == 16, automatic.state == .off, punctuation.state == .on,
+          font.intValue == 16, automatic.state == .off, punctuation.state == .on, accent.state == .on,
+          defaults.object(forKey: "TelepathyInferenceAccent") == nil,
           strategy.indexOfSelectedItem == 0, defaults.object(forKey: "TelepathyRankingStrategy") == nil,
           TelepathyPreferences.shared.rankingStrategy == "continuation",
           rankCount.selectedTag() == 12, shownCount.selectedTag() == 6,

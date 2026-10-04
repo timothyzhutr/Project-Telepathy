@@ -13,6 +13,7 @@ private final class IntentProtocol: URLProtocol {
   static var lastRankCandidates = [String]()
   static var lastLanguageCandidates = [String]()
   static var reverseRanking = false
+  static var inferenceRan = true
   private var work: DispatchWorkItem?
   override class func canInit(with request: URLRequest) -> Bool {
     request.url?.path == "/api/language" || request.url?.path == "/api/decision"
@@ -37,7 +38,7 @@ private final class IntentProtocol: URLProtocol {
     }
     else { Self.languageCalls += 1; Self.lastLanguageCandidates = body["candidates"] as! [String] }
     let result: [String: Any] = isRank
-      ? ["status": "ok", "revision": body["revision"]!, "order": Self.reverseRanking ? Array((0..<(body["candidates"] as! [String]).count).reversed()) : Array(0..<(body["candidates"] as! [String]).count), "ranked": false]
+      ? ["status": "ok", "revision": body["revision"]!, "order": Self.reverseRanking ? Array((0..<(body["candidates"] as! [String]).count).reversed()) : Array(0..<(body["candidates"] as! [String]).count), "ranked": true, "inferred": Self.inferenceRan, "inferred_indices": Self.inferenceRan ? Array(0..<(body["candidates"] as! [String]).count) : [], "strategy": "continuation", "request_ms": 8]
       : ["status": "ok", "revision": body["revision"]!, "language": (body["prefix"] as! String).hasPrefix("中文") ? "chinese" : "english"]
     let status = !isRank && Self.failLanguage ? 500 : 200
     let work = DispatchWorkItem { [weak self] in
@@ -270,6 +271,10 @@ enum ControllerEventTests {
       }
       return findText(delegate.panel!.contentView!)!.textContentStorage?.attributedString?.string ?? ""
     }
+    func highlightedColor() -> NSColor {
+      let view = delegate.panel!.contentView!.subviews.compactMap { $0 as? SquirrelView }.first!
+      return view.textContentStorage.attributedString!.attribute(.foregroundColor, at: view.candidateRanges[view.hilightedIndex].location, effectiveRange: nil) as! NSColor
+    }
     func typeLe() {
       client.text = "中文："; key("l"); key("e"); wait(0.25)
     }
@@ -277,9 +282,61 @@ enum ControllerEventTests {
     let all = IntentProtocol.lastRankCandidates
     check(all.count == 12, "The ranking pool must remain twelve while only six are shown")
     let reversed = Array(all.reversed())
+    let inferredColor = highlightedColor()
+    controller.commitComposition(client)
+    IntentProtocol.inferenceRan = false
+    typeLe()
+    let ordinaryColor = highlightedColor()
+    check(inferredColor != ordinaryColor, "A model-evaluated candidate must have an accent; fallbacks must retain the normal highlight")
+    controller.commitComposition(client)
+    IntentProtocol.inferenceRan = true
+    defaults.set(false, forKey: "TelepathyInferenceAccent")
+    controller.preferencesDidChange()
+    typeLe()
+    check(highlightedColor() == ordinaryColor, "The accent preference must disable the inference highlight")
+    controller.commitComposition(client)
+    defaults.removeObject(forKey: "TelepathyInferenceAccent")
+    controller.preferencesDidChange()
+    typeLe()
+    check(!renderedCandidates().contains("Full phrase") && !renderedCandidates().contains("Context") && !renderedCandidates().contains(" ms"),
+          "Inference must be indicated visually without adding status text to candidates")
     check(reversed.prefix(6).allSatisfy { renderedCandidates().contains($0) } &&
           reversed.suffix(6).allSatisfy { !renderedCandidates().contains($0) },
           "The panel must show only the six best candidates after ranking")
+    let savedAppearance = defaults.object(forKey: "TelepathyAppearance")
+    let images = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("inference-accent")
+    try! FileManager.default.createDirectory(at: images, withIntermediateDirectories: true)
+    for name in ["light", "dark"] {
+      controller.commitComposition(client)
+      defaults.set(name, forKey: "TelepathyAppearance")
+      delegate.loadSettings(); controller.preferencesDidChange()
+      var normal: NSColor?
+      for assisted in [false, true] {
+        IntentProtocol.inferenceRan = assisted
+        typeLe()
+        let view = delegate.panel!.contentView!.subviews.compactMap { $0 as? SquirrelView }.first!
+        check(view.currentTheme === (name == "dark" ? view.darkTheme : view.lightTheme), "Visual checks must use the packaged light/dark theme")
+        let color = highlightedColor()
+        if assisted {
+          print("Accent QA", name, "rendered", color, "theme", view.currentTheme.inferredLabelAttrs[.foregroundColor]!)
+          check(color == view.currentTheme.inferredLabelAttrs[.foregroundColor] as? NSColor, "Text colors must match the current model accent appearance")
+          check(color != normal, "The model accent must be distinct in both appearances")
+          check(view.inferredCandidates == Set(0..<6), "Every scored visible candidate must retain its status")
+        } else { normal = color }
+        wait(0.05)
+        let content = delegate.panel!.contentView!
+        content.displayIfNeeded()
+        let bitmap = content.bitmapImageRepForCachingDisplay(in: content.bounds)!
+        content.cacheDisplay(in: content.bounds, to: bitmap)
+        try! bitmap.representation(using: .png, properties: [:])!.write(to: images.appendingPathComponent(name + (assisted ? "-inferred.png" : "-ordinary.png")))
+        controller.commitComposition(client)
+      }
+    }
+    if let savedAppearance { defaults.set(savedAppearance, forKey: "TelepathyAppearance") }
+    else { defaults.removeObject(forKey: "TelepathyAppearance") }
+    IntentProtocol.inferenceRan = true
+    delegate.loadSettings(); controller.preferencesDidChange()
+    typeLe()
     let beforeHiddenKey = client.text
     let beforeHiddenMarked = client.marked
     key("7", code: 26)
@@ -316,6 +373,9 @@ enum ControllerEventTests {
     check(limited.allSatisfy { renderedCandidates().contains($0) } &&
           all.suffix(6).allSatisfy { !renderedCandidates().contains($0) },
           "Showing more than are ranked must keep remaining candidates in native order")
+    check(highlightedColor() == inferredColor, "The ranked prefix must retain its inference accent")
+    for _ in 0..<3 { key("\u{f701}", code: 125) }
+    check(highlightedColor() == ordinaryColor, "Unranked candidates must never inherit the inference accent")
     controller.commitComposition(client)
     TelepathyPreferences.shared.set(true, for: .autoLanguage)
     controller.preferencesDidChange()

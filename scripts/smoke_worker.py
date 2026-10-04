@@ -8,7 +8,7 @@ def main():
     env=dict(os.environ,PYTHONPATH='',PATH='/usr/bin:/bin')
     result=subprocess.run([str(app/'Contents/MacOS/Telepathy'),'--self-test','--model-dir',str(models)],env=env,capture_output=True,text=True,check=True)
     decision=json.loads(result.stdout.strip().splitlines()[-1]);assert decision['selected_index']==1,decision
-    assert decision.get('ranker')=='continuation',decision
+    assert decision.get('ranker')=='continuation' and decision['inferred'],decision
     print('Native command reached bundled model:',decision)
     worker=app/'Contents/Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker'
     with tempfile.TemporaryDirectory(prefix='telepathy isolated worker ') as name:
@@ -35,6 +35,7 @@ def main():
                     assert 0<health['backbone_weight_bytes']<health['unquantized_backbone_weight_bytes']*.6,health
                     assert ranked['status']=='ok' and ranked['order'][0]==1 and ranked['order'][7:]==list(range(7,12)),ranked
                     assert ranked['strategy']=='continuation' and ranked.get('ranker')=='continuation',ranked
+                    assert ranked['inferred'] and ranked['inferred_indices']==list(range(7)),ranked
                     repeated=request('/api/decision',json.dumps(dict(snapshot,revision=20)).encode())
                     assert repeated['status']=='ok' and repeated['cache_hit'] and repeated['order'][0]==1,repeated
                     print('Repeated ranking uses copied context:',repeated)
@@ -42,9 +43,13 @@ def main():
                         continued=request('/api/decision',json.dumps(dict(snapshot,revision=revision,strategy='kev')).encode())
                         assert continued['status']=='ok' and continued['strategy']=='kev' and continued.get('ranker')!='continuation' and continued['order'][0]==1,continued
                         assert continued['order'][7:]==list(range(7,12)),continued
+                        assert continued['inferred'] and continued['inferred_indices']==list(range(7)),continued
                         if revision==22:assert continued['cache_hit'],continued
                     empty=request('/api/decision',json.dumps(dict(snapshot,revision=23,prefix='',strategy='continuation')).encode())
                     assert empty['keep'] and empty['order']==list(range(12)),empty
+                    assert not empty['inferred'] and empty['inferred_indices']==[],empty
+                    single=request('/api/decision',json.dumps(dict(snapshot,revision=24,candidates=['权利','全'],candidate_ends=[6,4])).encode())
+                    assert not single['inferred'] and single['inferred_indices']==[],single
                     print('Alternative Kev decision ranking and empty-context fallback:',continued,empty)
                 else:assert ranked['status']=='unavailable' and ranked['order']==list(range(12)),ranked
                 print('Worker '+expected+':',ranked)

@@ -30,7 +30,7 @@ final class SquirrelInputController: IMKInputController {
   private var ranking = RankingState()
   private var intent = InputIntentState()
   private var rankingDelay: DispatchWorkItem?
-  private var rankingNote = ""
+  private var inferredCandidates = Set<Int>()
   private var compositionPrefix = ""
   private var refreshContextOnEdit = false
   private var fallbackHistory = ""
@@ -44,7 +44,7 @@ final class SquirrelInputController: IMKInputController {
     rankingDelay?.cancel()
     rankingDelay = nil
     ranking.invalidate()
-    rankingNote = ""
+    inferredCandidates.removeAll()
     if resetIntent { intent.invalidate(revision: ranking.revision) }
   }
 
@@ -651,10 +651,8 @@ private extension SquirrelInputController {
             let order = result["order"] as? [Int], self.ranking.apply(order, revision: revision) else { return }
       self.displayedHighlight = 0
       _ = self.rimeAPI.highlight_candidate_on_current_page(self.session, order[0])
-      if result["ranked"] as? Bool == true {
-        let name = result["strategy"] as? String == "continuation" ? "Context" : "Kev"
-        self.rankingNote = "\(name) \(Int((result["request_ms"] as? Double) ?? 0)) ms"
-      } else { self.rankingNote = "Full phrase" }
+      self.inferredCandidates = result["inferred"] as? Bool == true
+        ? Set((result["inferred_indices"] as? [Int] ?? []).filter { $0 >= 0 && $0 < self.ranking.rankedCount }) : []
       self.rimeUpdate(clearReservedComments: false)
     }
   }
@@ -837,14 +835,14 @@ private extension SquirrelInputController {
         if ranking.displayIndex(nativeHighlight) == nil, let native = ranking.nativeIndex(0) {
           _ = rimeAPI.highlight_candidate_on_current_page(session, native)
         }
-        if TelepathyPreferences.shared.enabled(.timing), !rankingNote.isEmpty && !comments.isEmpty && ranking.displayPage == 0 { comments[0] = rankingNote }
       }
       displayedHighlight = shownHighlight
       let selRange = NSRange(location: start.utf16Offset(in: preedit), length: preedit.utf16.distance(from: start, to: end))
       showPanel(preedit: inlinePreedit ? "" : preedit, selRange: selRange, caretPos: caretPos.utf16Offset(in: preedit),
                 candidates: candidates, comments: comments, labels: labels, highlighted: shownHighlight,
                 page: page * ((Int(ctx.menu.page_size) + ranking.displayLimit - 1) / ranking.displayLimit) + ranking.displayPage,
-                lastPage: lastPage && !ranking.hasNextDisplayPage)
+                lastPage: lastPage && !ranking.hasNextDisplayPage,
+                inferredCandidates: Set(ranking.visibleOrder.enumerated().compactMap { inferredCandidates.contains($0.element) ? $0.offset : nil }))
       _ = rimeAPI.free_context(&ctx)
     } else {
       hidePalettes()
@@ -900,7 +898,7 @@ private extension SquirrelInputController {
   }
 
   // swiftlint:disable:next function_parameter_count
-  func showPanel(preedit: String, selRange: NSRange, caretPos: Int, candidates: [String], comments: [String], labels: [String], highlighted: Int, page: Int, lastPage: Bool) {
+  func showPanel(preedit: String, selRange: NSRange, caretPos: Int, candidates: [String], comments: [String], labels: [String], highlighted: Int, page: Int, lastPage: Bool, inferredCandidates: Set<Int> = []) {
     guard let client = client else { return }
     var inputPos = NSRect()
     client.attributes(forCharacterIndex: 0, lineHeightRectangle: &inputPos)
@@ -908,7 +906,7 @@ private extension SquirrelInputController {
       panel.position = inputPos
       panel.inputController = self
       panel.update(preedit: preedit, selRange: selRange, caretPos: caretPos, candidates: candidates, comments: comments, labels: labels,
-                   highlighted: highlighted, page: page, lastPage: lastPage, update: true)
+                   highlighted: highlighted, page: page, lastPage: lastPage, update: true, inferredCandidates: inferredCandidates)
     }
   }
 

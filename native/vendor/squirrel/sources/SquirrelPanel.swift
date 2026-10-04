@@ -26,6 +26,7 @@ final class SquirrelPanel: NSPanel {
   private var comments: [String] = .init()
   private var labels: [String] = .init()
   private var index: Int = 0
+  private var inferredCandidates = Set<Int>()
   private var cursorIndex: Int = 0
   private var scrollDirection: CGVector = .zero
   private var scrollTime: Date = .distantPast
@@ -152,7 +153,7 @@ final class SquirrelPanel: NSPanel {
   }
 
   // swiftlint:disable:next cyclomatic_complexity function_parameter_count
-  func update(preedit: String, selRange: NSRange, caretPos: Int, candidates: [String], comments: [String], labels: [String], highlighted index: Int, page: Int, lastPage: Bool, update: Bool) {
+  func update(preedit: String, selRange: NSRange, caretPos: Int, candidates: [String], comments: [String], labels: [String], highlighted index: Int, page: Int, lastPage: Bool, update: Bool, inferredCandidates: Set<Int> = []) {
     if update {
       self.preedit = preedit
       self.selRange = selRange
@@ -161,6 +162,7 @@ final class SquirrelPanel: NSPanel {
       self.comments = comments
       self.labels = labels
       self.index = index
+      self.inferredCandidates = inferredCandidates
       self.page = page
       self.lastPage = lastPage
     }
@@ -181,6 +183,7 @@ final class SquirrelPanel: NSPanel {
     }
 
     let theme = view.currentTheme
+    view.inferredCandidates = TelepathyPreferences.shared.enabled(.inferenceAccent) ? self.inferredCandidates : []
     currentScreen()
 
     let text = NSMutableAttributedString()
@@ -207,9 +210,10 @@ final class SquirrelPanel: NSPanel {
 
     var candidateRanges = [NSRange]()
     for i in 0..<candidates.count {
-      let attrs = i == index ? theme.highlightedAttrs : theme.attrs
-      let labelAttrs = i == index ? theme.labelHighlightedAttrs : theme.labelAttrs
-      let commentAttrs = i == index ? theme.commentHighlightedAttrs : theme.commentAttrs
+      let inferred = i == index && view.inferredCandidates.contains(i)
+      let attrs = inferred ? theme.inferredAttrs : (i == index ? theme.highlightedAttrs : theme.attrs)
+      let labelAttrs = inferred ? theme.inferredLabelAttrs : (i == index ? theme.labelHighlightedAttrs : theme.labelAttrs)
+      let commentAttrs = inferred ? theme.inferredCommentAttrs : (i == index ? theme.commentHighlightedAttrs : theme.commentAttrs)
 
       let label = if theme.candidateFormat.contains(/\[label\]/) {
         if labels.count > 1 && i < labels.count {

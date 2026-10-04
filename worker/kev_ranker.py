@@ -78,6 +78,7 @@ class KevRanker:
             keep=not usable or max(scores)==min(scores)
             order=original if keep else sorted(original,key=lambda i:-scores[i])
             return dict(order=order,selected_index=None if keep else order[0],keep=keep,
+                inferred=usable,
                 request_ms=(time.perf_counter()-started)*1000,
                 context_tokens=scored['context_tokens'],cache_hit=scored['cache_hit'],ranker='continuation')
         request=build_request(self.cap(prefix),pinyin,words)
@@ -92,6 +93,7 @@ class KevRanker:
         order=sorted(range(len(words)),key=lambda i:(-distribution[f'c{i}'],f'c{i}'!=choice))
         keep=choice=='keep'
         return dict(order=list(range(len(words))) if keep else order,selected_index=None if keep else int(choice[1:]),keep=keep,
+            inferred=True,
             request_ms=(time.perf_counter()-started)*1000,context_tokens=len(self.tok(request['state']['prefix'],add_special_tokens=False).input_ids),
             cache_hit=use_cache and self.ranking_cache.hit)
     def route(self,prefix,raw,chinese):

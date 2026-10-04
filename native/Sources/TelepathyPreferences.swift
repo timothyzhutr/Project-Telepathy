@@ -9,7 +9,7 @@ final class TelepathyPreferences {
   enum Key: String, CaseIterable {
     case rows = "TelepathyCandidatesPerRow", font = "TelepathyFontSize", appearance = "TelepathyAppearance"
     case inlinePinyin = "TelepathyInlinePinyin", annotations = "TelepathyAnnotations"
-    case timing = "TelepathyRankingTiming", punctuation = "TelepathyChinesePunctuation"
+    case inferenceAccent = "TelepathyInferenceAccent", punctuation = "TelepathyChinesePunctuation"
     case statusIcon = "TelepathyStatusIcon", kev = "KevEnabled", autoLanguage = "TelepathyAutoLanguage"
     case autoPunctuation = "TelepathyAutoPunctuation"
     case rankingStrategy = "TelepathyRankingStrategy"

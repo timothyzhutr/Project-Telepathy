@@ -130,6 +130,7 @@ class ContinuationRankTests(unittest.TestCase):
         self.assertEqual(result['context_tokens'], 3)
         self.assertTrue(result['cache_hit'])
         self.assertEqual(result['ranker'], 'continuation')
+        self.assertIs(result.get('inferred'), True)
         self.assertGreaterEqual(result['request_ms'], 0)
 
     def test_unusable_scores_keep_original_order(self):
@@ -139,12 +140,14 @@ class ContinuationRankTests(unittest.TestCase):
                 self.assertEqual(result['order'], [0, 1])
                 self.assertIsNone(result['selected_index'])
                 self.assertTrue(result['keep'])
+                self.assertIs(result.get('inferred'), False)
 
     def test_all_equal_scores_keep_original_order(self):
         result = self.ranker([-2, -2]).rank('context', 'x', ['a', 'b'], strategy='continuation')
         self.assertEqual(result['order'], [0, 1])
         self.assertTrue(result['keep'])
         self.assertIsNone(result['selected_index'])
+        self.assertIs(result.get('inferred'), True)
 
     def test_unknown_strategy_is_rejected(self):
         with self.assertRaises(ValueError):

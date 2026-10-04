@@ -20,7 +20,7 @@ Telepathy is in early access. It currently supports **Apple Silicon Macs running
 - **Native typing.** Use Telepathy in your Mac apps, with normal pinyin composition, keyboard selection and a native candidate panel.
 - **Chinese and English together.** Optional Auto mode uses context to keep English literal and convert Chinese pinyin. This feature is experimental.
 - **Automatic punctuation forms.** In Auto mode, commas, quotes and other marks follow the language of the sentence.
-- **Make it yours.** Set ranking pool size, candidates shown per page and row layout independently, alongside text size, appearance, annotations and timing indicators.
+- **Make it yours.** Set ranking pool size, candidates shown per page and row layout independently, alongside text size, appearance, annotations and model-assisted highlighting.
 - **Choose your ranker.** Context prediction is the default; Kev decision ranking is available in Settings. Both use the same local model.
 - **Local inference.** After the model download, typing assistance works offline. Your writing is not sent to a cloud service.
 
@@ -52,7 +52,7 @@ Select Telepathy and type pinyin normally.
 | Browse candidates | Arrow keys |
 | Use literal English manually | Caps Lock |
 
-Open **Telepathy → Settings…** from the input-source menu to change the candidate layout, choose a ranking method, or enable **Automatic Chinese / English**. **Context prediction** is the default; select **Kev decision ranking** to use the alternative. Both use your existing model download. You can also switch Kev assistance on or off from the menu. With assistance off, Rime's regular candidates remain available and the model helper stops to free memory.
+Open **Telepathy → Settings…** from the input-source menu to change the candidate layout, choose a ranking method, or enable **Automatic Chinese / English**. **Context prediction** is the default; select **Kev decision ranking** to use the alternative. Both use your existing model download. A teal highlight marks the selected candidate when model scoring actually ran; disable **Highlight model-assisted candidates** to use the normal highlight throughout. You can also switch Kev assistance on or off from the menu. With assistance off, Rime's regular candidates remain available and the model helper stops to free memory.
 
 By default, Telepathy **ranks up to 12 candidates and shows six per page**. **Candidates to rank** sets the ranking pool; **Candidates to show** sets the total visible on each page; **Candidates per row** controls layout. Both counts can be set independently from 1–12. Press **Page Down or =** for more choices and **Page Up or -** to go back. When you show more than you rank, the remaining candidates keep their original order.
 

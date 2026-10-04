@@ -8,7 +8,7 @@ class Ranker:
     def rank(self,prefix,pinyin,words,*,strategy='kev'):
         self.strategy=strategy
         self.seen=(prefix,pinyin,words)
-        return dict(order=list(reversed(range(len(words)))),selected_index=len(words)-1,keep=False,request_ms=10)
+        return dict(order=list(reversed(range(len(words)))),selected_index=len(words)-1,keep=False,request_ms=10,inferred=True)
 class DecisionTests(unittest.TestCase):
     def request(self,**kw):
         return dict(revision=12,prefix='这个职位拥有决定预算分配的',pinyin='quanli',pending='quanli',candidates=['权利','全','权力'],candidate_ends=[6,4,6],**kw)
@@ -24,6 +24,13 @@ class DecisionTests(unittest.TestCase):
         ranker=Ranker(); result=DecisionService(ranker).decision(self.request())
         self.assertEqual(result.get('order'),[2,0,1]);self.assertEqual(result['revision'],12)
         self.assertEqual(ranker.seen[2],['权利','权力'])
+        self.assertEqual(result.get('inferred_indices'),[0,2])
+    def test_fallback_does_not_mark_candidates_as_inferred(self):
+        class NoContextRanker(Ranker):
+            def rank(self,*args,**kw):
+                return dict(super().rank(*args,**kw),inferred=False)
+        result=DecisionService(NoContextRanker()).decision(self.request())
+        self.assertEqual(result.get('inferred_indices'),[])
     def test_partial_selection_uses_remaining_pinyin(self):
         ranker=Ranker();body=self.request();body.update(prefix='全',pending='li',candidates=['力','里'],candidate_ends=[6,6])
         DecisionService(ranker).decision(body)
@@ -36,6 +43,7 @@ class DecisionTests(unittest.TestCase):
         body=self.request();body.update(pinyin='butaixing',pending='butaixing',candidates=['不太行','不'],candidate_ends=[9,2])
         result=DecisionService(Ranker()).decision(body)
         self.assertEqual(result.get('order'),[0,1]);self.assertFalse(result['ranked'])
+        self.assertIs(result.get('inferred'),False);self.assertEqual(result.get('inferred_indices'),[])
     def test_continuation_strategy_preserves_native_index_mapping(self):
         class ContinuationRanker(Ranker):
             def rank(self,prefix,pinyin,words,*,strategy='kev'):

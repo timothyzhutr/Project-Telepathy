@@ -41,12 +41,12 @@ class DecisionService:
     def decision(self,body):
         revision,prefix,raw,pending,words,ends=self.snapshot(body)
         original=list(range(len(words)))
-        unavailable=dict(status='unavailable',revision=revision,order=original)
+        unavailable=dict(status='unavailable',revision=revision,order=original,inferred=False,inferred_indices=[])
         if any(e<=0 for e in ends): return unavailable
         eligible=[i for i,e in enumerate(ends) if e>=ends[0]]
         shorter=[i for i in original if i not in eligible]
         if len(eligible)==1:
-            return dict(status='ok',revision=revision,order=eligible+shorter,selected_index=None,keep=True,ranked=False,request_ms=0)
+            return dict(status='ok',revision=revision,order=eligible+shorter,selected_index=None,keep=True,ranked=False,inferred=False,inferred_indices=[],request_ms=0)
         with self.lock:
             if self.ranker is None: return unavailable
             try:
@@ -55,6 +55,7 @@ class DecisionService:
                 if sorted(result['order']) != list(range(len(eligible))): return unavailable
                 selected=result.get('selected_index')
                 return dict(result,status='ok',revision=revision,ranked=True,strategy=strategy,
+                    inferred_indices=eligible if result.get('inferred') is True else [],
                     order=[eligible[i] for i in result['order']]+shorter,
                     selected_index=eligible[selected] if selected is not None else None)
             except Exception: return unavailable

@@ -116,7 +116,7 @@ final class TelepathySettingsView: NSView {
     add(previewBox)
     checkbox("Show pinyin in the text field", .inlinePinyin)
     checkbox("Show candidate annotations", .annotations)
-    checkbox("Show model timing on the chosen candidate", .timing)
+    checkbox("Highlight model-assisted candidates", .inferenceAccent)
     checkbox("Show the Chinese / English status icon in the menu bar", .statusIcon)
     heading("Typing")
     checkbox("Enable Kev assistance", .kev)

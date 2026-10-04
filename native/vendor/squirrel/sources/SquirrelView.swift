@@ -28,6 +28,7 @@ final class SquirrelView: NSView {
   private let squirrelLayoutDelegate: SquirrelLayoutDelegate
   var candidateRanges: [NSRange] = []
   var hilightedIndex = 0
+  var inferredCandidates = Set<Int>()
   var preeditRange: NSRange = .empty
   var canPageUp: Bool = false
   var canPageDown: Bool = false
@@ -134,6 +135,7 @@ final class SquirrelView: NSView {
     var highlightedPath: CGMutablePath?
     var highlightedPreeditPath: CGMutablePath?
     let theme = currentTheme
+    let highlightColor = inferredCandidates.contains(hilightedIndex) ? theme.inferredBackColor : theme.highlightedBackColor
 
     var containingRect = self.bounds
     containingRect.size.width -= theme.pagingOffset
@@ -159,7 +161,7 @@ final class SquirrelView: NSView {
     for i in 0..<candidateRanges.count {
       let candidate = candidateRanges[i]
       if i == hilightedIndex {
-        if candidate.length > 0 && theme.highlightedBackColor != nil {
+        if candidate.length > 0 && highlightColor != nil {
           highlightedPath = drawPath(highlightedRange: candidate, backgroundRect: backgroundRect, preeditRect: preeditRect, containingRect: containingRect, extraExpansion: 0)?.mutableCopy()
         }
       } else {
@@ -259,7 +261,7 @@ final class SquirrelView: NSView {
       layer.fillColor = color.cgColor
       panelLayer.addSublayer(layer)
     }
-    if let color = theme.highlightedBackColor, let path = highlightedPath {
+    if let color = highlightColor, let path = highlightedPath {
       let layer = shapeFromPath(path: path)
       layer.fillColor = color.cgColor
       if theme.shadowSize > 0 {

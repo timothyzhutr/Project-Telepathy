@@ -111,7 +111,7 @@ private final class DemoDocument: NSView {
     defaults.set(4, forKey: TelepathyPreferences.Key.rows.rawValue)
     defaults.set(22, forKey: TelepathyPreferences.Key.font.rawValue)
     defaults.set(false, forKey: TelepathyPreferences.Key.annotations.rawValue)
-    defaults.set(false, forKey: TelepathyPreferences.Key.timing.rawValue)
+    defaults.set(false, forKey: TelepathyPreferences.Key.inferenceAccent.rawValue)
     let previous = FileManager.default.currentDirectoryPath
     FileManager.default.changeCurrentDirectoryPath(shared.path)
     defer { FileManager.default.changeCurrentDirectoryPath(previous) }
