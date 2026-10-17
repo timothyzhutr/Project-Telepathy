@@ -9,12 +9,17 @@ def verify(app):
     assert info['LSMinimumSystemVersion']=='26.2'
     assert 'TelepathyProjectRoot' not in info
     assert info['CFBundleIconFile']=='Telepathy'
+    assert info['tsInputMethodIconFileKey']=='TelepathyMenuTemplate.pdf'
+    assert info['TISIconIsTemplate'] is True
     resources=contents/'Resources'
-    assert (resources/'Telepathy.icns').is_file() and (resources/'Telepathy.pdf').is_file()
-    assert not any((resources/name).exists() for name in ('Rime.icns','rime.pdf'))
+    assert (resources/'Telepathy.icns').is_file() and (resources/'TelepathyMenuTemplate.pdf').is_file()
+    assert not any((resources/name).exists() for name in ('Rime.icns','rime.pdf','Telepathy.pdf'))
     for mode in info['ComponentInputModeDict']['tsInputModeListKey'].values():
         for key in ('tsInputModeMenuIconFileKey','tsInputModeAlternateMenuIconFileKey','tsInputModePaletteIconFileKey'):
-            assert mode[key]=='Telepathy.pdf' and (resources/mode[key]).is_file()
+            assert mode[key]=='TelepathyMenuTemplate.pdf' and (resources/mode[key]).is_file()
+    # Cover both the parent input method and its selectable mode. Either can
+    # appear in system UI, and neither may fall back to the opaque app tile.
+    subprocess.run(['xcrun','swift',str(Path(__file__).resolve().parents[1]/'native/Tests/MenuIconTests.swift'),str(contents.parent)],check=True)
     inventory=json.loads((contents/'Resources/data-inventory.json').read_text())
     actual={str(p.relative_to(contents)) for folder in ('Resources/Profile','SharedSupport') for p in (contents/folder).rglob('*') if p.is_file()}
     assert actual==set(inventory),'Runtime files outside the audited inventory: '+str(actual-set(inventory))
@@ -45,6 +50,11 @@ def verify(app):
     assert (contents/'Resources/licenses/python-dependencies.json').is_file()
     assert not any('__pycache__' in p.parts or p.suffix == '.pyc' for p in (contents/'Resources/licenses').rglob('*'))
     assert (contents/'Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker').is_file()
+    helper=contents/'Helpers/TelepathyWorker.app/Contents'
+    model_lock=json.loads((helper/'Resources/assets/models.lock.json').read_text())
+    assert set(model_lock)=={'vision'},'Only the active vision model belongs in the setup manifest'
+    mlx=helper/'Frameworks/libmlx.dylib'
+    assert mlx.is_symlink() and mlx.resolve()==(helper/'Frameworks/mlx/lib/libmlx.dylib').resolve(),'MLX must retain its colocated shader resource lookup'
     print(json.dumps(dict(runtime_files=len(inventory),mach_o_binaries=len(binaries),weights_bundled=False,architecture='arm64',minimum_macos='26.2')))
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('app',type=Path);args=parser.parse_args();verify(args.app)

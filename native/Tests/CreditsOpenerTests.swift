@@ -171,7 +171,7 @@ private final class TestHealthProtocol: URLProtocol {
     while status.stringValue == "Checking model status…", Date() < deadline {
       RunLoop.current.run(until: Date().addingTimeInterval(0.01))
     }
-    guard status.stringValue == "Kev is ready · Runs on this Mac" else {
+    guard status.stringValue == "Qwen is ready · Runs on this Mac" else {
       fatalError("Clicking the Settings tab must fetch and display worker health")
     }
     let defaults = UserDefaults.standard
@@ -213,15 +213,11 @@ private final class TestHealthProtocol: URLProtocol {
     guard rankCount.selectedTag() == 3, shownCount.selectedTag() == 9 else {
       fatalError("Reopening Settings must retain both candidate counts")
     }
-    let strategy = control("settings.rankingStrategy", NSPopUpButton.self)
-    guard strategy.indexOfSelectedItem == 0, TelepathyPreferences.shared.rankingStrategy == "continuation" else {
-      fatalError("Context prediction must be the default ranking strategy")
-    }
-    strategy.selectItem(at: 1); change(strategy)
-    guard defaults.string(forKey: "TelepathyRankingStrategy") == "kev" else { fatalError("The alternative Kev decision ranking must persist") }
+    defaults.set("kev", forKey: "TelepathyRankingStrategy")
     delegate.openSettings()
-    guard strategy.indexOfSelectedItem == 1, TelepathyPreferences.shared.rankingStrategy == "kev" else {
-      fatalError("Reopening Settings must preserve an explicit Kev selection")
+    guard TelepathyPreferences.shared.rankingStrategy == "continuation",
+          !descendants(tabs.tabViewItems[0].view!, of: NSPopUpButton.self).contains(where: { $0.identifier?.rawValue == "settings.rankingStrategy" }) else {
+      fatalError("The vision model must use continuation ranking and omit the unsupported Kev picker")
     }
     rows.selectItem(withTag: 3); change(rows)
     guard defaults.integer(forKey: "TelepathyCandidatesPerRow") == 3 else { fatalError("Row layout must persist") }
@@ -258,13 +254,20 @@ private final class TestHealthProtocol: URLProtocol {
     let kev = control("settings.kev", NSButton.self)
     kev.state = .off; change(kev)
     guard defaults.object(forKey: "KevEnabled") as? Bool == false else { fatalError("Settings must share the existing Kev menu preference") }
-    guard status.stringValue == "Kev assistance is off. The model helper stops to free memory." else { fatalError("Settings must explain that disabling assistance releases the helper") }
+    guard status.stringValue == "Local assistance is off. The model helper stops to free memory." else { fatalError("Settings must explain that disabling assistance releases the helper") }
     let automatic = control("settings.autoLanguage", NSButton.self)
     guard automatic.state == .off else { fatalError("Automatic language mode must be opt-in") }
     automatic.state = .on; change(automatic)
     guard defaults.object(forKey: "TelepathyAutoLanguage") as? Bool == true else {
       fatalError("Automatic Chinese / English typing must be available as a saved opt-in setting")
     }
+    let screenLanguage = control("settings.TelepathyScreenLanguage", NSButton.self)
+    guard screenLanguage.state == .on, !screenLanguage.isEnabled else { fatalError("Screen hints default on but require Auto mode and local assistance") }
+    kev.state = .on; change(kev)
+    guard screenLanguage.isEnabled else { fatalError("Screen hints must become available with Auto and assistance") }
+    screenLanguage.state = .off; change(screenLanguage)
+    guard defaults.object(forKey: "TelepathyScreenLanguage") as? Bool == false else { fatalError("Screen hint preference must persist") }
+    guard descendants(tabs.tabViewItems[0].view!, of: NSButton.self).contains(where: { $0.identifier?.rawValue == "settings.screenPermission" }) else { fatalError("Settings must offer an explicit screen-recording permission action") }
     let punctuation = control("settings.TelepathyAutoPunctuation", NSButton.self)
     guard punctuation.state == .on else { fatalError("Automatic punctuation must default on within Auto mode") }
     punctuation.state = .off; change(punctuation)
@@ -281,7 +284,8 @@ private final class TestHealthProtocol: URLProtocol {
     guard defaults.object(forKey: "KevEnabled") == nil, rows.selectedTag() == 0,
           font.intValue == 16, automatic.state == .off, punctuation.state == .on, accent.state == .on,
           defaults.object(forKey: "TelepathyInferenceAccent") == nil,
-          strategy.indexOfSelectedItem == 0, defaults.object(forKey: "TelepathyRankingStrategy") == nil,
+          screenLanguage.state == .on, !screenLanguage.isEnabled, defaults.object(forKey: "TelepathyScreenLanguage") == nil,
+          defaults.object(forKey: "TelepathyRankingStrategy") == nil,
           TelepathyPreferences.shared.rankingStrategy == "continuation",
           rankCount.selectedTag() == 12, shownCount.selectedTag() == 6,
           defaults.object(forKey: "TelepathyCandidatesToRank") == nil,

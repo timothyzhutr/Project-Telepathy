@@ -1,0 +1,313 @@
+{
+  "version": 1,
+  "purpose": "Initial language prior before any typing; later context routing overrides it. Controls without a clear language are unscored.",
+  "canvas": [
+    960,
+    640
+  ],
+  "focused_input_bounds": [
+    270,
+    500,
+    930,
+    610
+  ],
+  "cases": [
+    {
+      "id": "chat-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "明天下午三点开会可以吗？",
+        "可以，我们到时候一起讨论新方案。"
+      ],
+      "sidebar": [
+        "Home",
+        "Search",
+        "Recent files"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "chat-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "Does three tomorrow work for our meeting?",
+        "Yes, let's discuss the new proposal then."
+      ],
+      "sidebar": [
+        "Home",
+        "Search",
+        "Recent files"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "support-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "你好，我昨天买的键盘一直无法连接。",
+        "请问你用的是蓝牙还是数据线？"
+      ],
+      "sidebar": [
+        "Inbox",
+        "Customers",
+        "Settings"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "support-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "Hi, the keyboard I bought won't connect.",
+        "Are you using Bluetooth or a cable?"
+      ],
+      "sidebar": [
+        "Inbox",
+        "Customers",
+        "Settings"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "friends-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "周末要不要一起去爬山？",
+        "好啊，希望天气能凉快一点。"
+      ],
+      "sidebar": [
+        "Chat",
+        "Contacts",
+        "Notifications"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "friends-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "Would you like to go hiking this weekend?",
+        "Sure, hopefully the weather will cool down."
+      ],
+      "sidebar": [
+        "Chat",
+        "Contacts",
+        "Notifications"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "technical-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "这个函数的返回值应该允许为空吗？",
+        "我觉得可以，但是调用方需要检查结果。"
+      ],
+      "sidebar": [
+        "Source control",
+        "Terminal",
+        "Build passed"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "technical-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "Should this function allow a null return value?",
+        "Yes, but callers need to check the result."
+      ],
+      "sidebar": [
+        "Source control",
+        "Terminal",
+        "Build passed"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "english-ui-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "这篇文章主要介绍本地人工智能模型。",
+        "作者比较了速度、内存和实际使用体验。"
+      ],
+      "sidebar": [
+        "Dashboard",
+        "Projects",
+        "Documentation",
+        "English interface"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "chinese-ui-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "This article compares local AI models.",
+        "The author considers speed, memory and usability."
+      ],
+      "sidebar": [
+        "工作台",
+        "项目管理",
+        "中文帮助",
+        "系统设置"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "decoy-en-focused-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "晚饭想吃什么？",
+        "我想吃面条，你呢？"
+      ],
+      "sidebar": [
+        "Other conversation",
+        "The release is ready.",
+        "Please review the plan.",
+        "Send it by Friday."
+      ],
+      "raw": ""
+    },
+    {
+      "id": "decoy-zh-focused-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "What would you like for dinner?",
+        "I'd like noodles. How about you?"
+      ],
+      "sidebar": [
+        "其他聊天",
+        "这个版本已经发布。",
+        "请检查一下项目计划。",
+        "周五之前发送给我。"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "mixed-terms-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "今天把 API 的 timeout 调整到了三十秒。",
+        "之前的 bug 是重试逻辑没有正确处理错误。"
+      ],
+      "sidebar": [
+        "API settings",
+        "Errors",
+        "Documentation"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "mixed-terms-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "The project is called 万象 and uses a local model.",
+        "We should check whether 鼠须管 handles this correctly."
+      ],
+      "sidebar": [
+        "中文项目",
+        "万象词库",
+        "输入法设置"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "document-zh",
+      "group": "context",
+      "expected": "chinese",
+      "messages": [
+        "项目说明：我们希望让中文输入更加自然。",
+        "下一步需要评估模型在实际打字过程中的表现。"
+      ],
+      "sidebar": [
+        "Files",
+        "Outline",
+        "Search"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "document-en",
+      "group": "context",
+      "expected": "english",
+      "messages": [
+        "Project notes: make typing feel more natural.",
+        "Next, evaluate the model during real typing sessions."
+      ],
+      "sidebar": [
+        "文件",
+        "大纲",
+        "查找"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "blank",
+      "group": "ambiguous",
+      "expected": null,
+      "messages": [],
+      "sidebar": [
+        "Home",
+        "Settings",
+        "New conversation"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "numbers-only",
+      "group": "ambiguous",
+      "expected": null,
+      "messages": [
+        "2026-10-17",
+        "14:30 → 15:00"
+      ],
+      "sidebar": [
+        "Calendar",
+        "Settings"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "balanced-bilingual",
+      "group": "ambiguous",
+      "expected": null,
+      "messages": [
+        "中文和 English 都可以。",
+        "Both languages work here; choose whichever you prefer."
+      ],
+      "sidebar": [
+        "Chat / 聊天",
+        "Settings / 设置"
+      ],
+      "raw": ""
+    },
+    {
+      "id": "empty-chinese-ui",
+      "group": "ambiguous",
+      "expected": null,
+      "messages": [],
+      "sidebar": [
+        "工作台",
+        "系统设置",
+        "新建会话",
+        "帮助中心"
+      ],
+      "raw": ""
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 """Run native regressions after preparing the pinned build assets."""
 import plistlib
+import platform
 import shutil
 import subprocess
 from pathlib import Path
@@ -21,6 +22,26 @@ def main():
     run('xcrun', 'swiftc', SOURCE / 'Sources/InputIntentState.swift',
         SOURCE / 'Tests/InputIntentStateTests.swift', '-o', intent)
     run(intent)
+    location = BUILD / 'location-tests'
+    run('xcrun', 'swiftc', SOURCE / 'Sources/TypingLocationState.swift',
+        SOURCE / 'Tests/TypingLocationStateTests.swift', '-o', location)
+    run(location)
+    throttle = BUILD / 'capture-throttle-tests'
+    run('xcrun', 'swiftc', SOURCE / 'Sources/ScreenCaptureThrottle.swift',
+        SOURCE / 'Tests/ScreenCaptureThrottleTests.swift', '-o', throttle)
+    run(throttle)
+    screen = BUILD / 'screen-hint-tests'
+    run('xcrun', 'swiftc', SOURCE / 'Sources/ScreenLanguageHintState.swift',
+        SOURCE / 'Sources/ScreenLanguageImage.swift',
+        SOURCE / 'Tests/ScreenLanguageHintTests.swift', '-o', screen)
+    run(screen)
+    screen_session = BUILD / 'screen-session-tests'
+    run('xcrun', 'swiftc', '-swift-version', '5', '-target', platform.machine() + '-apple-macosx26.2',
+        SOURCE / 'Sources/TelepathyPreferences.swift',
+        SOURCE / 'Sources/ScreenCaptureThrottle.swift',
+        *sorted((SOURCE / 'Sources').glob('ScreenLanguage*.swift')),
+        SOURCE / 'Tests/ScreenLanguageSessionTests.swift', '-framework', 'ScreenCaptureKit', '-o', screen_session)
+    run(screen_session)
     punctuation = BUILD / 'punctuation-tests'
     run('xcrun', 'swiftc', SOURCE / 'Sources/PunctuationPolicy.swift',
         SOURCE / 'Tests/PunctuationPolicyTests.swift', '-o', punctuation)
@@ -41,17 +62,21 @@ def main():
     sdk = subprocess.check_output(['xcrun', '--show-sdk-path'], text=True).strip()
     coverage = BUILD / 'credits-coverage.o'
     run('xcrun', 'clang', '-c', '-Wall', '-Wextra', '-I' + str(dist / 'include'),
+        '-mmacosx-version-min=26.2',
         '-Dtp_candidate_ends=tp_real_candidate_ends', SOURCE / 'Sources/Coverage.c', '-o', coverage)
     probe = BUILD / 'credits-probe.o'
     run('xcrun', 'clang', '-c', '-Wall', '-Wextra', '-I' + str(dist / 'include'),
+        '-mmacosx-version-min=26.2',
         '-I' + str(SOURCE / 'Sources'), SOURCE / 'Tests/CoverageProbe.c', '-o', probe)
     run('xcrun', 'swiftc', '-swift-version', '5', '-enable-bare-slash-regex',
+        '-target', platform.machine() + '-apple-macosx26.2',
         '-module-name', 'TelepathyNative', '-import-objc-header',
         SOURCE / 'vendor/squirrel/sources/Squirrel-Bridging-Header.h',
         '-I', dist / 'include', '-I', SOURCE / 'vendor/include', '-I', SOURCE / 'Sources',
         '-I', Path(sdk) / 'System/Library/Frameworks/Tk.framework/Versions/8.5/Headers',
         '-L', dist / 'lib', '-lrime', '-framework', 'AppKit',
         '-framework', 'InputMethodKit', '-framework', 'Carbon',
+        '-framework', 'ScreenCaptureKit',
         '-Xlinker', '-rpath', '-Xlinker', (dist / 'lib').resolve(),
         *[p for p in sorted((SOURCE / 'vendor/squirrel/sources').glob('*.swift')) if p.name != 'Main.swift'],
         *sorted((SOURCE / 'Sources').glob('*.swift')),

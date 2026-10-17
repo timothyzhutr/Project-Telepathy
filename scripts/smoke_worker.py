@@ -1,20 +1,24 @@
 """Exercise the packaged executable from a relocated directory, with no Python PATH."""
-import argparse,json,os,subprocess,tempfile,time,urllib.request,urllib.error
+import argparse,base64,io,json,os,subprocess,tempfile,time,urllib.request,urllib.error
 from pathlib import Path
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('app',type=Path);parser.add_argument('--model-dir',type=Path,required=True);args=parser.parse_args()
     app=args.app.resolve();models=args.model_dir.resolve()
     env=dict(os.environ,PYTHONPATH='',PATH='/usr/bin:/bin')
-    result=subprocess.run([str(app/'Contents/MacOS/Telepathy'),'--self-test','--model-dir',str(models)],env=env,capture_output=True,text=True,check=True)
+    with tempfile.TemporaryDirectory(prefix='telepathy isolated self-test ') as name:
+        result=subprocess.run([str(app/'Contents/MacOS/Telepathy'),'--self-test','--model-dir',str(models)],
+            env=dict(env,TELEPATHY_DATA_DIR=name),capture_output=True,text=True)
+        assert result.returncode==0,result.stdout+result.stderr
     decision=json.loads(result.stdout.strip().splitlines()[-1]);assert decision['selected_index']==1,decision
     assert decision.get('ranker')=='continuation' and decision['inferred'],decision
     print('Native command reached bundled model:',decision)
     worker=app/'Contents/Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker'
     with tempfile.TemporaryDirectory(prefix='telepathy isolated worker ') as name:
         env['TELEPATHY_DATA_DIR']=name;port=19765;url='http://127.0.0.1:'+str(port)
+        opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
         def request(path,data=None):
-            with urllib.request.urlopen(urllib.request.Request(url+path,data=data),timeout=10) as response:return json.load(response)
+            with opener.open(urllib.request.Request(url+path,data=data),timeout=10) as response:return json.load(response)
         for root,expected in [(Path(name)/'missing-models','model_missing'),(models,'ready')]:
             process=subprocess.Popen([str(worker),'--serve','--port',str(port),'--model-dir',str(root)],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             try:
@@ -31,26 +35,32 @@ def main():
                 ranked=request('/api/decision',json.dumps(snapshot).encode())
                 assert ranked['revision']==18
                 if expected=='ready':
-                    assert health['quantization']=='mxfp8',health
-                    assert 0<health['backbone_weight_bytes']<health['unquantized_backbone_weight_bytes']*.6,health
+                    assert health['quantization']=='4bit' and health['vision'] is True,health
+                    assert health['engine']=='Qwen3.5/MLX-VLM',health
+                    assert 0<health['weight_bytes']<700_000_000,health
                     assert ranked['status']=='ok' and ranked['order'][0]==1 and ranked['order'][7:]==list(range(7,12)),ranked
                     assert ranked['strategy']=='continuation' and ranked.get('ranker')=='continuation',ranked
                     assert ranked['inferred'] and ranked['inferred_indices']==list(range(7)),ranked
                     repeated=request('/api/decision',json.dumps(dict(snapshot,revision=20)).encode())
                     assert repeated['status']=='ok' and repeated['cache_hit'] and repeated['order'][0]==1,repeated
                     print('Repeated ranking uses copied context:',repeated)
-                    for revision in (21,22):
-                        continued=request('/api/decision',json.dumps(dict(snapshot,revision=revision,strategy='kev')).encode())
-                        assert continued['status']=='ok' and continued['strategy']=='kev' and continued.get('ranker')!='continuation' and continued['order'][0]==1,continued
-                        assert continued['order'][7:]==list(range(7,12)),continued
-                        assert continued['inferred'] and continued['inferred_indices']==list(range(7)),continued
-                        if revision==22:assert continued['cache_hit'],continued
+                    from PIL import Image,ImageDraw,ImageFont
+                    image=Image.new('RGB',(864,576),'white');draw=ImageDraw.Draw(image)
+                    font=ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf',28)
+                    draw.multiline_text((55,65),'Can you confirm the meeting time?\nPlease write your reply below.',font=font,fill='black',spacing=15)
+                    draw.rectangle((55,220,810,290),outline='#0099ff',width=4)
+                    encoded=io.BytesIO();image.save(encoded,format='PNG')
+                    screen=request('/api/screen-language',json.dumps(dict(revision=21,image=base64.b64encode(encoded.getvalue()).decode())).encode())
+                    assert screen['status']=='ok' and screen['language']=='english' and screen['revision']==21,screen
+                    after_image=request('/api/decision',json.dumps(dict(snapshot,revision=22)).encode())
+                    assert after_image['cache_hit'] and after_image['order']==repeated['order'],after_image
+                    print('Screenshot hint and unchanged retained text cache:',screen,after_image)
                     empty=request('/api/decision',json.dumps(dict(snapshot,revision=23,prefix='',strategy='continuation')).encode())
                     assert empty['keep'] and empty['order']==list(range(12)),empty
                     assert not empty['inferred'] and empty['inferred_indices']==[],empty
                     single=request('/api/decision',json.dumps(dict(snapshot,revision=24,candidates=['权利','全'],candidate_ends=[6,4])).encode())
                     assert not single['inferred'] and single['inferred_indices']==[],single
-                    print('Alternative Kev decision ranking and empty-context fallback:',continued,empty)
+                    print('Empty-context and single-choice fallback:',empty,single)
                 else:assert ranked['status']=='unavailable' and ranked['order']==list(range(12)),ranked
                 print('Worker '+expected+':',ranked)
                 for prefix,language in [('I think ','english'),('天气很热，我们买点水来','chinese')]:
@@ -75,7 +85,7 @@ def main():
                     assert rechecked['status']=='ok' and rechecked['order'][0]==1,rechecked
                     print('Model reload replaced the ranker and resumed offline inference.')
                 try:
-                    urllib.request.urlopen(urllib.request.Request(url+'/api/health',headers={'Origin':'https://example.com'}),timeout=5)
+                    opener.open(urllib.request.Request(url+'/api/health',headers={'Origin':'https://example.com'}),timeout=5)
                     raise AssertionError('Foreign origin accepted')
                 except urllib.error.HTTPError as error:assert error.code==403
                 stopped=request('/api/shutdown',b'{}');assert stopped['status']=='stopping',stopped

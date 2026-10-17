@@ -13,9 +13,10 @@ final class TelepathySettingsView: NSView {
   private let font = NSSlider(value: 16, minValue: 12, maxValue: 28, target: nil, action: nil)
   private let fontLabel = NSTextField(labelWithString: "16 pt")
   private let appearancePopup = NSPopUpButton()
-  private let rankingPopup = NSPopUpButton()
   private let preview = NSTextField(wrappingLabelWithString: "")
   private let modelStatus = NSTextField(wrappingLabelWithString: "Checking model status…")
+  private let screenStatus = NSTextField(wrappingLabelWithString: "")
+  private var screenObserver: NSObjectProtocol?
   private var toggles = [TelepathyPreferences.Key: NSButton]()
   private var observer: NSObjectProtocol?
   private var assistanceEnabled: Bool?
@@ -119,20 +120,23 @@ final class TelepathySettingsView: NSView {
     checkbox("Highlight model-assisted candidates", .inferenceAccent)
     checkbox("Show the Chinese / English status icon in the menu bar", .statusIcon)
     heading("Typing")
-    checkbox("Enable Kev assistance", .kev)
-    note("Kev ranks candidates locally using preceding text. Turning assistance off stops the helper to free memory. Turning it on reloads the model while ordinary pinyin typing remains available.")
+    checkbox("Local assistance", .kev)
+    note("Qwen ranks candidates locally using preceding text. Turning assistance off stops the helper to free memory. Turning it on reloads the model while ordinary pinyin typing remains available.")
     rankCount.identifier = .init("settings.rankCount"); rankCount.target = self; rankCount.action = #selector(changeRankCount(_:))
     row("Candidates to rank", rankCount)
     note("Ranks up to this many candidates from Rime's first page, then shows the best ones. Remaining candidates keep their original order. A smaller pool can reduce scoring work but may miss a better word. With 1, there is no choice to rerank.")
-    rankingPopup.addItems(withTitles: ["Context prediction (default)", "Kev decision ranking"])
-    rankingPopup.identifier = .init("settings.rankingStrategy"); rankingPopup.target = self; rankingPopup.action = #selector(changeRanking(_:))
-    row("Ranking method", rankingPopup)
-    note("Context prediction uses the same local model to score which candidate naturally follows your text. It can be faster, but may still choose a poor match when all candidates are unsuitable.")
+    note("Context prediction uses the local Qwen model to score which candidate naturally follows your text.")
     checkbox("Automatic Chinese / English (experimental)", .autoLanguage)
-    note("Uses context to keep English words literal. Requires Kev assistance. Space adds a space after English; ↓ or Tab restores Chinese choices. Shift + a letter starts literal English until the next space.")
+    note("Uses context to keep English words literal. Requires local assistance. Space adds a space after English; ↓ or Tab restores Chinese choices. Shift + a letter starts literal English until the next space.")
+    checkbox("Starting language from screen", .screenLanguage)
+    note("In Auto mode, the local model can look once at the focused app window to choose the starting language when the field has no preceding text. A blue marker identifies the input position. Images stay in memory on this Mac and are never saved. Secure input is excluded. Requires Screen Recording permission.")
+    add(screenStatus)
+    let permission = NSButton(title: "Allow Screen Recording…", target: self, action: #selector(requestScreenPermission))
+    permission.identifier = .init("settings.screenPermission")
+    add(NSStackView(views: [permission, NSView()]))
     checkbox("Use Chinese punctuation", .punctuation)
     checkbox("Automatic punctuation in Auto mode", .autoPunctuation)
-    note("Chooses Chinese or English forms from the current sentence, without waiting for Kev. Keeps decimals, URLs, email and backtick code ASCII. Turn off Use Chinese punctuation to always use ASCII forms.")
+    note("Chooses Chinese or English forms from the current sentence, without waiting for the model. Keeps decimals, URLs, email and backtick code ASCII. Turn off Use Chinese punctuation to always use ASCII forms.")
     note("Space chooses the highlighted candidate; 1–9 select candidates; Esc cancels composition. Personal dictionary learning is disabled in this prototype.")
     heading("Local model")
     add(modelStatus)
@@ -150,10 +154,14 @@ final class TelepathySettingsView: NSView {
       self.reload()
       if assistanceChanged { self.refreshModelStatus() }
     }
+    screenObserver = NotificationCenter.default.addObserver(forName: .telepathyScreenHintChanged, object: nil, queue: .main) { [weak self] _ in self?.refreshScreenStatus() }
     reload()
   }
   required init?(coder: NSCoder) { nil }
-  deinit { if let observer { NotificationCenter.default.removeObserver(observer) } }
+  deinit {
+    if let observer { NotificationCenter.default.removeObserver(observer) }
+    if let screenObserver { NotificationCenter.default.removeObserver(screenObserver) }
+  }
 
   func reload() {
     rows.selectItem(withTag: preferences.candidatesPerRow)
@@ -162,10 +170,10 @@ final class TelepathySettingsView: NSView {
     rankCount.isEnabled = preferences.enabled(.kev)
     font.doubleValue = Double(preferences.fontSize); fontLabel.stringValue = "\(preferences.fontSize) pt"
     appearancePopup.selectItem(at: ["system", "light", "dark"].firstIndex(of: preferences.appearance) ?? 0)
-    rankingPopup.selectItem(at: preferences.rankingStrategy == "kev" ? 1 : 0)
-    rankingPopup.isEnabled = preferences.enabled(.kev)
     assistanceEnabled = preferences.enabled(.kev)
     toggles.forEach { $0.value.state = preferences.enabled($0.key) ? .on : .off }
+    toggles[.screenLanguage]?.isEnabled = preferences.enabled(.kev) && preferences.enabled(.autoLanguage)
+    refreshScreenStatus()
     let samples = ["你好", "拟好", "你号", "倪好", "泥好", "你好啊", "您好", "你好呀", "你好吗", "你好吧", "你好哦", "你好呢"].prefix(preferences.candidatesToShow)
     preview.font = .systemFont(ofSize: CGFloat(preferences.fontSize))
     preview.stringValue = samples.enumerated().map { preferences.separator(before: $0.offset, linear: true) + "\($0.offset + 1). \($0.element)" }.joined()
@@ -175,20 +183,31 @@ final class TelepathySettingsView: NSView {
   @objc private func changeShownCount(_ sender: NSPopUpButton) { preferences.set(sender.selectedTag(), for: .shownCount) }
   @objc private func changeFont(_ sender: NSSlider) { preferences.set(Int(sender.doubleValue.rounded()), for: .font) }
   @objc private func changeAppearance(_ sender: NSPopUpButton) { preferences.set(["system", "light", "dark"][sender.indexOfSelectedItem], for: .appearance) }
-  @objc private func changeRanking(_ sender: NSPopUpButton) { preferences.set(sender.indexOfSelectedItem == 1 ? "kev" : "continuation", for: .rankingStrategy) }
   @objc private func toggle(_ sender: NSButton) {
     if let key = toggles.first(where: { $0.value === sender })?.key { preferences.set(sender.state == .on, for: key) }
   }
   @objc private func resetSettings() { preferences.reset() }
+  private func refreshScreenStatus() {
+    screenStatus.stringValue = "Screen Recording: \(ScreenLanguageCapture.permissionGranted ? "allowed" : "not allowed"). \(ScreenLanguageDiagnostics.shared.summary)"
+    screenStatus.textColor = .secondaryLabelColor
+    screenStatus.font = .systemFont(ofSize: 12)
+  }
+  @objc private func requestScreenPermission() {
+    if !ScreenLanguageCapture.permissionGranted { _ = CGRequestScreenCaptureAccess() }
+    if !ScreenLanguageCapture.permissionGranted,
+       let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") { NSWorkspace.shared.open(url) }
+    refreshScreenStatus()
+  }
   @objc private func openModelFolder() {
     let folder = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Telepathy/models")
     try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     NSWorkspace.shared.open(folder)
   }
   @objc func refreshModelStatus() {
+    refreshScreenStatus()
     if download != nil { return }
     guard preferences.enabled(.kev) else {
-      modelStatus.stringValue = "Kev assistance is off. The model helper stops to free memory."
+      modelStatus.stringValue = "Local assistance is off. The model helper stops to free memory."
       return
     }
     modelStatus.stringValue = "Checking model status…"
@@ -201,10 +220,10 @@ final class TelepathySettingsView: NSView {
       DispatchQueue.main.async {
         guard let self, self.download == nil, self.preferences.enabled(.kev) else { return }
         self.modelStatus.stringValue = switch status {
-        case "ready": "Kev is ready · Runs on this Mac"
-        case "loading": "Kev is loading… Refresh in a moment."
-        case "model_missing": "Model files are missing. Use Download / repair model to set up Kev."
-        case "error": "Kev could not load. Try Download / repair model."
+        case "ready": "Qwen is ready · Runs on this Mac"
+        case "loading": "Qwen is loading… Refresh in a moment."
+        case "model_missing": "Model files are missing. Use Download / repair model to set up Qwen."
+        case "error": "Qwen could not load. Try Download / repair model."
         default: "The local worker is not responding. Typing can continue with Rime candidates."
         }
       }
@@ -232,10 +251,10 @@ final class TelepathySettingsView: NSView {
 
   private func reloadModel() {
     guard preferences.enabled(.kev) else {
-      modelStatus.stringValue = "Model files installed. Enable Kev assistance to load them."
+      modelStatus.stringValue = "Model files installed. Enable local assistance to load them."
       return
     }
-    modelStatus.stringValue = "Model files verified. Loading Kev…"
+    modelStatus.stringValue = "Model files verified. Loading Qwen…"
     var request = URLRequest(url: URL(string: "http://127.0.0.1:18765/api/reload")!)
     request.httpMethod = "POST"; request.httpBody = Data("{}".utf8)
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -12,6 +12,7 @@ final class TelepathyPreferences {
     case inferenceAccent = "TelepathyInferenceAccent", punctuation = "TelepathyChinesePunctuation"
     case statusIcon = "TelepathyStatusIcon", kev = "KevEnabled", autoLanguage = "TelepathyAutoLanguage"
     case autoPunctuation = "TelepathyAutoPunctuation"
+    case screenLanguage = "TelepathyScreenLanguage"
     case rankingStrategy = "TelepathyRankingStrategy"
     case rankCount = "TelepathyCandidatesToRank", shownCount = "TelepathyCandidatesToShow"
   }
@@ -39,7 +40,8 @@ final class TelepathyPreferences {
     return ["system", "light", "dark"].contains(value) ? value : "system"
   }
   var rankingStrategy: String {
-    defaults.string(forKey: Key.rankingStrategy.rawValue) == "kev" ? "kev" : "continuation"
+    // The resident Qwen vision model supports continuation scoring only.
+    "continuation"
   }
   func enabled(_ key: Key) -> Bool {
     defaults.object(forKey: key.rawValue) as? Bool ?? (key != .statusIcon && key != .autoLanguage)

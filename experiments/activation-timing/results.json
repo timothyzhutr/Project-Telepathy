@@ -1,0 +1,609 @@
+{
+  "date": "2026-10-17",
+  "hardware": "Apple M2 Pro, 16 GiB, macOS 27.0.1",
+  "method": "Real Telepathy input controller; timestamp hooks in a temporary native executable; inference disabled without preferences changes; human focus and first-key interactions.",
+  "source_sha256": "8ff8f4d1e63fbab29f83e5f1e1f159016e748d9bda0abf0750b10c09c449d1e3",
+  "baseline_binary_sha256": "bce7aa933d5f3e2f8531f2113b3e47f3df23d1e0c3b97d6a3c107266978ac1a7",
+  "probe_binary_sha256": "6b7c5bdb143850744e1d3d3dfc9cb3767d253bff3650807f8f2be83bb440af5d",
+  "summary": {
+    "com.apple.TextEdit": {
+      "samples": 1,
+      "lead_ms": [
+        915.1374583334473
+      ],
+      "min_ms": 915.1374583334473,
+      "median_ms": 915.1374583334473,
+      "max_ms": 915.1374583334473,
+      "lead_at_least_430ms": 1
+    },
+    "com.openai.codex": {
+      "samples": 4,
+      "lead_ms": [
+        2241.568083333277,
+        481.6216250001162,
+        314.90820833323596,
+        529.3565833335379
+      ],
+      "min_ms": 314.90820833323596,
+      "median_ms": 505.489104166827,
+      "max_ms": 2241.568083333277,
+      "lead_at_least_430ms": 3
+    },
+    "org.mozilla.firefox": {
+      "samples": 6,
+      "lead_ms": [
+        591.0050833331297,
+        432.012124999801,
+        116.13737499965282,
+        380.0612499999261,
+        334.7120416665348,
+        476.5178749998995
+      ],
+      "min_ms": 116.13737499965282,
+      "median_ms": 406.03668749986355,
+      "max_ms": 591.0050833331297,
+      "lead_at_least_430ms": 3
+    }
+  },
+  "first_key_samples": 11,
+  "all_recorded_leads_positive": true,
+  "observed_activations": 30,
+  "observed_first_keys_without_activation": 0,
+  "events": [
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 169499.03804233327,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 169554.61295900022,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 169569.26320900038,
+      "controller": "controller-2"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 181219.8070423333,
+      "controller": "controller-2"
+    },
+    {
+      "activation": 1,
+      "client_app": "unknown",
+      "event": "deactivate",
+      "elapsed_ms": 181222.42250066664,
+      "controller": "controller-2"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 181696.92925066693,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "first_key",
+      "lead_ms": 2241.568083333277,
+      "received_lead_ms": 2241.833291666353,
+      "elapsed_ms": 183938.76254233328,
+      "event_elapsed_ms": 183938.4973340002,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 187403.41995900008,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 2,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 187655.46416733332,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 2,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 197612.5715840003,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 2,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 197614.26025066702,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 2,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 197981.57937566703,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 3,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 198236.77387566704,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 3,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 215385.75666733368,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 3,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 215387.470625667,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 3,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 217562.0710423336,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 4,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 217829.78237566704,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 4,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 217979.66900066694,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 4,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 217982.120959,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 4,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 222801.48391733336,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.apple.TextEdit",
+      "event": "activate",
+      "elapsed_ms": 223100.3926673334,
+      "controller": "controller-4"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.apple.TextEdit",
+      "event": "first_key",
+      "lead_ms": 915.1374583334473,
+      "received_lead_ms": 915.6338333332315,
+      "elapsed_ms": 224016.0265006666,
+      "event_elapsed_ms": 224015.53012566682,
+      "controller": "controller-4"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.apple.TextEdit",
+      "event": "deactivate",
+      "elapsed_ms": 227180.17670900008,
+      "controller": "controller-4"
+    },
+    {
+      "activation": 5,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 227186.34908400007,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 5,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 227241.93220899996,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 5,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 227494.73391733362,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 2,
+      "client_app": "com.apple.TextEdit",
+      "event": "activate",
+      "elapsed_ms": 236450.91729233356,
+      "controller": "controller-4"
+    },
+    {
+      "activation": 5,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 236675.30187566672,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 6,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 237417.8517090004,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 2,
+      "client_app": "com.apple.TextEdit",
+      "event": "deactivate",
+      "elapsed_ms": 237428.64191733362,
+      "controller": "controller-4"
+    },
+    {
+      "activation": 6,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 503229.634584,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 6,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 503235.33670899994,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 6,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 513870.7562090003,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 1,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 514145.34079233365,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 1,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 514786.4289590002,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 2,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 514788.10820900026,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 2,
+      "client_app": "org.mozilla.firefox",
+      "event": "first_key",
+      "lead_ms": 591.0050833331297,
+      "received_lead_ms": 591.4614166667889,
+      "elapsed_ms": 515379.56962566706,
+      "event_elapsed_ms": 515379.1132923334,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 2,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 517676.1778340001,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 3,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 517680.169375667,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 3,
+      "client_app": "org.mozilla.firefox",
+      "event": "first_key",
+      "lead_ms": 432.012124999801,
+      "received_lead_ms": 432.36833333321556,
+      "elapsed_ms": 518112.53770900023,
+      "event_elapsed_ms": 518112.1815006668,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 3,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 520857.46808400017,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 4,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 520863.2943340003,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 4,
+      "client_app": "org.mozilla.firefox",
+      "event": "first_key",
+      "lead_ms": 116.13737499965282,
+      "received_lead_ms": 116.34879166649625,
+      "elapsed_ms": 520979.64312566683,
+      "event_elapsed_ms": 520979.43170899997,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 4,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 521866.395875667,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 5,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 521873.3493340001,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 5,
+      "client_app": "org.mozilla.firefox",
+      "event": "first_key",
+      "lead_ms": 380.0612499999261,
+      "received_lead_ms": 380.23116666681744,
+      "elapsed_ms": 522253.58050066687,
+      "event_elapsed_ms": 522253.410584,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 5,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 524057.8380006668,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 6,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 524060.08675066684,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 6,
+      "client_app": "org.mozilla.firefox",
+      "event": "first_key",
+      "lead_ms": 334.7120416665348,
+      "received_lead_ms": 334.9873333331743,
+      "elapsed_ms": 524395.0740840001,
+      "event_elapsed_ms": 524394.7987923335,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 6,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 526205.4627923334,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 7,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 526218.9852506667,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 7,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 529803.893125667,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 7,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 529808.8170840001,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 7,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 529815.2366673335,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 8,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 529836.8003756668,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 8,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 529846.3654173333,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 9,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 529848.8413756668,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 9,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 533241.390959,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 10,
+      "client_app": "org.mozilla.firefox",
+      "event": "activate",
+      "elapsed_ms": 533243.2828340002,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 10,
+      "client_app": "org.mozilla.firefox",
+      "event": "first_key",
+      "lead_ms": 476.5178749998995,
+      "received_lead_ms": 476.7779583335141,
+      "elapsed_ms": 533720.0607923337,
+      "event_elapsed_ms": 533719.8007090001,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 10,
+      "client_app": "org.mozilla.firefox",
+      "event": "deactivate",
+      "elapsed_ms": 535437.9180006668,
+      "controller": "controller-5"
+    },
+    {
+      "activation": 8,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 535438.3316673334,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 8,
+      "client_app": "com.openai.codex",
+      "event": "first_key",
+      "lead_ms": 481.6216250001162,
+      "received_lead_ms": 481.8086250002125,
+      "elapsed_ms": 535920.1402923336,
+      "event_elapsed_ms": 535919.9532923335,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 8,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 542783.743084,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 7,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 543037.1241256667,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 7,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 585118.8137090002,
+      "controller": "controller-1"
+    },
+    {
+      "activation": 9,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 585120.7497090003,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 9,
+      "client_app": "com.openai.codex",
+      "event": "first_key",
+      "lead_ms": 314.90820833323596,
+      "received_lead_ms": 315.21304166653863,
+      "elapsed_ms": 585435.9627506669,
+      "event_elapsed_ms": 585435.6579173337,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 9,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 586207.7740006667,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 9,
+      "client_app": "com.openai.codex",
+      "event": "deactivate",
+      "elapsed_ms": 586208.3937506668,
+      "controller": "controller-3"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "activate",
+      "elapsed_ms": 586674.7166256668,
+      "controller": "controller-6"
+    },
+    {
+      "activation": 1,
+      "client_app": "com.openai.codex",
+      "event": "first_key",
+      "lead_ms": 529.3565833335379,
+      "received_lead_ms": 529.5054166667796,
+      "elapsed_ms": 587204.2220423337,
+      "event_elapsed_ms": 587204.0732090004,
+      "controller": "controller-6"
+    }
+  ],
+  "cleanup": {
+    "original_binary_restored": true,
+    "original_signature_restored": true,
+    "timing_logging_enabled": false,
+    "fixture_server_stopped": true,
+    "browser_test_tabs_closed": true,
+    "scratch_document_closed": true,
+    "scratch_document_preserved_in_ignored_runtime": true,
+    "native_app_and_worker_returned_to_original_stopped_state": true
+  },
+  "limitations": [
+    "Small prompted interaction sample; not a distribution of normal user typing delays.",
+    "No screenshots or model inference were run in this timing test. The 430 ms reference comes from the previous warm synthetic image benchmark.",
+    "Screen capture, settling/debounce, IPC and inference queue overhead are not measured here.",
+    "The trace does not identify individual text fields or tabs and cannot establish one callback per focus change.",
+    "Initial background automation did not produce IME callbacks and was excluded; final first-key observations came from human interaction.",
+    "Browser coverage is Firefox only. Notes, Safari and Chrome have not been measured."
+  ]
+}

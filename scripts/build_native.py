@@ -1,7 +1,7 @@
 """Assemble an Apple Silicon app from the active dependency closure."""
-import json,plistlib,shutil,subprocess
+import json,os,plistlib,shutil,subprocess
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];BUILD=ROOT/'.build';APP=ROOT/'dist/Telepathy.app';VERSION='0.1.12'
+ROOT=Path(__file__).resolve().parents[1];BUILD=ROOT/'.build';APP=ROOT/'dist/Telepathy.app';VERSION='0.2.6'
 def run(*args):subprocess.run(list(map(str,args)),check=True,cwd=ROOT)
 def main():
     dist=BUILD/'rime/dist';source=ROOT/'native';stock=BUILD/'squirrel-package/Payload/Squirrel.app/Contents'
@@ -10,7 +10,7 @@ def main():
     run('xcrun','swiftc','-target','arm64-apple-macosx26.2','-swift-version','5','-enable-bare-slash-regex','-O','-module-name','TelepathyNative',
         '-import-objc-header',source/'vendor/squirrel/sources/Squirrel-Bridging-Header.h','-I',dist/'include','-I',source/'vendor/include','-I',source/'Sources',
         '-I',Path(sdk)/'System/Library/Frameworks/Tk.framework/Versions/8.5/Headers','-L',dist/'lib','-lrime','-framework','AppKit','-framework','InputMethodKit',
-        '-framework','Carbon','-Xlinker','-rpath','-Xlinker','@executable_path/../Frameworks',
+        '-framework','Carbon','-framework','ScreenCaptureKit','-Xlinker','-rpath','-Xlinker','@executable_path/../Frameworks',
         *sorted((source/'vendor/squirrel/sources').glob('*.swift')),*sorted((source/'Sources').glob('*.swift')),BUILD/'coverage.o','-o',BUILD/'Telepathy')
     if APP.exists():shutil.rmtree(APP)
     contents=APP/'Contents';(contents/'MacOS').mkdir(parents=True)
@@ -30,7 +30,7 @@ def main():
     shutil.copyfile(BUILD/'package-data/inventory.json',contents/'Resources/data-inventory.json')
     resources=contents/'Resources';resources.mkdir(exist_ok=True)
     run(__import__('sys').executable,ROOT/'scripts/build_branding.py')
-    for name in ('Telepathy.icns','Telepathy.pdf'):shutil.copyfile(ROOT/'assets/branding'/name,resources/name)
+    for name in ('Telepathy.icns','TelepathyMenuTemplate.pdf'):shutil.copyfile(ROOT/'assets/branding'/name,resources/name)
     for locale in ('en','zh-Hans'):
         shutil.copytree(stock/f'Resources/{locale}.lproj',resources/f'{locale}.lproj')
         localized={'CFBundleName':'Telepathy','CFBundleDisplayName':'Telepathy','local.telepathy.inputmethod.Telepathy.Hans':'Telepathy'}
@@ -41,21 +41,26 @@ def main():
     def rename(v):
         if isinstance(v,dict):return {rename(k):rename(x) for k,x in v.items()}
         if isinstance(v,list):return [rename(x) for x in v]
-        if isinstance(v,str):return v.replace('im.rime.inputmethod.Squirrel','local.telepathy.inputmethod.Telepathy').replace('rime.pdf','Telepathy.pdf')
+        if isinstance(v,str):return v.replace('im.rime.inputmethod.Squirrel','local.telepathy.inputmethod.Telepathy').replace('rime.pdf','TelepathyMenuTemplate.pdf')
         return v
     plist=rename(plist)
     for key in list(plist):
         if key.startswith(('SU','DT')) or key in ('BuildMachineOSBuild','CFBundleIconName'):plist.pop(key)
     plist.update(CFBundleExecutable='Telepathy',CFBundleName='Telepathy',CFBundleDisplayName='Telepathy',CFBundleIdentifier='local.telepathy.inputmethod.Telepathy',CFBundleVersion=VERSION,
-        CFBundleShortVersionString=VERSION,CFBundleIconFile='Telepathy',LSMinimumSystemVersion='26.2',InputMethodConnectionName='Telepathy_Connection',
+        CFBundleShortVersionString=VERSION,CFBundleIconFile='Telepathy',tsInputMethodIconFileKey='TelepathyMenuTemplate.pdf',TISIconIsTemplate=True,LSMinimumSystemVersion='26.2',InputMethodConnectionName='Telepathy_Connection',
         InputMethodServerControllerClass='TelepathyNative.SquirrelInputController',InputMethodServerDelegateClass='TelepathyNative.SquirrelInputController')
     modes=plist['ComponentInputModeDict'];modes['tsInputModeListKey'].pop('local.telepathy.inputmethod.Telepathy.Hant',None)
     modes['tsVisibleInputModeOrderedArrayKey']=['local.telepathy.inputmethod.Telepathy.Hans']
     (contents/'Info.plist').write_bytes(plistlib.dumps(plist))
     # Native libraries and the PyInstaller helper are already signed inside-out.
-    run('codesign','--force','--sign','-',APP);run('codesign','--verify','--deep','--strict',APP)
+    identity=os.environ.get('TELEPATHY_CODESIGN_IDENTITY')
+    if identity is None:
+        identity_file=ROOT/'.runtime/codesign-identity'
+        identity=identity_file.read_text().strip() if identity_file.is_file() else '-'
+    run('codesign','--force','--sign',identity,APP);run('codesign','--verify','--deep','--strict',APP)
     run(contents/'MacOS/Telepathy','--verify-runtime')
-    for name in ('Install Telepathy.command','Download Kev Model.command'):shutil.copy2(ROOT/'packaging'/name,ROOT/'dist'/name)
+    (ROOT/'dist/Download Kev Model.command').unlink(missing_ok=True)
+    for name in ('Install Telepathy.command','Download Model.command'):shutil.copy2(ROOT/'packaging'/name,ROOT/'dist'/name)
     for name in ('README.md','README.en.md','CREDITS.md','LICENSE'):shutil.copy2(ROOT/name,ROOT/'dist'/name)
     # The release's README uses the same relative images as GitHub.
     for name in ('assets/branding/Telepathy-128.png','docs/images/telepathy-native-demo.png'):

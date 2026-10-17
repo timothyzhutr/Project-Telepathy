@@ -1,4 +1,6 @@
 """Rank copied native snapshots; Rime owns composition and selection."""
+import base64
+from io import BytesIO
 import threading
 class DecisionService:
     def __init__(self,ranker=None):
@@ -38,6 +40,41 @@ class DecisionService:
                 if result.get('language') not in ('english','chinese','uncertain'):return fallback
                 return dict(result,status='ok',revision=revision)
             except Exception:return fallback
+    def screen_language(self,body):
+        # Screenshots exist only in this request's memory. The service retains
+        # neither the image nor an image cache between activations.
+        if not isinstance(body,dict):raise ValueError('Expected an object')
+        revision=body.get('revision');encoded=body.get('image')
+        if type(revision) is not int or revision<0 or not isinstance(encoded,str) or len(encoded)>3*1024*1024:
+            raise ValueError('Invalid screenshot request')
+        from PIL import Image
+        image=None
+        try:
+            pixels=base64.b64decode(encoded,validate=True)
+            if not pixels.startswith(b'\x89PNG\r\n\x1a\n'):raise ValueError('Expected PNG')
+            image=Image.open(BytesIO(pixels),formats=['PNG'])
+            width,height=image.size
+            if image.format!='PNG' or not 0<width<=1536 or not 0<height<=1536 or width*height>1_000_000:
+                image.close();raise ValueError('Invalid screenshot dimensions')
+            # load() alone tolerates a missing IEND. Verify all PNG chunks,
+            # then reopen the immutable bytes for actual pixel decoding.
+            image.verify();image.close()
+            image=Image.open(BytesIO(pixels),formats=['PNG'])
+            image.load()
+        except (OSError,SyntaxError,EOFError,Image.DecompressionBombError) as error:
+            if image is not None:image.close()
+            raise ValueError('Invalid PNG') from error
+        fallback=dict(status='ok',revision=revision,language='uncertain',request_ms=0)
+        try:
+            if not self.lock.acquire(blocking=False):return dict(fallback,status='busy')
+            try:
+                if self.ranker is None:return fallback
+                result=self.ranker.screen_language(image)
+                if result.get('language') not in ('english','chinese','uncertain'):return fallback
+                return dict(result,status='ok',revision=revision)
+            except Exception:return fallback
+            finally:self.lock.release()
+        finally:image.close()
     def decision(self,body):
         revision,prefix,raw,pending,words,ends=self.snapshot(body)
         original=list(range(len(words)))

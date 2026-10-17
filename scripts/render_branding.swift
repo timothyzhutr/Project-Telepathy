@@ -105,7 +105,7 @@ for size in [16, 18, 22] {
   try png(size * 2, app: false, name: "menu-\(size)@2x.png", destination: work)
 }
 var mediaBox = CGRect(x: 0, y: 0, width: 18, height: 18)
-let pdf = CGContext(output.appendingPathComponent("Telepathy.pdf") as CFURL, mediaBox: &mediaBox,
+let pdf = CGContext(output.appendingPathComponent("TelepathyMenuTemplate.pdf") as CFURL, mediaBox: &mediaBox,
                     [kCGPDFContextTitle: "Telepathy Context link", kCGPDFContextCreator: "Project Telepathy"] as CFDictionary)!
 pdf.beginPDFPage(nil)
 pdf.translateBy(x: 0, y: 18)

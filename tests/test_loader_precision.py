@@ -17,7 +17,7 @@ class LoaderPrecisionTests(unittest.TestCase):
         def replacement(*args):
             released.append(reference() is None)
             return SimpleRanker()
-        with patch('kev_ranker.KevRanker', side_effect=replacement):
+        with patch('vision_ranker.VisionRanker', side_effect=replacement):
             loader.start(); self.wait_loaded(loader)
         self.assertEqual(released, [True], 'Reload must not allocate two backbones together')
         self.assertEqual(loader.status, 'ready')
@@ -27,14 +27,14 @@ class LoaderPrecisionTests(unittest.TestCase):
             self.assertLess(time.monotonic(),deadline,'Loader never finished')
             time.sleep(.005)
     def test_ready_health_identifies_the_installed_model_precision(self):
-        info=dict(quantization='mxfp8',backbone_weight_bytes=776393408,unquantized_backbone_weight_bytes=1504791232)
+        info=dict(engine='Qwen3.5/MLX-VLM',model='mlx-community/Qwen3.5-0.8B-MLX-4bit',vision=True,quantization='4bit',weight_bytes=625148416,backbone_weight_bytes=625148416)
         service=DecisionService();loader=ModelLoader(service,Path('/unused'))
         # Replace only loading the large checkpoint, not the loader/service.
-        with patch('kev_ranker.KevRanker',return_value=SimpleNamespace(model_info=info)):
+        with patch('vision_ranker.VisionRanker',return_value=SimpleNamespace(model_info=info)):
             loader.start();self.wait_loaded(loader)
         self.assertEqual(loader.status,'ready')
-        self.assertEqual(loader.health().get('quantization'),'mxfp8')
-        self.assertEqual(loader.health().get('backbone_weight_bytes'),776393408)
+        self.assertEqual(loader.health().get('quantization'),'4bit')
+        self.assertEqual(loader.health().get('backbone_weight_bytes'),625148416)
         self.assertEqual(service.ranker.model_info,info)
         loader.status='loading'
         self.assertNotIn('quantization',loader.health())

@@ -1,0 +1,3352 @@
+{
+  "date": "2026-10-17",
+  "source": {
+    "upstream": {
+      "url": "https://github.com/jev-skills/openjev-multimodal",
+      "commit": "c23bba19751a7b3008c58a86f77f2cc2129357fc"
+    },
+    "llama_cpp": {
+      "tag": "b9670",
+      "commit": "02810c7aa",
+      "release_asset_sha256": "67f8a8c6710dc81524ef7b102f295cbf19e880bf3822030420a0eeeeab2148b2"
+    },
+    "hardware": {
+      "chip": "Apple M2 Pro",
+      "memory_bytes": 17179869184,
+      "cpu_cores": 10
+    },
+    "model_files": [
+      {
+        "name": "Qwen3.5-0.8B-Q4_K_M.gguf",
+        "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+        "bytes": 532517120,
+        "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517"
+      },
+      {
+        "name": "mmproj-F16.gguf",
+        "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+        "bytes": 204987232,
+        "sha256": "56e4c6cfe73b0c82e3e82bc518d7591997e61d81f723fc41a586f4fa69ea2453"
+      }
+    ],
+    "total_weight_bytes": 737504352,
+    "settings": {
+      "profile": "fast",
+      "context_tokens": 4096,
+      "image_tokens": 512,
+      "cpu_threads": 4,
+      "gpu_layers": 99
+    },
+    "dataset_sha256": "030ac9aed761036f0095be6743cdaf0e17ae47325a95e5fb31b2f72536b49dc9"
+  },
+  "initial": {
+    "first_request": {
+      "client_ms": 3068.413333967328,
+      "choice": "english",
+      "error": null
+    },
+    "modes": {
+      "image": {
+        "attempts": 28,
+        "matches": 12,
+        "errors": 0,
+        "fraction_matching": 0.42857142857142855,
+        "latency_ms": {
+          "samples": 28,
+          "median": 517.0636670081876,
+          "p95": 528.1988744798582,
+          "minimum": 507.7408750075847,
+          "maximum": 632.738042040728
+        },
+        "confusion": {
+          "chinese→english": 12,
+          "uncertain→english": 4,
+          "english→english": 12
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-en-answer-zh",
+          "numbers-only",
+          "reply-in-zh",
+          "support-zh",
+          "technical-zh",
+          "empty-chinese-ui",
+          "blank",
+          "decoy-en-focused-zh",
+          "field-zh",
+          "translate-to-zh",
+          "document-zh",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 519.917520985473,
+              "p95": 524.1523874487029,
+              "minimum": 512.2610419639386,
+              "maximum": 524.832625000272
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "context": {
+            "attempts": 16,
+            "matches": 8,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 16,
+              "median": 517.4275630270131,
+              "p95": 554.9422287876951,
+              "minimum": 507.7408750075847,
+              "maximum": 632.738042040728
+            },
+            "confusion": {
+              "chinese→english": 8,
+              "english→english": 8
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "document-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 4,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 8,
+              "median": 513.4663540229667,
+              "p95": 525.8319352171384,
+              "minimum": 508.9662920217961,
+              "maximum": 526.6919580171816
+            },
+            "confusion": {
+              "chinese→english": 4,
+              "english→english": 4
+            },
+            "mistakes": [
+              "quote-en-answer-zh",
+              "reply-in-zh",
+              "field-zh",
+              "translate-to-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      },
+      "crop": {
+        "attempts": 28,
+        "matches": 12,
+        "errors": 0,
+        "fraction_matching": 0.42857142857142855,
+        "latency_ms": {
+          "samples": 28,
+          "median": 430.68033349118195,
+          "p95": 437.41919354361016,
+          "minimum": 425.5309159634635,
+          "maximum": 498.9008749835193
+        },
+        "confusion": {
+          "chinese→english": 12,
+          "uncertain→english": 4,
+          "english→english": 12
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-en-answer-zh",
+          "numbers-only",
+          "reply-in-zh",
+          "support-zh",
+          "technical-zh",
+          "empty-chinese-ui",
+          "blank",
+          "decoy-en-focused-zh",
+          "field-zh",
+          "translate-to-zh",
+          "document-zh",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 427.7106254885439,
+              "p95": 434.0858938463498,
+              "minimum": 425.5309159634635,
+              "maximum": 434.9576249951497
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "context": {
+            "attempts": 16,
+            "matches": 8,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 16,
+              "median": 432.9832289949991,
+              "p95": 453.0610932415584,
+              "minimum": 426.45495804026723,
+              "maximum": 498.9008749835193
+            },
+            "confusion": {
+              "chinese→english": 8,
+              "english→english": 8
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "document-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 4,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 8,
+              "median": 429.4083545100875,
+              "p95": 430.940614186693,
+              "minimum": 425.68924999795854,
+              "maximum": 431.0945410397835
+            },
+            "confusion": {
+              "chinese→english": 4,
+              "english→english": 4
+            },
+            "mistakes": [
+              "quote-en-answer-zh",
+              "reply-in-zh",
+              "field-zh",
+              "translate-to-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      },
+      "text": {
+        "attempts": 28,
+        "matches": 12,
+        "errors": 0,
+        "fraction_matching": 0.42857142857142855,
+        "latency_ms": {
+          "samples": 28,
+          "median": 144.04364599613473,
+          "p95": 156.24785042600706,
+          "minimum": 132.12249998468906,
+          "maximum": 173.40229102410376
+        },
+        "confusion": {
+          "chinese→english": 10,
+          "uncertain→english": 4,
+          "english→english": 12,
+          "chinese→uncertain": 2
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-en-answer-zh",
+          "numbers-only",
+          "reply-in-zh",
+          "support-zh",
+          "technical-zh",
+          "empty-chinese-ui",
+          "blank",
+          "decoy-en-focused-zh",
+          "field-zh",
+          "translate-to-zh",
+          "document-zh",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 138.52277150726877,
+              "p95": 153.55928399658296,
+              "minimum": 132.12249998468906,
+              "maximum": 155.32170899678022
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "context": {
+            "attempts": 16,
+            "matches": 8,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 16,
+              "median": 144.65658299741335,
+              "p95": 160.91047922964208,
+              "minimum": 142.2789579955861,
+              "maximum": 173.40229102410376
+            },
+            "confusion": {
+              "chinese→english": 7,
+              "english→english": 8,
+              "chinese→uncertain": 1
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "document-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 4,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 8,
+              "median": 143.6926044698339,
+              "p95": 153.39880841202103,
+              "minimum": 142.9137079976499,
+              "maximum": 153.6953749600798
+            },
+            "confusion": {
+              "chinese→english": 3,
+              "english→english": 4,
+              "chinese→uncertain": 1
+            },
+            "mistakes": [
+              "quote-en-answer-zh",
+              "reply-in-zh",
+              "field-zh",
+              "translate-to-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      },
+      "empty": {
+        "attempts": 28,
+        "matches": 12,
+        "errors": 0,
+        "fraction_matching": 0.42857142857142855,
+        "latency_ms": {
+          "samples": 28,
+          "median": 133.9737290109042,
+          "p95": 138.56741653871723,
+          "minimum": 130.45604201033711,
+          "maximum": 143.69833300588652
+        },
+        "confusion": {
+          "chinese→english": 12,
+          "uncertain→english": 4,
+          "english→english": 12
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-en-answer-zh",
+          "numbers-only",
+          "reply-in-zh",
+          "support-zh",
+          "technical-zh",
+          "empty-chinese-ui",
+          "blank",
+          "decoy-en-focused-zh",
+          "field-zh",
+          "translate-to-zh",
+          "document-zh",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 135.16620799782686,
+              "p95": 137.37699819903355,
+              "minimum": 131.64929201593623,
+              "maximum": 137.56041700253263
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "context": {
+            "attempts": 16,
+            "matches": 8,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 16,
+              "median": 133.9401460136287,
+              "p95": 139.52148921089247,
+              "minimum": 131.171541986987,
+              "maximum": 143.69833300588652
+            },
+            "confusion": {
+              "chinese→english": 8,
+              "english→english": 8
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "document-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 4,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 8,
+              "median": 133.79083352629095,
+              "p95": 138.55789375666063,
+              "minimum": 130.45604201033711,
+              "maximum": 138.80337501177564
+            },
+            "confusion": {
+              "chinese→english": 4,
+              "english→english": 4
+            },
+            "mistakes": [
+              "quote-en-answer-zh",
+              "reply-in-zh",
+              "field-zh",
+              "translate-to-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      }
+    },
+    "timing": {
+      "fresh-timing": {
+        "attempts": 28,
+        "matches": 14,
+        "errors": 0,
+        "fraction_matching": 0.5,
+        "latency_ms": {
+          "samples": 28,
+          "median": 512.0268540049437,
+          "p95": 518.8452853035415,
+          "minimum": 505.85975003195927,
+          "maximum": 524.3505419930443
+        },
+        "confusion": {
+          "chinese→english": 14,
+          "english→english": 14
+        },
+        "mistakes": [
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        }
+      },
+      "exact-repeat-timing": {
+        "attempts": 28,
+        "matches": 14,
+        "errors": 0,
+        "fraction_matching": 0.5,
+        "latency_ms": {
+          "samples": 28,
+          "median": 34.298583515919745,
+          "p95": 46.13310221757274,
+          "minimum": 32.70712500670925,
+          "maximum": 47.54599998705089
+        },
+        "confusion": {
+          "chinese→english": 14,
+          "english→english": 14
+        },
+        "mistakes": [
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        }
+      }
+    },
+    "peak_combined_process_rss_bytes": 2421997568,
+    "option_order": {
+      "cases": 28,
+      "changed": 28,
+      "decisions": {
+        "chat-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "chat-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "support-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "support-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "friends-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "friends-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "technical-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "technical-en": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "english-ui-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "chinese-ui-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "decoy-en-focused-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "decoy-zh-focused-en": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "mixed-terms-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "mixed-terms-en": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "document-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "document-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "translate-to-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "translate-to-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "reply-in-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "reply-in-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "field-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "field-en": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "quote-en-answer-zh": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "quote-zh-answer-en": [
+          "english",
+          "chinese",
+          "english"
+        ],
+        "blank": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "numbers-only": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "balanced-bilingual": [
+          "english",
+          "uncertain",
+          "english"
+        ],
+        "empty-chinese-ui": [
+          "english",
+          "uncertain",
+          "english"
+        ]
+      }
+    }
+  },
+  "bounded": {
+    "first_request": {
+      "client_ms": 509.7370840376243,
+      "choice": "english",
+      "error": null
+    },
+    "modes": {
+      "image": {
+        "attempts": 28,
+        "matches": 12,
+        "errors": 0,
+        "fraction_matching": 0.42857142857142855,
+        "latency_ms": {
+          "samples": 28,
+          "median": 510.4208125267178,
+          "p95": 524.9041771981865,
+          "minimum": 505.6858750176616,
+          "maximum": 530.3956250427291
+        },
+        "confusion": {
+          "chinese→english": 12,
+          "uncertain→english": 4,
+          "english→english": 12
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-en-answer-zh",
+          "numbers-only",
+          "reply-in-zh",
+          "support-zh",
+          "technical-zh",
+          "empty-chinese-ui",
+          "blank",
+          "decoy-en-focused-zh",
+          "field-zh",
+          "translate-to-zh",
+          "document-zh",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 509.1373955074232,
+              "p95": 513.1369517650455,
+              "minimum": 505.6858750176616,
+              "maximum": 513.6238330160268
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "context": {
+            "attempts": 16,
+            "matches": 8,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 16,
+              "median": 512.2179795289412,
+              "p95": 524.5682502281852,
+              "minimum": 506.0766250244342,
+              "maximum": 530.3956250427291
+            },
+            "confusion": {
+              "chinese→english": 8,
+              "english→english": 8
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "document-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 4,
+            "errors": 0,
+            "fraction_matching": 0.5,
+            "latency_ms": {
+              "samples": 8,
+              "median": 511.866146029206,
+              "p95": 524.0642937511439,
+              "minimum": 507.68445897847414,
+              "maximum": 526.1310000205413
+            },
+            "confusion": {
+              "chinese→english": 4,
+              "english→english": 4
+            },
+            "mistakes": [
+              "quote-en-answer-zh",
+              "reply-in-zh",
+              "field-zh",
+              "translate-to-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      }
+    },
+    "timing": {
+      "fresh-timing": {
+        "attempts": 28,
+        "matches": 14,
+        "errors": 0,
+        "fraction_matching": 0.5,
+        "latency_ms": {
+          "samples": 28,
+          "median": 511.6987085202709,
+          "p95": 520.1966312277364,
+          "minimum": 506.0879170196131,
+          "maximum": 1631.6005830303766
+        },
+        "confusion": {
+          "chinese→english": 14,
+          "english→english": 14
+        },
+        "mistakes": [
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        }
+      },
+      "exact-repeat-timing": {
+        "attempts": 28,
+        "matches": 14,
+        "errors": 0,
+        "fraction_matching": 0.5,
+        "latency_ms": {
+          "samples": 28,
+          "median": 35.870708496076986,
+          "p95": 46.022754031582735,
+          "minimum": 32.41525002522394,
+          "maximum": 50.80920900218189
+        },
+        "confusion": {
+          "chinese→english": 14,
+          "english→english": 14
+        },
+        "mistakes": [
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "chat-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh",
+          "translate-to-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        }
+      }
+    },
+    "peak_combined_process_rss_bytes": 1161887744,
+    "option_order": {
+      "cases": 28,
+      "changed": 0,
+      "decisions": {
+        "chat-zh": [
+          "english"
+        ],
+        "chat-en": [
+          "english"
+        ],
+        "support-zh": [
+          "english"
+        ],
+        "support-en": [
+          "english"
+        ],
+        "friends-zh": [
+          "english"
+        ],
+        "friends-en": [
+          "english"
+        ],
+        "technical-zh": [
+          "english"
+        ],
+        "technical-en": [
+          "english"
+        ],
+        "english-ui-zh": [
+          "english"
+        ],
+        "chinese-ui-en": [
+          "english"
+        ],
+        "decoy-en-focused-zh": [
+          "english"
+        ],
+        "decoy-zh-focused-en": [
+          "english"
+        ],
+        "mixed-terms-zh": [
+          "english"
+        ],
+        "mixed-terms-en": [
+          "english"
+        ],
+        "document-zh": [
+          "english"
+        ],
+        "document-en": [
+          "english"
+        ],
+        "translate-to-zh": [
+          "english"
+        ],
+        "translate-to-en": [
+          "english"
+        ],
+        "reply-in-zh": [
+          "english"
+        ],
+        "reply-in-en": [
+          "english"
+        ],
+        "field-zh": [
+          "english"
+        ],
+        "field-en": [
+          "english"
+        ],
+        "quote-en-answer-zh": [
+          "english"
+        ],
+        "quote-zh-answer-en": [
+          "english"
+        ],
+        "blank": [
+          "english"
+        ],
+        "numbers-only": [
+          "english"
+        ],
+        "balanced-bilingual": [
+          "english"
+        ],
+        "empty-chinese-ui": [
+          "english"
+        ]
+      }
+    }
+  },
+  "compact_exploratory": {
+    "compact-en": {
+      "image": {
+        "attempts": 28,
+        "matches": 17,
+        "errors": 0,
+        "fraction_matching": 0.6071428571428571,
+        "latency_ms": {
+          "samples": 28,
+          "median": 455.8453960053157,
+          "p95": 470.0268562504789,
+          "minimum": 453.46279098885134,
+          "maximum": 489.83462498290464
+        },
+        "confusion": {
+          "chinese→english": 7,
+          "uncertain→english": 4,
+          "english→english": 12,
+          "chinese→chinese": 5
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-en-answer-zh",
+          "numbers-only",
+          "support-zh",
+          "technical-zh",
+          "empty-chinese-ui",
+          "blank",
+          "decoy-en-focused-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 4,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "context": {
+            "attempts": 16,
+            "matches": 10,
+            "errors": 0,
+            "fraction_matching": 0.625,
+            "latency_ms": {
+              "samples": 16,
+              "median": 455.9851039957721,
+              "p95": 476.40053124632686,
+              "minimum": 455.06300003034994,
+              "maximum": 489.83462498290464
+            },
+            "confusion": {
+              "chinese→english": 6,
+              "english→english": 8,
+              "chinese→chinese": 2
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 3,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 7,
+            "errors": 0,
+            "fraction_matching": 0.875,
+            "latency_ms": {
+              "samples": 8,
+              "median": 455.58493747375906,
+              "p95": 457.2064521838911,
+              "minimum": 454.96412500506267,
+              "maximum": 457.54987496184185
+            },
+            "confusion": {
+              "chinese→english": 1,
+              "english→english": 4,
+              "chinese→chinese": 3
+            },
+            "mistakes": [
+              "quote-en-answer-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 1,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 455.850291531533,
+              "p95": 464.67882678552996,
+              "minimum": 453.46279098885134,
+              "maximum": 466.1669580382295
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      },
+      "text": {
+        "attempts": 28,
+        "matches": 9,
+        "errors": 0,
+        "fraction_matching": 0.32142857142857145,
+        "latency_ms": {
+          "samples": 28,
+          "median": 93.46843798994087,
+          "p95": 119.7915102005936,
+          "minimum": 82.3865839629434,
+          "maximum": 122.34683299902827
+        },
+        "confusion": {
+          "chinese→uncertain": 10,
+          "uncertain→english": 1,
+          "chinese→chinese": 2,
+          "english→uncertain": 8,
+          "uncertain→uncertain": 3,
+          "english→english": 4
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-zh-answer-en",
+          "reply-in-zh",
+          "decoy-zh-focused-en",
+          "support-zh",
+          "chat-en",
+          "chinese-ui-en",
+          "mixed-terms-en",
+          "technical-zh",
+          "decoy-en-focused-zh",
+          "field-zh",
+          "document-en",
+          "support-en",
+          "friends-en",
+          "document-zh",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "context": {
+            "attempts": 16,
+            "matches": 1,
+            "errors": 0,
+            "fraction_matching": 0.0625,
+            "latency_ms": {
+              "samples": 16,
+              "median": 95.25968748494051,
+              "p95": 122.09464549960103,
+              "minimum": 83.92233296763152,
+              "maximum": 122.34683299902827
+            },
+            "confusion": {
+              "chinese→uncertain": 8,
+              "english→uncertain": 7,
+              "english→english": 1
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "decoy-zh-focused-en",
+              "support-zh",
+              "chat-en",
+              "chinese-ui-en",
+              "mixed-terms-en",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "document-en",
+              "support-en",
+              "friends-en",
+              "document-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 5,
+            "errors": 0,
+            "fraction_matching": 0.625,
+            "latency_ms": {
+              "samples": 8,
+              "median": 92.96156201162376,
+              "p95": 95.05603288416751,
+              "minimum": 85.36774996900931,
+              "maximum": 95.69029096746817
+            },
+            "confusion": {
+              "chinese→chinese": 2,
+              "english→uncertain": 1,
+              "chinese→uncertain": 2,
+              "english→english": 3
+            },
+            "mistakes": [
+              "quote-zh-answer-en",
+              "reply-in-zh",
+              "field-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 3,
+            "errors": 0,
+            "fraction_matching": 0.75,
+            "latency_ms": {
+              "samples": 4,
+              "median": 88.57750048628077,
+              "p95": 102.16971620393451,
+              "minimum": 82.3865839629434,
+              "maximum": 103.69129100581631
+            },
+            "confusion": {
+              "uncertain→english": 1,
+              "uncertain→uncertain": 3
+            },
+            "mistakes": [
+              "balanced-bilingual"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      },
+      "option_order": {
+        "changed": 15,
+        "decisions": {
+          "chat-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "chat-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "support-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "support-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "friends-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "friends-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "technical-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "technical-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "english-ui-zh": [
+            "english",
+            "english",
+            "english"
+          ],
+          "chinese-ui-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "decoy-en-focused-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "decoy-zh-focused-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "mixed-terms-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "mixed-terms-en": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "document-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "document-en": [
+            "english",
+            "uncertain",
+            "english"
+          ],
+          "translate-to-zh": [
+            "chinese",
+            "chinese",
+            "english"
+          ],
+          "translate-to-en": [
+            "english",
+            "english",
+            "chinese"
+          ],
+          "reply-in-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "reply-in-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "field-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "field-en": [
+            "english",
+            "chinese",
+            "english"
+          ],
+          "quote-en-answer-zh": [
+            "english",
+            "english",
+            "chinese"
+          ],
+          "quote-zh-answer-en": [
+            "english",
+            "chinese",
+            "english"
+          ],
+          "blank": [
+            "english",
+            "english",
+            "english"
+          ],
+          "numbers-only": [
+            "english",
+            "uncertain",
+            "english"
+          ],
+          "balanced-bilingual": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "empty-chinese-ui": [
+            "english",
+            "chinese",
+            "chinese"
+          ]
+        }
+      }
+    },
+    "compact-zh": {
+      "image": {
+        "attempts": 28,
+        "matches": 16,
+        "errors": 0,
+        "fraction_matching": 0.5714285714285714,
+        "latency_ms": {
+          "samples": 28,
+          "median": 471.9658749818336,
+          "p95": 486.43061077746097,
+          "minimum": 468.6512500047684,
+          "maximum": 487.25695797475055
+        },
+        "confusion": {
+          "chinese→english": 8,
+          "uncertain→english": 4,
+          "english→english": 12,
+          "chinese→chinese": 4
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "quote-en-answer-zh",
+          "numbers-only",
+          "support-zh",
+          "technical-zh",
+          "empty-chinese-ui",
+          "blank",
+          "decoy-en-focused-zh",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "context": {
+            "attempts": 16,
+            "matches": 9,
+            "errors": 0,
+            "fraction_matching": 0.5625,
+            "latency_ms": {
+              "samples": 16,
+              "median": 471.8837710097432,
+              "p95": 486.89336476672906,
+              "minimum": 468.6512500047684,
+              "maximum": 487.25695797475055
+            },
+            "confusion": {
+              "chinese→english": 7,
+              "english→english": 8,
+              "chinese→chinese": 1
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "technical-zh",
+              "decoy-en-focused-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 7,
+            "errors": 0,
+            "fraction_matching": 0.875,
+            "latency_ms": {
+              "samples": 8,
+              "median": 471.35916701518,
+              "p95": 483.0522629781626,
+              "minimum": 468.78258301876485,
+              "maximum": 485.79629202140495
+            },
+            "confusion": {
+              "chinese→english": 1,
+              "english→english": 4,
+              "chinese→chinese": 3
+            },
+            "mistakes": [
+              "quote-en-answer-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 474.29595849826,
+              "p95": 478.07468574901577,
+              "minimum": 469.19287502532825,
+              "maximum": 478.28166699036956
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      },
+      "text": {
+        "attempts": 28,
+        "matches": 19,
+        "errors": 0,
+        "fraction_matching": 0.6785714285714286,
+        "latency_ms": {
+          "samples": 28,
+          "median": 94.29299947805703,
+          "p95": 97.13324376498349,
+          "minimum": 83.53337500011548,
+          "maximum": 99.64945900719613
+        },
+        "confusion": {
+          "chinese→english": 5,
+          "uncertain→english": 4,
+          "chinese→chinese": 7,
+          "english→english": 12
+        },
+        "mistakes": [
+          "mixed-terms-zh",
+          "balanced-bilingual",
+          "friends-zh",
+          "numbers-only",
+          "support-zh",
+          "empty-chinese-ui",
+          "blank",
+          "chat-zh",
+          "english-ui-zh"
+        ],
+        "threshold_0.8": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.9": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "threshold_0.97": {
+          "applied": 0,
+          "wrong": 0,
+          "chinese_to_english": 0
+        },
+        "groups": {
+          "context": {
+            "attempts": 16,
+            "matches": 11,
+            "errors": 0,
+            "fraction_matching": 0.6875,
+            "latency_ms": {
+              "samples": 16,
+              "median": 94.39016596297733,
+              "p95": 96.17012500530109,
+              "minimum": 92.54437498748302,
+              "maximum": 96.28637501737103
+            },
+            "confusion": {
+              "chinese→english": 5,
+              "english→english": 8,
+              "chinese→chinese": 3
+            },
+            "mistakes": [
+              "mixed-terms-zh",
+              "friends-zh",
+              "support-zh",
+              "chat-zh",
+              "english-ui-zh"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "explicit": {
+            "attempts": 8,
+            "matches": 8,
+            "errors": 0,
+            "fraction_matching": 1.0,
+            "latency_ms": {
+              "samples": 8,
+              "median": 94.88341698306613,
+              "p95": 98.92838585947175,
+              "minimum": 93.36583403637633,
+              "maximum": 99.64945900719613
+            },
+            "confusion": {
+              "chinese→chinese": 4,
+              "english→english": 4
+            },
+            "mistakes": [],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          },
+          "ambiguous": {
+            "attempts": 4,
+            "matches": 0,
+            "errors": 0,
+            "fraction_matching": 0.0,
+            "latency_ms": {
+              "samples": 4,
+              "median": 88.93112497753464,
+              "p95": 92.96986256958917,
+              "minimum": 83.53337500011548,
+              "maximum": 93.02312502404675
+            },
+            "confusion": {
+              "uncertain→english": 4
+            },
+            "mistakes": [
+              "balanced-bilingual",
+              "numbers-only",
+              "empty-chinese-ui",
+              "blank"
+            ],
+            "threshold_0.8": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.9": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            },
+            "threshold_0.97": {
+              "applied": 0,
+              "wrong": 0,
+              "chinese_to_english": 0
+            }
+          }
+        }
+      },
+      "option_order": {
+        "changed": 7,
+        "decisions": {
+          "chat-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "chat-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "support-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "support-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "friends-zh": [
+            "english",
+            "english",
+            "chinese"
+          ],
+          "friends-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "technical-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "technical-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "english-ui-zh": [
+            "english",
+            "english",
+            "english"
+          ],
+          "chinese-ui-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "decoy-en-focused-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "decoy-zh-focused-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "mixed-terms-zh": [
+            "english",
+            "english",
+            "english"
+          ],
+          "mixed-terms-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "document-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "document-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "translate-to-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "translate-to-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "reply-in-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "reply-in-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "field-zh": [
+            "chinese",
+            "chinese",
+            "chinese"
+          ],
+          "field-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "quote-en-answer-zh": [
+            "english",
+            "chinese",
+            "chinese"
+          ],
+          "quote-zh-answer-en": [
+            "english",
+            "english",
+            "english"
+          ],
+          "blank": [
+            "english",
+            "english",
+            "english"
+          ],
+          "numbers-only": [
+            "english",
+            "english",
+            "english"
+          ],
+          "balanced-bilingual": [
+            "english",
+            "english",
+            "english"
+          ],
+          "empty-chinese-ui": [
+            "english",
+            "english",
+            "chinese"
+          ]
+        }
+      }
+    }
+  },
+  "compact_by_order": {
+    "compact-en": [
+      {
+        "order": [
+          "chinese",
+          "english",
+          "uncertain"
+        ],
+        "cases": 28,
+        "matching": 17,
+        "uncertain_chosen": 0,
+        "median_ms": 455.8453960053157
+      },
+      {
+        "order": [
+          "english",
+          "uncertain",
+          "chinese"
+        ],
+        "cases": 28,
+        "matching": 19,
+        "uncertain_chosen": 2,
+        "median_ms": 468.11837499262765
+      },
+      {
+        "order": [
+          "uncertain",
+          "chinese",
+          "english"
+        ],
+        "cases": 28,
+        "matching": 20,
+        "uncertain_chosen": 0,
+        "median_ms": 468.4328960138373
+      }
+    ],
+    "compact-zh": [
+      {
+        "order": [
+          "chinese",
+          "english",
+          "uncertain"
+        ],
+        "cases": 28,
+        "matching": 16,
+        "uncertain_chosen": 0,
+        "median_ms": 471.9658749818336
+      },
+      {
+        "order": [
+          "english",
+          "uncertain",
+          "chinese"
+        ],
+        "cases": 28,
+        "matching": 21,
+        "uncertain_chosen": 0,
+        "median_ms": 472.4837079702411
+      },
+      {
+        "order": [
+          "uncertain",
+          "chinese",
+          "english"
+        ],
+        "cases": 28,
+        "matching": 22,
+        "uncertain_chosen": 0,
+        "median_ms": 469.71016650786623
+      }
+    ]
+  },
+  "memory": {
+    "default_worker_vmmap_physical_footprint": "9.3G",
+    "default_api_vmmap_physical_footprint": "51.3M",
+    "bounded_worker_vmmap_physical_footprint": "474.9M",
+    "bounded_api_vmmap_physical_footprint": "68.5M",
+    "note": "vmmap footprint includes compressed/private allocations; RSS includes resident mapped files. These metrics differ and must not be added."
+  },
+  "api_attempts": 694,
+  "api_errors": 0,
+  "basic_vision_controls": [
+    {
+      "id": "plain-zh",
+      "question": "What language is the main text in this image? Answer only Chinese or English.",
+      "answer": "Chinese",
+      "client_ms": 369.8517080047168
+    },
+    {
+      "id": "plain-zh",
+      "question": "Read the main text in this image. Write the text exactly.",
+      "answer": "你好，我们明天下午三点开会。",
+      "client_ms": 259.20825003413484
+    },
+    {
+      "id": "plain-en",
+      "question": "What language is the main text in this image? Answer only Chinese or English.",
+      "answer": "英语",
+      "client_ms": 330.7858750340529
+    },
+    {
+      "id": "plain-en",
+      "question": "Read the main text in this image. Write the text exactly.",
+      "answer": "Hello. Our meeting is tomorrow.",
+      "client_ms": 253.87808302184567
+    }
+  ],
+  "limitations": [
+    "Handcrafted synthetic labels, not observed human intent.",
+    "Prompt refinements used the same cases after initial failures; exploratory only.",
+    "No screenshot capture, native IME integration, debounce, cold download or startup included in per-request latency.",
+    "No battery or sustained energy measurements.",
+    "Other desktop applications remained running."
+  ],
+  "final_scope": "One initial screenshot supplies a weak Chinese/English starting prior. Existing text-context routing takes over; no screenshot per word.",
+  "prior_dataset_sha256": "e70b6f03b15335c5db31fa454f5ce84c837d34245695197c859808a447b918d5",
+  "starting_prior": {
+    "run-prior": {
+      "results": {
+        "english": {
+          "orders": [
+            {
+              "order": [
+                "chinese",
+                "english"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 15,
+                "errors": 0,
+                "fraction_matching": 0.9375,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 478.2845829904545,
+                  "p95": 489.7159067186294,
+                  "minimum": 459.69687501201406,
+                  "maximum": 494.1370000015013
+                },
+                "confusion": {
+                  "chinese→chinese": 8,
+                  "english→english": 7,
+                  "english→chinese": 1
+                },
+                "mistakes": [
+                  "mixed-terms-en"
+                ],
+                "threshold_0.8": {
+                  "applied": 12,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 2,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "numbers-only",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.2279510017044693,
+                    "english": 0.7720489982955308
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "chinese": 0.5147147621299397,
+                    "english": 0.4852852378700603
+                  }
+                },
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.2487294561971643,
+                    "english": 0.7512705438028358
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "chinese": 0.7334473729133606,
+                    "english": 0.2665526270866394
+                  }
+                }
+              ]
+            },
+            {
+              "order": [
+                "english",
+                "chinese"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 15,
+                "errors": 0,
+                "fraction_matching": 0.9375,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 460.45320804114453,
+                  "p95": 470.7576355431229,
+                  "minimum": 458.47683399915695,
+                  "maximum": 475.7747920230031
+                },
+                "confusion": {
+                  "english→english": 7,
+                  "chinese→chinese": 8,
+                  "english→chinese": 1
+                },
+                "mistakes": [
+                  "mixed-terms-en"
+                ],
+                "threshold_0.8": {
+                  "applied": 12,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 1,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.7028360962867737,
+                    "chinese": 0.2971639037132263
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.20028748511411293,
+                    "chinese": 0.799712514885887
+                  }
+                },
+                {
+                  "id": "numbers-only",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.7093574404716492,
+                    "chinese": 0.29064255952835083
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.27934443950653076,
+                    "chinese": 0.7206555604934692
+                  }
+                }
+              ]
+            }
+          ],
+          "option_order_changed": 0,
+          "decisions": {
+            "chat-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "chat-en": [
+              "english",
+              "english"
+            ],
+            "support-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "support-en": [
+              "english",
+              "english"
+            ],
+            "friends-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "friends-en": [
+              "english",
+              "english"
+            ],
+            "technical-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "technical-en": [
+              "english",
+              "english"
+            ],
+            "english-ui-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "chinese-ui-en": [
+              "english",
+              "english"
+            ],
+            "decoy-en-focused-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "decoy-zh-focused-en": [
+              "english",
+              "english"
+            ],
+            "mixed-terms-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "mixed-terms-en": [
+              "chinese",
+              "chinese"
+            ],
+            "document-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "document-en": [
+              "english",
+              "english"
+            ]
+          }
+        },
+        "chinese": {
+          "orders": [
+            {
+              "order": [
+                "chinese",
+                "english"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 16,
+                "errors": 0,
+                "fraction_matching": 1.0,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 466.932708513923,
+                  "p95": 488.8905415282352,
+                  "minimum": 459.12537502590567,
+                  "maximum": 489.3677920335904
+                },
+                "confusion": {
+                  "chinese→chinese": 8,
+                  "english→english": 8
+                },
+                "mistakes": [],
+                "threshold_0.8": {
+                  "applied": 9,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 2,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "numbers-only",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.3640336204777247,
+                    "english": 0.6359663795222753
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "chinese": 0.5486338138580322,
+                    "english": 0.4513661861419678
+                  }
+                },
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.3204822540283203,
+                    "english": 0.6795177459716797
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "chinese": 0.7086254743151226,
+                    "english": 0.2913745256848775
+                  }
+                }
+              ]
+            },
+            {
+              "order": [
+                "english",
+                "chinese"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 16,
+                "errors": 0,
+                "fraction_matching": 1.0,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 461.77379199070856,
+                  "p95": 474.5577187422896,
+                  "minimum": 458.2484159618616,
+                  "maximum": 489.6686249994673
+                },
+                "confusion": {
+                  "english→english": 8,
+                  "chinese→chinese": 8
+                },
+                "mistakes": [],
+                "threshold_0.8": {
+                  "applied": 7,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 1,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.6001975119172785,
+                    "chinese": 0.39980248808272145
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.32271939516067505,
+                    "chinese": 0.677280604839325
+                  }
+                },
+                {
+                  "id": "numbers-only",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.6033550084637108,
+                    "chinese": 0.3966449915362892
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.25455673770437426,
+                    "chinese": 0.7454432622956257
+                  }
+                }
+              ]
+            }
+          ],
+          "option_order_changed": 0,
+          "decisions": {
+            "chat-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "chat-en": [
+              "english",
+              "english"
+            ],
+            "support-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "support-en": [
+              "english",
+              "english"
+            ],
+            "friends-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "friends-en": [
+              "english",
+              "english"
+            ],
+            "technical-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "technical-en": [
+              "english",
+              "english"
+            ],
+            "english-ui-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "chinese-ui-en": [
+              "english",
+              "english"
+            ],
+            "decoy-en-focused-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "decoy-zh-focused-en": [
+              "english",
+              "english"
+            ],
+            "mixed-terms-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "mixed-terms-en": [
+              "english",
+              "english"
+            ],
+            "document-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "document-en": [
+              "english",
+              "english"
+            ]
+          }
+        }
+      },
+      "attempts": 80,
+      "errors": 0,
+      "cached_tokens": {
+        "0": 80
+      },
+      "all_request_median_ms": 465.0551670056302
+    },
+    "run-prior-128": {
+      "results": {
+        "chinese": {
+          "orders": [
+            {
+              "order": [
+                "chinese",
+                "english"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 13,
+                "errors": 0,
+                "fraction_matching": 0.8125,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 180.33504151389934,
+                  "p95": 189.67210401024204,
+                  "minimum": 175.38475000765175,
+                  "maximum": 196.8504170072265
+                },
+                "confusion": {
+                  "chinese→chinese": 6,
+                  "english→english": 7,
+                  "english→chinese": 1,
+                  "chinese→english": 2
+                },
+                "mistakes": [
+                  "mixed-terms-en",
+                  "mixed-terms-zh",
+                  "english-ui-zh"
+                ],
+                "threshold_0.8": {
+                  "applied": 1,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "numbers-only",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.4723925151707973,
+                    "english": 0.5276074848292027
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "chinese": 0.6510186791419983,
+                    "english": 0.3489813208580017
+                  }
+                },
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.40468756570480957,
+                    "english": 0.5953124342951904
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "chinese": 0.5274211168289185,
+                    "english": 0.47257888317108154
+                  }
+                }
+              ]
+            },
+            {
+              "order": [
+                "english",
+                "chinese"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 14,
+                "errors": 0,
+                "fraction_matching": 0.875,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 179.92535399389453,
+                  "p95": 184.13895850244444,
+                  "minimum": 175.69816601462662,
+                  "maximum": 185.91033399570733
+                },
+                "confusion": {
+                  "english→english": 6,
+                  "chinese→chinese": 8,
+                  "english→chinese": 2
+                },
+                "mistakes": [
+                  "chinese-ui-en",
+                  "mixed-terms-en"
+                ],
+                "threshold_0.8": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.5051859021186829,
+                    "chinese": 0.49481409788131714
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.4225455946488856,
+                    "chinese": 0.5774544053511145
+                  }
+                },
+                {
+                  "id": "numbers-only",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.4571745829932267,
+                    "chinese": 0.5428254170067732
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.24056267738342285,
+                    "chinese": 0.7594373226165771
+                  }
+                }
+              ]
+            }
+          ],
+          "option_order_changed": 3,
+          "decisions": {
+            "chat-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "chat-en": [
+              "english",
+              "english"
+            ],
+            "support-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "support-en": [
+              "english",
+              "english"
+            ],
+            "friends-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "friends-en": [
+              "english",
+              "english"
+            ],
+            "technical-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "technical-en": [
+              "english",
+              "english"
+            ],
+            "english-ui-zh": [
+              "english",
+              "chinese"
+            ],
+            "chinese-ui-en": [
+              "english",
+              "chinese"
+            ],
+            "decoy-en-focused-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "decoy-zh-focused-en": [
+              "english",
+              "english"
+            ],
+            "mixed-terms-zh": [
+              "english",
+              "chinese"
+            ],
+            "mixed-terms-en": [
+              "chinese",
+              "chinese"
+            ],
+            "document-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "document-en": [
+              "english",
+              "english"
+            ]
+          }
+        }
+      },
+      "attempts": 40,
+      "errors": 0,
+      "cached_tokens": {
+        "0": 40
+      },
+      "all_request_median_ms": 180.48193751019426
+    },
+    "run-prior-256": {
+      "results": {
+        "chinese": {
+          "orders": [
+            {
+              "order": [
+                "chinese",
+                "english"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 15,
+                "errors": 0,
+                "fraction_matching": 0.9375,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 269.56758348387666,
+                  "p95": 274.63585400255397,
+                  "minimum": 264.17858398053795,
+                  "maximum": 282.049541012384
+                },
+                "confusion": {
+                  "chinese→chinese": 8,
+                  "english→english": 7,
+                  "english→chinese": 1
+                },
+                "mistakes": [
+                  "mixed-terms-en"
+                ],
+                "threshold_0.8": {
+                  "applied": 4,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 2,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "numbers-only",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.38736255802623754,
+                    "english": 0.6126374419737625
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "chinese": 0.5877102017402649,
+                    "english": 0.4122897982597351
+                  }
+                },
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.3414538102908787,
+                    "english": 0.6585461897091213
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "english",
+                  "probabilities": {
+                    "chinese": 0.4090769290924072,
+                    "english": 0.5909230709075928
+                  }
+                }
+              ]
+            },
+            {
+              "order": [
+                "english",
+                "chinese"
+              ],
+              "scored": {
+                "attempts": 16,
+                "matches": 13,
+                "errors": 0,
+                "fraction_matching": 0.8125,
+                "latency_ms": {
+                  "samples": 16,
+                  "median": 269.104604027234,
+                  "p95": 272.9691247368464,
+                  "minimum": 264.70050000352785,
+                  "maximum": 274.4036249932833
+                },
+                "confusion": {
+                  "english→english": 5,
+                  "chinese→chinese": 8,
+                  "english→chinese": 3
+                },
+                "mistakes": [
+                  "decoy-zh-focused-en",
+                  "chinese-ui-en",
+                  "mixed-terms-en"
+                ],
+                "threshold_0.8": {
+                  "applied": 4,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.9": {
+                  "applied": 1,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                },
+                "threshold_0.97": {
+                  "applied": 0,
+                  "wrong": 0,
+                  "chinese_to_english": 0
+                }
+              },
+              "controls": [
+                {
+                  "id": "blank",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.5750306420037342,
+                    "chinese": 0.42496935799626584
+                  }
+                },
+                {
+                  "id": "empty-chinese-ui",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.5408651393909794,
+                    "chinese": 0.4591348606090206
+                  }
+                },
+                {
+                  "id": "numbers-only",
+                  "choice": "english",
+                  "probabilities": {
+                    "english": 0.5637326240539551,
+                    "chinese": 0.4362673759460449
+                  }
+                },
+                {
+                  "id": "balanced-bilingual",
+                  "choice": "chinese",
+                  "probabilities": {
+                    "english": 0.23263685751910296,
+                    "chinese": 0.7673631424808971
+                  }
+                }
+              ]
+            }
+          ],
+          "option_order_changed": 2,
+          "decisions": {
+            "chat-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "chat-en": [
+              "english",
+              "english"
+            ],
+            "support-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "support-en": [
+              "english",
+              "english"
+            ],
+            "friends-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "friends-en": [
+              "english",
+              "english"
+            ],
+            "technical-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "technical-en": [
+              "english",
+              "english"
+            ],
+            "english-ui-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "chinese-ui-en": [
+              "english",
+              "chinese"
+            ],
+            "decoy-en-focused-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "decoy-zh-focused-en": [
+              "english",
+              "chinese"
+            ],
+            "mixed-terms-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "mixed-terms-en": [
+              "chinese",
+              "chinese"
+            ],
+            "document-zh": [
+              "chinese",
+              "chinese"
+            ],
+            "document-en": [
+              "english",
+              "english"
+            ]
+          }
+        }
+      },
+      "attempts": 40,
+      "errors": 0,
+      "cached_tokens": {
+        "0": 40
+      },
+      "all_request_median_ms": 269.1930420114659
+    }
+  },
+  "earlier_scope_api_attempts": 534
+}

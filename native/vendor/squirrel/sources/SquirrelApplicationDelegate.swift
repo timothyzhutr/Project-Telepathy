@@ -342,7 +342,7 @@ private extension SquirrelApplicationDelegate {
   func applyStatusIcon(asciiMode: Bool, schemaLabel: String?) {
     guard let button = statusItem?.button else { return }
     button.image = nil
-    if !asciiMode, let url = Bundle.main.url(forResource: "Telepathy", withExtension: "pdf"), let image = NSImage(contentsOf: url) {
+    if !asciiMode, let url = Bundle.main.url(forResource: "TelepathyMenuTemplate", withExtension: "pdf"), let image = NSImage(contentsOf: url) {
       image.isTemplate = true; image.size = NSSize(width: 18, height: 18)
       button.title = ""; button.image = image
     } else {

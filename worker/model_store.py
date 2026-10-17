@@ -11,8 +11,13 @@ def manifest_path():
 
 def manifest(): return json.loads(manifest_path().read_text())
 
+def model_roles(lock):
+    # Explicit old research/test locks remain usable, but the installed lock
+    # lists only one vision checkpoint. Metadata is not a downloadable role.
+    return [role for role,info in lock.items() if isinstance(info,dict) and 'files' in info]
+
 def validate_models(root, lock):
-    paths={role:Path(root)/role for role in ('kev','base')}
+    paths={role:Path(root)/role for role in model_roles(lock)}
     for role,path in paths.items():
         for f in lock[role]['files']:
             p=path/f['name']
@@ -27,7 +32,7 @@ def download_models(root):
     os.environ['HF_HUB_DISABLE_IMPLICIT_TOKEN']='1'
     from huggingface_hub import hf_hub_download
     lock=manifest()
-    for role in ('kev','base'):
+    for role in model_roles(lock):
         info=lock[role]
         for f in info['files']:
             path=Path(root)/role/f['name']
@@ -39,4 +44,4 @@ def download_models(root):
             # mtime. Fetch fresh bytes whenever our pinned checksum is invalid.
             hf_hub_download(repo_id=info['repo'],filename=f['name'],revision=info['revision'],local_dir=Path(root)/role,token=False,force_download=True)
     validate_models(root,lock)
-    print('Kev and Qwen model files verified. Inference runs offline.',flush=True)
+    print('Pinned model files verified. Inference runs offline.',flush=True)

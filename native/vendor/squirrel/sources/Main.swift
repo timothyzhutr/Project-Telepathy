@@ -9,6 +9,15 @@ import InputMethodKit
     let installer = SquirrelInstaller()
     if let action = CommandLine.arguments.dropFirst().first {
       switch action {
+      case "--check-screen-permission":
+        print(ScreenLanguageCapture.permissionGranted ? "Screen Recording permission is granted." : "Screen Recording permission is not granted."); return
+      case "--request-screen-permission":
+        _ = NSApplication.shared
+        let granted = ScreenLanguageCapture.permissionGranted || CGRequestScreenCaptureAccess()
+        print(granted ? "Screen Recording permission is granted." : "Allow Telepathy in System Settings → Privacy & Security → Screen & System Audio Recording.")
+        if !granted, let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") { NSWorkspace.shared.open(url) }
+        return
+      case "--screen-hint-status": ScreenLanguageDiagnostics.printRunningStatus(); return
       case "--download-model", "--check-model", "--self-test":
         let worker = Process()
         worker.executableURL = appDir.appendingPathComponent("Contents/Helpers/TelepathyWorker.app/Contents/MacOS/TelepathyWorker")
@@ -58,6 +67,7 @@ import InputMethodKit
     delegate.startRime(fullCheck: false)
     delegate.loadSettings()
     TelepathyWorkerController.shared.start()
+    ScreenLanguageDiagnostics.shared.startReporting()
     withExtendedLifetime(server) { app.run() }
     rime_get_api_stdbool().pointee.finalize()
   }

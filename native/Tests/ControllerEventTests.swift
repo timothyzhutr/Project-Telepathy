@@ -8,6 +8,8 @@ import ObjectiveC
 private final class IntentProtocol: URLProtocol {
   static var rankCalls = 0
   static var languageCalls = 0
+  static var screenCalls = 0
+  static var emptyLanguage = "english"
   static var delay = 0.01
   static var failLanguage = false
   static var lastRankingStrategy: String?
@@ -17,7 +19,7 @@ private final class IntentProtocol: URLProtocol {
   static var inferenceRan = true
   private var work: DispatchWorkItem?
   override class func canInit(with request: URLRequest) -> Bool {
-    request.url?.path == "/api/language" || request.url?.path == "/api/decision"
+    ["/api/language", "/api/decision", "/api/screen-language"].contains(request.url?.path ?? "")
   }
   override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
   override func startLoading() {
@@ -33,14 +35,16 @@ private final class IntentProtocol: URLProtocol {
     }
     let body = (try! JSONSerialization.jsonObject(with: data)) as! [String: Any]
     let isRank = request.url!.path == "/api/decision"
+    let isScreen = request.url!.path == "/api/screen-language"
     if isRank {
       Self.rankCalls += 1; Self.lastRankingStrategy = body["strategy"] as? String
       Self.lastRankCandidates = body["candidates"] as! [String]
     }
+    else if isScreen { Self.screenCalls += 1 }
     else { Self.languageCalls += 1; Self.lastLanguageCandidates = body["candidates"] as! [String] }
     let result: [String: Any] = isRank
       ? ["status": "ok", "revision": body["revision"]!, "order": Self.reverseRanking ? Array((0..<(body["candidates"] as! [String]).count).reversed()) : Array(0..<(body["candidates"] as! [String]).count), "ranked": true, "inferred": Self.inferenceRan, "inferred_indices": Self.inferenceRan ? Array(0..<(body["candidates"] as! [String]).count) : [], "strategy": "continuation", "request_ms": 8]
-      : ["status": "ok", "revision": body["revision"]!, "language": (body["prefix"] as! String).hasPrefix("中文") ? "chinese" : "english"]
+      : ["status": "ok", "revision": body["revision"]!, "language": isScreen ? "english" : ((body["prefix"] as! String).isEmpty ? Self.emptyLanguage : ((body["prefix"] as! String).hasPrefix("中文") ? "chinese" : "english"))]
     let status = !isRank && Self.failLanguage ? 500 : 200
     let work = DispatchWorkItem { [weak self] in
       guard let self else { return }
@@ -56,22 +60,35 @@ private final class IntentProtocol: URLProtocol {
 }
 
 private final class TextClient: NSObject, IMKTextInput {
+  var identityRequests = 0
   var text = "I think "
   var marked = ""
+  private var markedCaret = 0
+  var selection: NSRange?
+  var caret = NSRect(x: 300, y: 300, width: 1, height: 20)
   func insertText(_ string: Any!, replacementRange: NSRange) {
-    text += (string as? NSAttributedString)?.string ?? (string as? String ?? "")
+    let value = (string as? NSAttributedString)?.string ?? (string as? String ?? "")
+    if let selected = selection {
+      text = (text as NSString).replacingCharacters(in: selected, with: value)
+      selection = NSRange(location: selected.location + value.utf16.count, length: 0)
+    } else { text += value }
     marked = ""
+    markedCaret = 0
   }
   func setMarkedText(_ string: Any!, selectionRange: NSRange, replacementRange: NSRange) {
     marked = (string as? NSAttributedString)?.string ?? (string as? String ?? "")
+    markedCaret = selectionRange.location
   }
-  func selectedRange() -> NSRange { .init(location: text.utf16.count, length: 0) }
-  func markedRange() -> NSRange { .init(location: marked.isEmpty ? NSNotFound : text.utf16.count, length: marked.utf16.count) }
+  func selectedRange() -> NSRange {
+    if !marked.isEmpty { return .init(location: (selection?.location ?? text.utf16.count) + markedCaret, length: 0) }
+    return selection ?? .init(location: text.utf16.count, length: 0)
+  }
+  func markedRange() -> NSRange { .init(location: marked.isEmpty ? NSNotFound : (selection?.location ?? text.utf16.count), length: marked.utf16.count) }
   func attributedSubstring(from range: NSRange) -> NSAttributedString! { NSAttributedString(string: (text as NSString).substring(with: range)) }
   func length() -> Int { text.utf16.count }
   func characterIndex(for point: NSPoint, tracking mappingMode: IMKLocationToOffsetMappingMode, inMarkedRange: UnsafeMutablePointer<ObjCBool>!) -> Int { 0 }
   func attributes(forCharacterIndex index: Int, lineHeightRectangle: UnsafeMutablePointer<NSRect>!) -> [AnyHashable: Any]! {
-    lineHeightRectangle.pointee = .init(x: 300, y: 300, width: 1, height: 20); return [:]
+    lineHeightRectangle.pointee = caret; return [:]
   }
   func validAttributesForMarkedText() -> [Any]! { [] }
   func overrideKeyboard(withKeyboardNamed keyboardUniqueName: String!) {}
@@ -80,7 +97,7 @@ private final class TextClient: NSObject, IMKTextInput {
   func bundleIdentifier() -> String! { "local.telepathy.tests.client" }
   func windowLevel() -> CGWindowLevel { 0 }
   func supportsProperty(_ property: TSMDocumentPropertyTag) -> Bool { false }
-  func uniqueClientIdentifierString() -> String! { "telepathy-controller-test" }
+  func uniqueClientIdentifierString() -> String! { identityRequests += 1; return "telepathy-controller-test-\(identityRequests)" }
   func string(from range: NSRange, actualRange: NSRangePointer!) -> String! { (text as NSString).substring(with: range) }
   func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer!) -> NSRect { .zero }
 }
@@ -132,7 +149,7 @@ enum ControllerEventTests {
                                   isARepeat: false, keyCode: code)!
       let consumed = controller.handle(event, client: client)
       if !consumed, flags.intersection([.command, .control, .option]).isEmpty,
-         chars.unicodeScalars.allSatisfy({ (32...126).contains($0.value) }) { client.text += chars }
+         chars.unicodeScalars.allSatisfy({ (32...126).contains($0.value) }) { client.insertText(chars, replacementRange: .empty) }
       return consumed
     }
     func shift(_ down: Bool) {
@@ -141,6 +158,71 @@ enum ControllerEventTests {
         isARepeat: false, keyCode: 56)!, client: client)
     }
     func check(_ ok: Bool, _ message: String) { if !ok { fatalError(message) } }
+    controller.activateServer(client)
+    let identityRequests = client.identityRequests
+    controller.activateServer(client)
+    check(client.identityRequests == identityRequests, "Rapid duplicate activation must reuse the client token and coalesce capture")
+    let cachedIdentity = controller.screenFocusIdentity(forInsertionAnchor: 0)
+    check(cachedIdentity == controller.screenFocusIdentity(forInsertionAnchor: 0) && client.identityRequests == identityRequests,
+      "An IMK client returning a fresh globally unique string per call must keep the activation identity stable across callbacks")
+    // Exercise the real controller/Rime path with an in-memory fixture at
+    // only the screenshot and worker boundaries; no screen permission request.
+    let fixtureBitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 8, pixelsHigh: 8,
+      bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+      colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+    let fixturePNG = fixtureBitmap.representation(using: .png, properties: [:])!
+    controller.screenLanguage = ScreenLanguageSession(throttle: .init(minimumInterval: 0), capture: { _, complete in complete(fixturePNG) })
+    func screenFocus() {
+      controller.refreshTypingLocation()
+      controller.screenLanguage.deactivate()
+      controller.screenLanguage.activate(identity: UUID().uuidString,
+        context: { ScreenLanguageCaptureContext(processID: getpid(), caret: .zero, primaryScreenHeight: 900, allowed: true) },
+        precedingText: { client.text }) { _ in controller.applyInitialScreenLanguageHint() }
+    }
+    IntentProtocol.emptyLanguage = "chinese"
+    client.text = ""; screenFocus(); key("a"); wait(0.3); key(" ", code: 49)
+    check(client.text == "a " && client.marked.isEmpty && IntentProtocol.screenCalls == 1,
+      "An English screen hint must make actual a + Space commit a literal a and one space")
+    let screenCallsAfterFirstWord = IntentProtocol.screenCalls
+    IntentProtocol.delay = 0.4
+    key("h"); key("e"); key(" ", code: 49)
+    check(client.text == "a he ", "A screen-derived English default must survive commit and route the next word immediately")
+    check(IntentProtocol.screenCalls == screenCallsAfterFirstWord, "Continuing to type must not capture another screenshot")
+    client.selection = NSRange(location: 0, length: 0)
+    key("a"); key(" ", code: 49)
+    check(client.text.first?.isASCII == false, "Moving the host cursor must discard the previous location's English default before inference")
+    client.selection = nil
+    IntentProtocol.delay = 0.01
+    controller.commitComposition(client)
+    client.text = ""; screenFocus(); wait(0.2)
+    key("a"); key(" ", code: 49)
+    check(client.text == "a ", "A screenshot completed before the first key must seed that key immediately")
+    IntentProtocol.failLanguage = true
+    key("h"); key("e"); wait(0.2); key(" ", code: 49)
+    check(client.text == "a he ", "A temporary model failure must preserve a learned English default")
+    IntentProtocol.failLanguage = false
+    controller.commitComposition(client)
+    client.text = ""; screenFocus(); wait(0.2)
+    let oldCaret = client.caret
+    client.caret = NSRect(x: 700, y: 500, width: 1, height: 20)
+    key("a"); key(" ", code: 49)
+    check(client.text.first?.isASCII == false, "A reused browser client in a new empty field must not inherit the prior field's English default")
+    client.caret = oldCaret
+    controller.commitComposition(client)
+    client.text = ""; screenFocus(); wait(0.2); client.text = "中文："; key("a"); wait(); key(" ", code: 49)
+    check(client.text.hasPrefix("中文：") && client.text != "中文：a ", "Nonempty text context must override a stored English screen hint")
+    controller.commitComposition(client)
+    client.text = ""; screenFocus(); key("a"); wait(0.2); key("\u{f701}", code: 125); key(" ", code: 49)
+    check(!client.text.isEmpty && client.text != "a ", "Manual Down must restore actual Chinese candidates after a screen hint")
+    controller.commitComposition(client)
+    client.text = ""; screenFocus(); key("a"); key(" ", code: 49)
+    let committedBeforeHint = client.text; wait(0.3)
+    check(client.text == committedBeforeHint && client.marked.isEmpty, "A late screen hint must never rewrite committed text")
+    controller.commitComposition(client)
+    controller.screenLanguage.deactivate()
+    IntentProtocol.emptyLanguage = "english"
+    IntentProtocol.rankCalls = 0
+    client.text = "I think "
     key("h"); key("e"); wait()
     check(client.marked == "he", "English must display the original raw text")
     check(IntentProtocol.rankCalls == 0, "Early English must skip pointer reranking")
@@ -148,10 +230,71 @@ enum ControllerEventTests {
     check(client.text == "I think he ", "English Space must commit raw text plus one space; got \(client.text), language calls \(IntentProtocol.languageCalls)")
     key(".", code: 47)
     check(client.text == "I think he .", "English period after committing a word must stay ASCII")
-    shift(true); key("H", flags: .shift); shift(false)
-    check(!key("e"), "Shift-release must preserve the literal run after H")
+    let beforeCapital = client.text
+    shift(true)
+    check(key("H", flags: .shift), "The initial capital must stay inside the IME's marked composition")
+    check(client.text == beforeCapital && client.marked == "H",
+      "Passing only the initial capital to the host can tear down the word's IME session")
+    shift(false)
+    check(key("e") && client.marked == "He", "Shift-release must preserve the capitalized composition after H")
     key("l"); key("l"); key("o"); key(" ", code: 49)
     check(client.text.hasSuffix("Hello "), "Capitals and subsequent letters must reach the host unchanged")
+    controller.commitComposition(client)
+    client.text = "中文："
+    key("n"); key("i"); wait(); key(" ", code: 49)
+    shift(true); key("P", code: 35, flags: .shift); shift(false)
+    for char in "ython" { key(String(char)) }; key(" ", code: 49)
+    check(client.text.hasSuffix("Python "), "A capitalized English word must remain literal inside a Chinese sentence")
+    for char in "nihao" { key(String(char)) }; key(" ", code: 49)
+    check(client.text.hasSuffix("Python 你好"), "A temporary capitalized word must not replace the Chinese default for the following word; got \(client.text)")
+    for fullReactivation in [false, true] {
+      controller.commitComposition(client)
+      client.text = "中文："
+      key("n"); key("i"); wait(); key(" ", code: 49)
+      shift(true); key("P", code: 35, flags: .shift)
+      if fullReactivation { controller.deactivateServer(client) }
+      controller.activateServer(client)
+      shift(false)
+      check(key("y"), "A same-location activation must preserve the capitalized word's marked composition")
+      for char in "thon" { key(String(char)) }; wait(); key(" ", code: 49)
+      check(client.text.hasSuffix("Python "), "A capitalized word must survive a host activation without converting its remaining letters")
+      for char in "nihao" { key(String(char)) }; key(" ", code: 49)
+      check(client.text.hasSuffix("Python 你好"), "Returning from a literal word must restore the prior language default")
+    }
+    controller.commitComposition(client)
+    client.text = "中文："
+    key("n"); key("i"); wait(); key(" ", code: 49)
+    shift(true); key("P", code: 35, flags: .shift); shift(false)
+    controller.commitComposition(client) // Host commits marked text before moving its cursor.
+    client.selection = NSRange(location: 0, length: 0)
+    for char in "nihao" { key(String(char)) }; key(" ", code: 49)
+    check(client.text.hasPrefix("你好") && client.text.hasSuffix("P"), "A genuine cursor change must clear the temporary override while retaining the segment committed before the move")
+    client.selection = nil
+    controller.commitComposition(client)
+    client.text = "I think "
+    shift(true); key("H", flags: .shift); shift(false)
+    for char in "ello" { key(String(char)) }
+    key("\u{7f}", code: 51)
+    check(client.marked == "Hell", "Backspace must edit the pending capitalized word")
+    key("o"); key(",", code: 43)
+    check(client.text == "I think Hello," && client.marked.isEmpty, "Punctuation must commit the complete capitalized word exactly once")
+    shift(true); key("H", flags: .shift); shift(false); key("i")
+    let beforeCancel = client.text
+    key("\u{1b}", code: 53)
+    check(client.text == beforeCancel && client.marked.isEmpty, "Escape must cancel the whole pending capitalized word without leaving its first letter")
+    shift(true); key("G", flags: .shift); key("P", flags: .shift); key("T", flags: .shift); shift(false)
+    key("4", code: 86, flags: .numericPad); key("o")
+    check(client.marked == "GPT4o" && delegate.panel?.isVisible == false, "Uppercase letters, keypad digits and lowercase suffixes must stay in one composition without Chinese candidates")
+    key(" ", code: 49)
+    check(client.text == beforeCancel + "GPT4o ", "Space must commit one capitalized identifier and one separator")
+    shift(true); key("O", flags: .shift); shift(false)
+    for char in "'Reilly" { key(String(char), flags: char.isUppercase ? .shift : []) }
+    key("\r", code: 36)
+    check(client.text.hasSuffix("O'Reilly") && client.marked.isEmpty, "Apostrophes must remain literal and Return must commit without adding a space")
+    shift(true); key("H", flags: .shift); shift(false); key("i")
+    key("c", code: 8, flags: .command)
+    check(client.text.hasSuffix("O'ReillyHi") && client.marked.isEmpty, "A Command shortcut must flush a pending capitalized word exactly once")
+    client.text = "I think he .Hello "
     key("h"); key("e"); wait()
     controller.deactivateServer(client)
     check(client.text.hasSuffix("Hello he"), "Deactivation must commit English raw, not a Chinese candidate")
@@ -276,6 +419,41 @@ enum ControllerEventTests {
       let view = delegate.panel!.contentView!.subviews.compactMap { $0 as? SquirrelView }.first!
       return view.textContentStorage.attributedString!.attribute(.foregroundColor, at: view.candidateRanges[view.hilightedIndex].location, effectiveRange: nil) as! NSColor
     }
+    IntentProtocol.reverseRanking = false
+    for assisted in [false, true] {
+      TelepathyPreferences.shared.set(assisted, for: .kev)
+      controller.preferencesDidChange()
+      // Reset Wanxiang's consecutive-English state with a real Chinese commit.
+      for char in "nihao" { key(String(char)) }; key(" ", code: 49)
+      client.text = ""
+      for char in "hello" { key(String(char)) }; wait()
+      check(renderedCandidates().contains("hello"), "The bundled profile must offer the English candidate")
+      key(" ", code: 49)
+      check(client.text == "hello " && client.marked.isEmpty,
+            "Space-selected English must append one space with assistance \(assisted); got \(client.text.debugDescription)")
+      for char in "world" { key(String(char)) }; wait(); key(" ", code: 49)
+      check(client.text == "hello world ", "Consecutive English candidates must have exactly one separating space")
+      for char in "nihao" { key(String(char)) }; wait(); key(" ", code: 49)
+      check(client.text == "hello world 你好", "Chinese candidates must not gain a trailing space")
+      let beforeBareSpace = client.text
+      key(" ", code: 49)
+      check(client.text == beforeBareSpace + " ", "A bare Space must still insert exactly one literal space")
+      client.text = ""
+      for char in "hello" { key(String(char)) }; wait(); key("1", code: 18)
+      check(client.text == "hello", "Number selection must not acquire the Space key's separator")
+      for char in "nihao" { key(String(char)) }; key(" ", code: 49)
+      client.text = ""
+      for char in "hello" { key(String(char)) }; wait()
+      check(controller.selectCandidate(0) && client.text == "hello", "Mouse selection must retain its normal commit behavior")
+      for char in "nihao" { key(String(char)) }; key(" ", code: 49)
+      client.text = ""
+      for char in "hello" { key(String(char)) }; key("\r", code: 36)
+      check(client.text == "hello", "Return must not append the Space key's separator")
+      for char in "nihao" { key(String(char)) }; key(" ", code: 49)
+    }
+    TelepathyPreferences.shared.set(true, for: .kev)
+    controller.preferencesDidChange()
+    IntentProtocol.reverseRanking = true
     func typeLe() {
       client.text = "中文："; key("l"); key("e"); wait(0.25)
     }

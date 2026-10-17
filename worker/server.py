@@ -19,13 +19,14 @@ def make_server(port,service,health=None,reload_model=None):
         def do_GET(self):
             if not self.allowed(): return
             if self.path!='/api/health': self.send(404,{'error':'Unknown endpoint'});return
-            self.send(200,dict(app='Telepathy',version='0.1.12',ime_api=1,local=True,engine='Kev/MLX',**(health() if health else {'status':'model_missing'})))
+            self.send(200,dict(dict(app='Telepathy',version='0.2.0',ime_api=1,local=True,engine='Qwen3.5/MLX-VLM'),**(health() if health else {'status':'model_missing'})))
         def do_POST(self):
             if not self.allowed(): return
-            if self.path not in ('/api/decision','/api/language','/api/reload','/api/shutdown'): self.send(404,{'error':'Unknown endpoint'});return
+            if self.path not in ('/api/decision','/api/language','/api/screen-language','/api/reload','/api/shutdown'): self.send(404,{'error':'Unknown endpoint'});return
             try:
                 length=int(self.headers.get('Content-Length','-1'))
-                if not 0<=length<=8192:
+                limit=3*1024*1024 if self.path=='/api/screen-language' else 8192
+                if not 0<=length<=limit:
                     self.send(413,{'error':'Body too large or missing length'});return
                 body=json.loads(self.rfile.read(length))
                 if self.path=='/api/shutdown':
@@ -37,6 +38,8 @@ def make_server(port,service,health=None,reload_model=None):
                 if self.path=='/api/reload':
                     if reload_model: reload_model()
                     self.send(202,{'status':'loading'});return
+                if self.path=='/api/screen-language':
+                    self.send(200,service.screen_language(body));return
                 self.send(200,service.language(body) if self.path=='/api/language' else service.decision(body))
             except (ValueError,UnicodeError): self.send(400,{'error':'Invalid snapshot'})
     server=ThreadingHTTPServer(('127.0.0.1',port),Handler);server.daemon_threads=True
@@ -51,8 +54,8 @@ class ModelLoader:
         return dict(status=self.status,error=self.error,**(self.model_info if self.status=='ready' else {}))
     def start(self):
         if not self.lock.acquire(blocking=False): return
+        self.status='loading';self.error=None
         def load():
-            self.status='loading';self.error=None
             try:
                 # Finish active inference and release the old backbone before
                 # constructing another. Ranker/scorer references form cycles.
@@ -61,8 +64,8 @@ class ModelLoader:
                     self.service.ranker=None
                 gc.collect()
                 if mx is not None:mx.clear_cache()
-                from kev_ranker import KevRanker
-                ranker=KevRanker(self.model_dir)
+                from vision_ranker import VisionRanker
+                ranker=VisionRanker(self.model_dir)
                 with self.service.lock:
                     self.service.ranker=ranker
                     self.model_info=ranker.model_info

@@ -1,10 +1,10 @@
 """Portable worker and explicit model setup CLI."""
-import argparse,fcntl,json,os,sys,time,urllib.request
+import argparse,fcntl,gc,json,os,sys,time,urllib.request
 from pathlib import Path
 from model_store import data_dir,download_models,validate_models,manifest
 
 def main():
-    parser=argparse.ArgumentParser(description='Telepathy local Kev worker')
+    parser=argparse.ArgumentParser(description='Telepathy local Qwen vision worker')
     group=parser.add_mutually_exclusive_group()
     for option in ('serve','download-model','check-model','self-test'): group.add_argument('--'+option,action='store_true')
     parser.add_argument('--model-dir',type=Path,default=data_dir()/'models')
@@ -22,10 +22,6 @@ def main():
         return
     if args.check_model:
         validate_models(args.model_dir,manifest());print('All pinned model files verified.');return
-    if args.self_test:
-        from kev_ranker import KevRanker
-        ranker=KevRanker(args.model_dir)
-        print(json.dumps(ranker.rank('作为消费者，我们有依法要求商家提供合格产品的','quanli',['权力','权利']),ensure_ascii=False));return
     from decision import DecisionService
     from server import make_server,ModelLoader
     # One worker per user, regardless of the calling app's installation location.
@@ -35,8 +31,29 @@ def main():
         while True:
             try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);break
             except BlockingIOError:
-                if not args.wait_lock or time.monotonic()>=deadline:return
+                if not args.wait_lock or time.monotonic()>=deadline:
+                    if args.self_test:raise SystemExit('Telepathy worker is already running; stop it before --self-test.')
+                    return
                 time.sleep(.1)
+        if args.self_test:
+            from vision_ranker import VisionRanker
+            ranker=None;failure=None
+            try:
+                ranker=VisionRanker(args.model_dir)
+                print(json.dumps(ranker.rank('作为消费者，我们有依法要求商家提供合格产品的','quanli',['权力','权利']),ensure_ascii=False))
+            except Exception as error:
+                # Leave the exception scope before collection: a traceback
+                # otherwise keeps the failing ranker's weights alive.
+                if os.environ.get('TELEPATHY_DEBUG_STARTUP') == '1':
+                    import traceback
+                    traceback.print_exc()
+                failure=type(error).__name__
+            finally:
+                mx=getattr(ranker,'mx',None)
+                ranker=None;gc.collect()
+                if mx is not None:mx.clear_cache()
+            if failure:raise SystemExit('Telepathy self-test failed: '+failure)
+            return
         service=DecisionService();loader=ModelLoader(service,args.model_dir)
         try: server=make_server(args.port,service,loader.health,loader.start)
         except OSError: raise SystemExit('Telepathy worker port is already in use.')

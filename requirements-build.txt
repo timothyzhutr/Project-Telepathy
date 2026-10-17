@@ -17,6 +17,7 @@ mdurl==0.1.2
 mlx==0.32.3
 mlx-lm==0.31.3
 mlx-metal==0.32.3
+mlx-vlm==0.7.8
 mpmath==1.3.0
 networkx==3.7
 numpy==2.5.3
@@ -34,11 +35,19 @@ setuptools==84.0.0
 sympy==1.14.0
 tokenizers==0.23.2
 torch==2.8.0
+torchvision==0.23.0
+pillow==12.3.0
+requests==2.34.2
+charset-normalizer==3.5.2
+urllib3==2.8.0
 tqdm==4.70.1
 transformers==5.17.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 pyinstaller==6.22.3
+pyinstaller-hooks-contrib==2026.8
+altgraph==0.17.5
+macholib==1.16.4
 psutil==7.2.2
 
 # Installer dependencies pulled in by upstream wheels; not collected into the app unless imported.

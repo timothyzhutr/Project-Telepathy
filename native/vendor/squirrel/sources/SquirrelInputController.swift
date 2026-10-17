@@ -29,6 +29,13 @@ final class SquirrelInputController: IMKInputController {
   private var currentApp: String = ""
   private var ranking = RankingState()
   private var intent = InputIntentState()
+  // nil means no capitalized word; an empty value can resume the same word
+  // after the host explicitly committed its current marked segment.
+  private var capitalComposition: String?
+  private var typingLocation = TypingLocationState()
+  var screenLanguage = ScreenLanguageSession()
+  private var screenClientIdentity = ""
+  private var screenIdentityClient: ObjectIdentifier?
   private var rankingDelay: DispatchWorkItem?
   private var inferredCandidates = Set<Int>()
   private var compositionPrefix = ""
@@ -38,14 +45,49 @@ final class SquirrelInputController: IMKInputController {
   private var rankingEnabled: Bool { TelepathyPreferences.shared.enabled(.kev) }
   private var automaticLanguageEnabled: Bool { rankingEnabled && TelepathyPreferences.shared.enabled(.autoLanguage) }
 
-  func freezeRanking() { ranking.freeze(); intent.forceChinese() }
+  func freezeRanking() { ranking.freeze(); intent.forceChinese(remember: true); screenLanguage.cancel(reason: "manual_chinese") }
 
-  private func invalidateRanking(resetIntent: Bool = true) {
+  func screenFocusIdentity(forInsertionAnchor anchor: Int) -> String { screenClientIdentity + "|\(anchor)" }
+
+  // Called on activation, input events and asynchronous decisions. A cursor
+  // move invalidates both language and ranking before old results can apply.
+  @discardableResult func refreshTypingLocation() -> Bool {
+    guard automaticLanguageEnabled, let location = typingLocationSnapshot() else { return false }
+    guard typingLocation.observe(location) else { activateScreenLanguage(); return false }
+    invalidateRanking(resetLanguageDefault: true)
+    capitalComposition = nil
+    compositionPrefix = ""; fallbackHistory = ""; refreshContextOnEdit = true
+    screenLanguage.deactivate()
+    if session != 0 { rimeAPI.clear_composition(session) }
+    preedit = ""
+    hidePalettes()
+    activateScreenLanguage()
+    return true
+  }
+
+  func applyInitialScreenLanguageHint() {
+    func event(_ reason: String) {
+      ScreenLanguageDiagnostics.shared.record(status: "capture_event", reason: reason, bundleIdentifier: client?.bundleIdentifier(), updateSummary: false)
+    }
+    guard automaticLanguageEnabled, !ranking.frozen, !rimeAPI.get_option(session, "ascii_mode") else { event("controller_not_eligible"); return }
+    guard ScreenLanguageHintState.empty(compositionPrefix) else { event("controller_context_present"); return }
+    guard let language = screenLanguage.language(precedingText: precedingText()) else { event("controller_context_present"); return }
+    guard !refreshTypingLocation(), intent.rememberScreenHint(language) else { event("controller_intent_rejected"); return }
+    guard let input = rimeAPI.get_input(session) else { event("controller_no_raw"); return }
+    let raw = String(cString: input)
+    guard DecisionSnapshot.validPinyin(raw) else { event("controller_no_raw"); return }
+    guard Int(rimeAPI.get_caret_pos(session)) == raw.utf8.count else { event("controller_caret_moved"); return }
+    guard intent.applyInitialHint(language, revision: ranking.revision) else { event("controller_intent_rejected"); return }
+    event("controller_hint_applied")
+    rimeUpdate(clearReservedComments: false)
+  }
+
+  private func invalidateRanking(resetIntent: Bool = true, resetLanguageDefault: Bool = false) {
     rankingDelay?.cancel()
     rankingDelay = nil
     ranking.invalidate()
     inferredCandidates.removeAll()
-    if resetIntent { intent.invalidate(revision: ranking.revision) }
+    if resetIntent || resetLanguageDefault { intent.invalidate(revision: ranking.revision, resetDefault: resetLanguageDefault) }
   }
 
   // swiftlint:disable:next cyclomatic_complexity
@@ -64,11 +106,13 @@ final class SquirrelInputController: IMKInputController {
       }
     }
 
-    self.client ?= sender as? IMKTextInput
+    if let currentClient = sender as? IMKTextInput { self.client = currentClient }
     if let app = client?.bundleIdentifier(), currentApp != app {
       currentApp = app
       updateAppOptions()
     }
+    if event.type == .keyDown { _ = refreshTypingLocation() }
+    defer { if event.type == .keyDown { recordTypingLocation(after: event, handled: handled) } }
 
     switch event.type {
     case .flagsChanged:
@@ -95,6 +139,7 @@ final class SquirrelInputController: IMKInputController {
       let rimeKeycode: UInt32 = SquirrelKeycode.osxKeycodeToRime(keycode: keyCode, keychar: nil, shift: false, caps: false)
 
       if changes.contains(.capsLock) {
+        if capitalComposition != nil { finishCapitalComposition() }
         // Rime expects XK_Caps_Lock before the lock mask changes; NSFlagsChanged has already applied it.
         rimeModifiers ^= kLockMask.rawValue
         _ = processKey(rimeKeycode, modifiers: rimeModifiers)
@@ -122,12 +167,14 @@ final class SquirrelInputController: IMKInputController {
     case .keyDown:
       // Let client apps handle Command shortcuts.
       if modifiers.contains(.command) {
-        if intent.english { commitPendingLiteral() }
+        if capitalComposition != nil { finishCapitalComposition() }
+        else if intent.english { commitPendingLiteral() }
         rankingDelay?.cancel(); rankingDelay = nil
         ranking.freeze()
         intent.invalidate(revision: ranking.revision)
         refreshContextOnEdit = true
         fallbackHistory = ""
+        screenLanguage.cancel()
         break
       }
 
@@ -144,7 +191,7 @@ final class SquirrelInputController: IMKInputController {
                                                            caps: modifiers.contains(.capsLock))
         // Match the active profile's keypad bindings before Auto routing and
         // visible-candidate selection, so neither can bypass the display map.
-        if !ranking.order.isEmpty || intent.english {
+        if !ranking.order.isEmpty || intent.english || capitalComposition != nil {
           if (UInt32(XK_KP_0)...UInt32(XK_KP_9)).contains(rimeKeycode) {
             rimeKeycode = 48 + rimeKeycode - UInt32(XK_KP_0)
           } else {
@@ -161,10 +208,11 @@ final class SquirrelInputController: IMKInputController {
           }
         }
         if rimeKeycode != 0 {
-          if let result = handleAutoKey(rimeKeycode, modifiers: modifiers) { return result }
+          if let result = handleAutoKey(rimeKeycode, modifiers: modifiers) { handled = result; return result }
           let rimeModifiers = SquirrelKeycode.osxModifiersToRime(modifiers: modifiers)
           handled = processKey(rimeKeycode, modifiers: rimeModifiers)
-          rimeUpdate()
+          rimeUpdate(appendEnglishSpace: handled && rimeModifiers == 0 && rimeKeycode == UInt32(XK_space))
+          if let input = rimeAPI.get_input(session), !String(cString: input).isEmpty { screenLanguage.firstCharacterDidArrive() }
         }
       }
 
@@ -203,6 +251,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   func moveCaret(forward: Bool) -> Bool {
+    screenLanguage.cancel()
     intent.forceChinese()
     let currentCaretPos = rimeAPI.get_caret_pos(session)
     guard let input = rimeAPI.get_input(session) else { return false }
@@ -227,11 +276,15 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func activateServer(_ sender: Any!) {
-    invalidateRanking()
+    self.client = sender as? IMKTextInput
+    _ = refreshTypingLocation()
+    // Some hosts reactivate the same insertion point after a passed-through
+    // capital. Keep that word's explicit literal mode until a real boundary.
+    // refreshTypingLocation already clears it if the cursor actually moved.
+    invalidateRanking(resetIntent: !intent.literalRun && capitalComposition == nil)
     compositionPrefix = ""
-    fallbackHistory = ""
-    self.client ?= sender as? IMKTextInput
     applyTypingPreferences()
+    activateScreenLanguage()
     var keyboardLayout = NSApp.squirrelAppDelegate.config?.getString("keyboard_layout") ?? ""
     if keyboardLayout == "last" || keyboardLayout == "" {
       keyboardLayout = ""
@@ -285,6 +338,7 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func deactivateServer(_ sender: Any!) {
+    screenLanguage.deactivate()
     hidePalettes()
     commitComposition(sender)
     fallbackHistory = ""
@@ -297,7 +351,18 @@ final class SquirrelInputController: IMKInputController {
   }
 
   override func commitComposition(_ sender: Any!) {
+    screenLanguage.finishFirstWord()
     self.client ?= sender as? IMKTextInput
+    if capitalComposition != nil {
+      finishCapitalComposition(keepWord: true)
+      return
+    }
+    if intent.literalRun, rimeAPI.get_input(session).map({ String(cString: $0).isEmpty }) ?? true {
+      // Literal keys are already in the host. A same-field IMK lifecycle
+      // callback must not turn the remaining letters back into pinyin.
+      invalidateRanking(resetIntent: false)
+      return
+    }
     if intent.english { commitPendingLiteral(); return }
     invalidateRanking()
     fallbackHistory = ""
@@ -316,7 +381,7 @@ final class SquirrelInputController: IMKInputController {
     let wiki = NSMenuItem(title: "Credits and licenses…", action: #selector(openWiki), keyEquivalent: "")
     wiki.target = self
 
-    let kev = NSMenuItem(title: "Kev assistance", action: #selector(toggleKev), keyEquivalent: "")
+    let kev = NSMenuItem(title: "Local assistance", action: #selector(toggleKev), keyEquivalent: "")
     kev.target = self
     kev.state = rankingEnabled ? .on : .off
     let menu = NSMenu()
@@ -331,8 +396,9 @@ final class SquirrelInputController: IMKInputController {
   }
 
   @objc func toggleKev() {
+    screenLanguage.deactivate()
     TelepathyPreferences.shared.set(!rankingEnabled, for: .kev)
-    invalidateRanking()
+    invalidateRanking(resetLanguageDefault: true)
     rimeUpdate()
   }
 
@@ -347,9 +413,11 @@ final class SquirrelInputController: IMKInputController {
   @objc func openSettings() { NSApp.squirrelAppDelegate.openSettings() }
 
   func preferencesDidChange() {
-    invalidateRanking()
+    screenLanguage.deactivate()
+    invalidateRanking(resetLanguageDefault: true)
     applyTypingPreferences()
     rimeUpdate()
+    activateScreenLanguage()
   }
 
   private func applyTypingPreferences() {
@@ -384,6 +452,94 @@ final class SquirrelInputController: IMKInputController {
 }
 
 private extension SquirrelInputController {
+  func typingLocationSnapshot() -> TypingLocationState.Snapshot? {
+    guard let client else { return nil }
+    let marked = client.markedRange()
+    let composing = marked.location != NSNotFound
+    let selected = composing ? NSRange(location: marked.location, length: 0) : client.selectedRange()
+    var caret: CGRect?
+    // Marked text changes its on-screen caret as letters arrive. Its anchor,
+    // rather than that moving rectangle, identifies the typing location.
+    if !composing {
+      var rect = NSRect.zero
+      _ = client.attributes(forCharacterIndex: selected.location == NSNotFound ? 0 : selected.location,
+                            lineHeightRectangle: &rect)
+      if rect.height > 0 { caret = rect }
+    }
+    return .init(client: ObjectIdentifier(client as AnyObject), selection: selected, caret: caret, marked: composing)
+  }
+
+  func recordTypingLocation(after event: NSEvent, handled: Bool) {
+    guard automaticLanguageEnabled, let location = typingLocationSnapshot() else { return }
+    typingLocation.record(location)
+    guard !handled, event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return }
+    if event.keyCode == 51 { typingLocation.expectHostEdit(backwardDelete: true) }
+    else if event.keyCode == 117 { typingLocation.expectHostEdit() }
+    else if [123, 124, 125, 126, 115, 119, 116, 121, 48].contains(event.keyCode) {
+      // Navigation has not executed yet. Keep the old point so the next
+      // observation detects a real move; an arrow at the edge may do nothing.
+      fallbackHistory = ""
+    } else if let chars = event.characters,
+              chars.unicodeScalars.allSatisfy({ $0.value >= 32 && $0.value < 0xf700 || $0.value == 10 || $0.value == 13 }) {
+      typingLocation.expectHostEdit(insertedUTF16: chars.utf16.count)
+    }
+  }
+
+  func activateScreenLanguage() {
+    guard let client, automaticLanguageEnabled, capitalComposition == nil, !screenLanguage.active, intent.defaultLanguage == nil,
+          !rimeAPI.get_option(session, "ascii_mode") else { return }
+    // IMK documents this API as a globallyUniqueString wrapper. Read it once
+    // per activation; a callback must never regenerate the client token.
+    let currentClient = ObjectIdentifier(client as AnyObject)
+    if !screenLanguage.active || screenClientIdentity.isEmpty || screenIdentityClient != currentClient {
+      screenClientIdentity = client.uniqueClientIdentifierString() ?? UUID().uuidString
+      screenIdentityClient = currentClient
+    }
+    let identity = (client.bundleIdentifier() ?? "") + "|" + screenClientIdentity
+    screenLanguage.activate(identity: identity, context: { [weak self] in self?.screenCaptureContext() },
+      precedingText: { [weak self] in self?.precedingText() ?? "" }) { [weak self] _ in
+        self?.applyInitialScreenLanguageHint()
+    }
+  }
+
+  func screenCaptureContext() -> ScreenLanguageCaptureContext? {
+    let bundleIdentifier = client?.bundleIdentifier()
+    func unavailable(_ reason: String, flags: [String: Bool] = [:]) -> ScreenLanguageCaptureContext? {
+      ScreenLanguageDiagnostics.shared.record(status: "capture_event", reason: reason,
+        bundleIdentifier: bundleIdentifier, flags: flags, updateSummary: false)
+      return nil
+    }
+    guard let client, let front = NSWorkspace.shared.frontmostApplication else { return unavailable("context_unavailable") }
+    guard front.bundleIdentifier == bundleIdentifier else { return unavailable("front_app_changed") }
+    guard !IsSecureEventInputEnabled() else { return unavailable("secure_input") }
+    // Password/ASCII-only sessions cannot use the visual hint. IMK exposes
+    // generic restricted modes through the input-mode document property.
+    var restricted = !client.supportsUnicode()
+    if client.supportsProperty(TSMDocumentPropertyTag(kTSMDocumentInputModePropertyTag)),
+       let mode = value(forTag: Int(kTSMDocumentInputModePropertyTag), client: client) as? String {
+      let normalized = mode.lowercased()
+      restricted = restricted || normalized.contains("password") || normalized.hasSuffix(".roman")
+    }
+    guard !restricted else { return unavailable("restricted_client") }
+    guard ScreenLanguageCapture.permissionGranted else { return unavailable("permission_denied") }
+    guard !IsSecureEventInputEnabled() else { return unavailable("secure_input") }
+    var caret = NSRect.zero
+    let attributes = client.attributes(forCharacterIndex: 0, lineHeightRectangle: &caret) ?? [:]
+    // Clients may also identify a secure field in their input attributes.
+    if attributes.contains(where: { key, value in
+      let name = String(describing: key).lowercased()
+      return (name.contains("secure") || name.contains("password")) &&
+        ((value as? Bool == true) || String(describing: value).lowercased().contains("securetextfield"))
+    }) { return unavailable("secure_field") }
+    guard caret.height > 0 else { return unavailable("caret_missing") }
+    let marked = client.markedRange(), selected = client.selectedRange()
+    let anchor = marked.location != NSNotFound ? marked.location : selected.location
+    let focusIdentity = screenFocusIdentity(forInsertionAnchor: anchor)
+    return ScreenLanguageCaptureContext(processID: front.processIdentifier, caret: caret,
+      primaryScreenHeight: NSScreen.screens.first?.frame.height ?? 0, allowed: true, focusIdentity: focusIdentity,
+      insertionAnchor: anchor, bundleIdentifier: bundleIdentifier ?? "", hasMarkedText: marked.location != NSNotFound,
+      compositionActive: rimeAPI.get_input(session).map { !String(cString: $0).isEmpty } ?? false)
+  }
 
   func commitPendingLiteral(separator: String = "") {
     let raw = rimeAPI.get_input(session).map { String(cString: $0) } ?? ""
@@ -392,10 +548,62 @@ private extension SquirrelInputController {
     else { invalidateRanking() }
   }
 
+  func showCapitalComposition() {
+    guard let text = capitalComposition else { return }
+    show(preedit: text, selRange: NSRange(location: 0, length: text.utf16.count), caretPos: text.utf16.count)
+    hidePalettes()
+  }
+
+  func finishCapitalComposition(separator: String = "", keepWord: Bool = false) {
+    guard let text = capitalComposition else { return }
+    capitalComposition = keepWord ? "" : nil
+    if !text.isEmpty || !separator.isEmpty { commit(string: text + separator) }
+    else { invalidateRanking() }
+    if keepWord { intent.startLiteralRun() }
+  }
+
+  // Keep every letter of a capitalized word in one marked composition. Passing
+  // the first capital to the host can replace its text client before the next
+  // letter, losing the temporary mode even when lifecycle callbacks are kept.
+  func handleCapitalCompositionKey(_ key: UInt32, modifiers: NSEvent.ModifierFlags) -> Bool? {
+    guard var text = capitalComposition else { return nil }
+    if !modifiers.intersection([.command, .control, .option]).isEmpty {
+      finishCapitalComposition(); return false
+    }
+    if key == UInt32(XK_space) { finishCapitalComposition(separator: " "); return true }
+    if key == UInt32(XK_BackSpace) {
+      if text.isEmpty { finishCapitalComposition(); return false }
+      text.removeLast(); capitalComposition = text
+      showCapitalComposition()
+      if text.isEmpty { capitalComposition = nil; invalidateRanking() }
+      return true
+    }
+    if key == UInt32(XK_Escape) {
+      capitalComposition = ""; showCapitalComposition()
+      capitalComposition = nil; invalidateRanking()
+      return true
+    }
+    if (33...126).contains(key), let scalar = UnicodeScalar(key) {
+      let char = Character(String(scalar))
+      if char != "'" && PunctuationPolicy.supports(char) {
+        finishCapitalComposition()
+        return nil // Route the mark through the normal sentence-form policy.
+      }
+      text.append(char); capitalComposition = text; showCapitalComposition()
+      return true
+    }
+    finishCapitalComposition()
+    return false // Return, Tab, cursor navigation and other host commands.
+  }
+
   // nil means use the ordinary Rime key path; false passes the original key
   // to the host. Nothing waits for a model on the input event thread.
   func handleAutoKey(_ key: UInt32, modifiers: NSEvent.ModifierFlags) -> Bool? {
+    if capitalComposition != nil, !automaticLanguageEnabled || rimeAPI.get_option(session, "ascii_mode") {
+      finishCapitalComposition()
+    }
     guard automaticLanguageEnabled, !rimeAPI.get_option(session, "ascii_mode") else { return nil }
+    if capitalComposition != nil, let handled = handleCapitalCompositionKey(key, modifiers: modifiers) { return handled }
     if modifiers.contains(.control) || modifiers.contains(.option) {
       guard intent.english || intent.literalRun else { return nil }
       if intent.english { commitPendingLiteral() }
@@ -403,6 +611,7 @@ private extension SquirrelInputController {
       return false
     }
     func recordPassedKey() {
+      screenLanguage.finishFirstWord()
       if (32...126).contains(key), let scalar = UnicodeScalar(key) {
         fallbackHistory = String((fallbackHistory + String(scalar)).suffix(512))
       } else { fallbackHistory = "" }
@@ -426,10 +635,10 @@ private extension SquirrelInputController {
             _ = rimeAPI.free_context(&ctx)
           }
         }
-        if let decision = PunctuationPolicy.decide(key: char, context: context, defaultChinese: true) {
+        if let decision = PunctuationPolicy.decide(key: char, context: context, defaultChinese: intent.defaultLanguage != "english") {
           if intent.english || addressStart { commitPendingLiteral() }
           else {
-            // Commit the current native highlight (including Kev's ordering)
+            // Commit the current native highlight (including model ordering)
             // before inserting the mark; never replace committed host text.
             _ = tp_commit_composition(session)
             rimeConsumeCommittedText()
@@ -446,8 +655,10 @@ private extension SquirrelInputController {
     if (65...90).contains(key) {
       commitPendingLiteral()
       intent.startLiteralRun()
-      recordPassedKey()
-      return false
+      screenLanguage.finishFirstWord()
+      capitalComposition = String(UnicodeScalar(key)!)
+      showCapitalComposition()
+      return true
     }
     switch intent.action(for: key) {
     case .none: return nil
@@ -619,20 +830,30 @@ private extension SquirrelInputController {
     return handled
   }
 
-  func rimeConsumeCommittedText() {
+  func rimeConsumeCommittedText(appendEnglishSpace: Bool = false) {
     var commitText = RimeCommit.rimeStructInit()
     if rimeAPI.get_commit(session, &commitText) {
-      if let text = commitText.text {
-        commit(string: String(cString: text))
-      }
+      let committed = commitText.text.map { String(cString: $0) }
       _ = rimeAPI.free_commit(&commitText)
+      guard var text = committed else { return }
+      if appendEnglishSpace, text.utf8.allSatisfy({ $0 < 128 }),
+         text.utf8.contains(where: { (65...90).contains($0) || (97...122).contains($0) }) {
+        if text.last?.isWhitespace != true { text += " " }
+        if rimeAPI.get_input(session).map({ String(cString: $0).isEmpty }) ?? true {
+          // Inform Wanxiang that the word separator was already inserted,
+          // so its smart spacing does not prefix the next word with another.
+          _ = rimeAPI.process_key(session, Int32(XK_space), 0)
+        }
+      }
+      commit(string: text)
     }
   }
 
   func submitRanking(_ data: Data, revision: Int) {
     guard rankingEnabled, ranking.revision == revision, !ranking.frozen, !intent.english else { return }
     DecisionTransport.shared.submit(data) { [weak self] result in
-      guard let self, !self.intent.english, let result, result["status"] as? String == "ok",
+      guard let self, self.ranking.revision == revision, !self.refreshTypingLocation(), !self.intent.english,
+            let result, result["status"] as? String == "ok",
             let order = result["order"] as? [Int], self.ranking.apply(order, revision: revision) else { return }
       self.displayedHighlight = 0
       _ = self.rimeAPI.highlight_candidate_on_current_page(self.session, order[0])
@@ -661,9 +882,13 @@ private extension SquirrelInputController {
       if routeLanguage, let languageData = try? JSONSerialization.data(withJSONObject: snapshot) {
         DecisionTransport.language.submit(languageData) { [weak self] result in
           guard let self, self.automaticLanguageEnabled, !self.ranking.frozen,
-                self.ranking.revision == revision else { return }
+                self.ranking.revision == revision, !self.refreshTypingLocation() else { return }
           let language = result?["status"] as? String == "ok" ? result?["language"] as? String ?? "uncertain" : "uncertain"
-          _ = self.intent.apply(language, revision: revision)
+          if ScreenLanguageHintState.empty(prefix), let hint = self.screenLanguage.language(precedingText: prefix) {
+            _ = self.intent.applyInitialHint(hint, revision: revision)
+          } else {
+            _ = self.intent.apply(language, revision: revision, hasContext: !ScreenLanguageHintState.empty(prefix))
+          }
           if !self.intent.english { self.submitRanking(data, revision: revision) }
           self.rimeUpdate(clearReservedComments: false)
         }
@@ -674,14 +899,19 @@ private extension SquirrelInputController {
   }
 
   // Preserve reserved comment marks when librime requests a UI-only refresh.
-  func rimeUpdate(clearReservedComments: Bool = true) {
+  func rimeUpdate(clearReservedComments: Bool = true, appendEnglishSpace: Bool = false) {
+    if capitalComposition != nil {
+      if automaticLanguageEnabled && !rimeAPI.get_option(session, "ascii_mode") { showCapitalComposition(); return }
+      finishCapitalComposition()
+    }
     if clearReservedComments {
       specialCommentIndices = [:]
     }
-    rimeConsumeCommittedText()
+    rimeConsumeCommittedText(appendEnglishSpace: appendEnglishSpace)
 
     var status = RimeStatus_stdbool.rimeStructInit()
     if rimeAPI.get_status(session, &status) {
+      if status.is_ascii_mode { screenLanguage.cancel() }
       // swiftlint:disable:next identifier_name
       if let schema_id = status.schema_id, schemaId == "" || schemaId != String(cString: schema_id) {
         schemaId = String(cString: schema_id)
@@ -795,6 +1025,10 @@ private extension SquirrelInputController {
           ? min(preferences.candidatesToRank, candidates.count) : 0
         let revision = ranking.reset(key: signature, count: candidates.count, rankedCount: rankCount, shownCount: preferences.candidatesToShow)
         intent.update(raw: raw, revision: revision)
+        if automaticLanguageEnabled, confirmed.isEmpty, caret == raw.utf8.count,
+           let hint = screenLanguage.language(precedingText: compositionPrefix) {
+          _ = intent.applyInitialHint(hint, revision: revision)
+        }
         if rankCount == 0 {
           intent.forceChinese()
         } else {
@@ -838,6 +1072,7 @@ private extension SquirrelInputController {
   }
 
   func commit(string: String) {
+    screenLanguage.finishFirstWord()
     guard let client = client else { return }
 
     let forceMarkedText =
@@ -859,6 +1094,7 @@ private extension SquirrelInputController {
     fallbackHistory = String((fallbackHistory + string).suffix(512))
     invalidateRanking()
     client.insertText(string, replacementRange: .empty)
+    if let location = typingLocationSnapshot() { typingLocation.record(location) }
     preedit = ""
     hidePalettes()
   }
@@ -901,6 +1137,8 @@ private extension SquirrelInputController {
   private func handleASCIIModeToggle(_ notification: Notification) {
     guard let enableASCII = notification.object as? Bool else { return }
     guard session != 0 && rimeAPI.find_session(session) else { return }
+    if capitalComposition != nil { finishCapitalComposition() }
+    screenLanguage.cancel()
 
     rimeAPI.set_option(session, "ascii_mode", enableASCII)
     rimeUpdate()

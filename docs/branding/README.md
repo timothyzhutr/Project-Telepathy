@@ -14,7 +14,7 @@ python3 scripts/build_branding.py --preview
 The generator uses Python's standard library, the macOS Swift compiler, AppKit/CoreGraphics, and `iconutil`. There are no extra graphics dependencies. It reads the canonical paths and circles from `assets/branding/Telepathy.svg`, and tile geometry and colors from `Telepathy-app.svg`.
 
 - `Telepathy.icns`: 16, 32, 128, 256, and 512 point images, each with a 2× representation.
-- `Telepathy.pdf`: an 18×18 point, black, transparent vector template for the input-source/menu icon.
+- `TelepathyMenuTemplate.pdf`: an 18×18 point, black, transparent vector template for the input-source/menu icon. Its distinct basename prevents AppKit from merging it with the rounded app tile in `Telepathy.icns`. Both the top-level `tsInputMethodIconFileKey` and each mode’s menu/alternate/palette keys must point to this template, with `TISIconIsTemplate` enabled; otherwise macOS can tint the opaque app icon into a solid square.
 - `Telepathy-128.png`: the app tile for the README.
 - `brand-preview.png`: optional documentation preview of the mark at 16, 18, and 22 points in light and dark surroundings. This preview is not an app resource.
 

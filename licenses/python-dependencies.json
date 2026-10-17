@@ -57,6 +57,14 @@
     ]
   },
   {
+    "name": "charset-normalizer",
+    "version": "3.5.2",
+    "license": "MIT",
+    "notices": [
+      "python/charset-normalizer/licenses/LICENSE"
+    ]
+  },
+  {
     "name": "click",
     "version": "8.5.0",
     "license": "BSD-3-Clause",
@@ -171,6 +179,14 @@
     ]
   },
   {
+    "name": "mlx-vlm",
+    "version": "0.7.8",
+    "license": "MIT",
+    "notices": [
+      "python/mlx-vlm/licenses/LICENSE"
+    ]
+  },
+  {
     "name": "mpmath",
     "version": "1.3.0",
     "license": "BSD",
@@ -224,6 +240,14 @@
     ]
   },
   {
+    "name": "pillow",
+    "version": "12.3.0",
+    "license": "MIT-CMU",
+    "notices": [
+      "python/pillow/licenses/LICENSE"
+    ]
+  },
+  {
     "name": "protobuf",
     "version": "7.36.2",
     "license": "3-Clause BSD License",
@@ -261,6 +285,15 @@
     "license": "Apache-2.0 AND CNRI-Python",
     "notices": [
       "python/regex/licenses/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "requests",
+    "version": "2.34.2",
+    "license": "Apache-2.0",
+    "notices": [
+      "python/requests/licenses/LICENSE",
+      "python/requests/licenses/NOTICE"
     ]
   },
   {
@@ -339,6 +372,14 @@
     ]
   },
   {
+    "name": "torchvision",
+    "version": "0.23.0",
+    "license": "BSD",
+    "notices": [
+      "python/torchvision/LICENSE"
+    ]
+  },
+  {
     "name": "tqdm",
     "version": "4.70.1",
     "license": "MPL-2.0 AND MIT",
@@ -368,6 +409,14 @@
     "license": "PSF-2.0",
     "notices": [
       "python/typing_extensions/licenses/LICENSE"
+    ]
+  },
+  {
+    "name": "urllib3",
+    "version": "2.8.0",
+    "license": "MIT",
+    "notices": [
+      "python/urllib3/licenses/LICENSE.txt"
     ]
   }
 ]

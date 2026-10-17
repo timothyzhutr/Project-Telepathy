@@ -20,7 +20,11 @@ class ModelStoreTests(unittest.TestCase):
             with self.assertRaises(ValueError): validate_models(d,manifest)
     def test_manifest_has_no_training_artifacts_or_private_paths(self):
         manifest=json.loads((Path(__file__).resolve().parents[1]/'assets/models.lock.json').read_text())
-        self.assertNotIn('checkpoint',manifest['kev'])
-        self.assertEqual({f['name'] for f in manifest['kev']['files']},{'adapter_config.json','adapter_model.safetensors','head.pt'})
+        self.assertEqual(set(manifest), {'vision'})
+        self.assertNotIn('checkpoint', manifest['vision'])
+        names = {f['name'] for f in manifest['vision']['files']}
+        self.assertIn('model.safetensors', names)
+        self.assertNotIn('head.pt', names)
+        self.assertNotIn('adapter_model.safetensors', names)
 
 if __name__=='__main__': unittest.main()

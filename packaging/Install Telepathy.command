@@ -89,6 +89,6 @@ if ! "$telepathy_target/Contents/MacOS/Telepathy" --verify-input-source; then
   open 'x-apple.systempreferences:com.apple.Keyboard-Settings.extension'
 fi
 echo 'Installed. Select Telepathy in the input-source menu. Log out and back in if it is missing.'
-echo 'For Kev assistance run:'
+echo 'For local model assistance run:'
 printf '"%s" --download-model\n' "$telepathy_target/Contents/MacOS/Telepathy"
 printf 'Previous installation, if any: %s\n' "$telepathy_backup"
