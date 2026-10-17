@@ -1,4 +1,5 @@
 import AppKit
+import ScreenCaptureKit
 
 private final class ScreenProtocol: URLProtocol {
   static var requests = 0
@@ -163,6 +164,45 @@ private final class ScreenProtocol: URLProtocol {
     wait(0.15); movedPrefix = "Hello "; wait(0.3)
     precondition(limitedCaptures == 2, "A deferred screenshot must recheck text context before capturing")
     firstField.deactivate(); secondField.deactivate()
+    // Hold the real capture pipeline at its asynchronous window-metadata
+    // boundary. Cancellation must prevent pixels, not merely prevent a POST.
+    for invalidation in ["none", "disable", "deactivate", "commit", "timeout", "focus", "text", "restricted"] {
+      var current: ScreenLanguageCaptureContext? = anchor
+      var prefix = ""
+      var metadata: ((ScreenLanguageCaptureWindow?) -> Void)?
+      var screenshots = 0
+      let beforeRequests = ScreenProtocol.requests
+      let pending = ScreenLanguageSession(preferences: preferences, session: http,
+        captureTimeout: invalidation == "timeout" ? 0.04 : 1,
+        throttle: .init(minimumInterval: 0), capture: { context, complete in
+          ScreenLanguageCapture.capture(context, accessFailure: { nil },
+            resolveWindow: { _, callback in metadata = callback }, completion: complete)
+        })
+      pending.activate(identity: "metadata-" + invalidation, context: { current }, precedingText: { prefix }) { _ in
+        fatalError("This fixture never supplies image pixels")
+      }
+      wait(0.12)
+      precondition(metadata != nil, "The fixture must reach the pending metadata boundary")
+      switch invalidation {
+      case "disable": preferences.set(false, for: .screenLanguage); preferences.set(true, for: .screenLanguage)
+      case "deactivate": pending.deactivate()
+      case "commit": pending.finishFirstWord()
+      case "timeout": wait(0.08)
+      case "focus": current = ScreenLanguageCaptureContext(processID: getpid(), caret: anchor.caret,
+        primaryScreenHeight: 900, allowed: true, insertionAnchor: 20)
+      case "text": prefix = "Hello "
+      case "restricted": current = ScreenLanguageCaptureContext(processID: getpid(), caret: anchor.caret,
+        primaryScreenHeight: 900, allowed: false)
+      default: break
+      }
+      metadata?(ScreenLanguageCaptureWindow(frame: .init(x: 0, y: 0, width: 800, height: 600),
+        captureImage: { _, complete in screenshots += 1; complete(nil) }))
+      wait(0.03)
+      precondition(screenshots == (invalidation == "none" ? 1 : 0),
+        "Pending metadata must not start a screenshot after \(invalidation)")
+      precondition(ScreenProtocol.requests == beforeRequests, "The fixture must never upload an image")
+      pending.deactivate()
+    }
     print("PASS: nonblocking screen transport, shared capture cooldown, deferred cancellation, context revalidation and fallback")
   }
 }

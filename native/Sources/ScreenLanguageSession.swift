@@ -104,7 +104,14 @@ final class ScreenLanguageSession {
       }
       self.captureDeadline = deadline
       DispatchQueue.main.asyncAfter(deadline: .now() + self.captureTimeout, execute: deadline)
-      self.capture(capturedContext) { [weak self] png in
+      var guardedContext = capturedContext
+      guardedContext.captureIsCurrent = { [weak self] in
+        guard let self, self.enabled, self.state.revision == revision, self.captureSequence == sequence,
+              let current = context(), capturedContext.matches(current),
+              ScreenLanguageHintState.empty(precedingText()) else { return false }
+        return true
+      }
+      self.capture(guardedContext) { [weak self] png in
         guard let self else { return }
         guard self.enabled, self.state.revision == revision, self.captureSequence == sequence else {
           let current = self.state.revision == revision && self.captureSequence == sequence
